@@ -3,16 +3,17 @@
   "version": "1.0.0",
   "description": "Discord League of Legends Bot",
   "main": "app.js",
-  "type": "commonjs",
+  "type": "module",
   "scripts": {
-    "start": "tsc && node app.js",
-    "dev": "concurrently --kill-others \"tsc --watch\" \"nodemon app.js\"",
+    "start": "tsc && node ./dist/app.js",
+    "dev": "concurrently --kill-others \"tsc --watch\" \"nodemon ./dist/app.js\"",
     "register": "node commands.js"
   },
   "keywords": [],
   "author": "Hara",
   "license": "ISC",
   "devDependencies": {
+    "@types/node": "^22.10.5",
     "concurrently": "^9.1.2",
     "eslint": "^9.17.0",
     "nodemon": "3.1.9",
