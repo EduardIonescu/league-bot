@@ -5,12 +5,14 @@ dotenv.config();
 
 interface ClientWithCommands extends Client<boolean> {
   commands?: Collection<any, any>;
+  cooldowns?: Collection<any, any>;
 }
 const client: ClientWithCommands = new Client({
   intents: [GatewayIntentBits.Guilds],
 });
 (async () => {
   client.commands = new Collection();
+  client.cooldowns = new Collection();
 
   const commandFolderPath = "./commands/";
   const absoluteCommandsPath = new URL(commandFolderPath, import.meta.url);
@@ -37,7 +39,7 @@ const client: ClientWithCommands = new Client({
   const eventFiles = fs
     .readdirSync(eventsPath)
     .filter((file) => file.endsWith(".js"));
-  console.log("we now here");
+
   for (const file of eventFiles) {
     const filePath = new URL(file, eventsPath);
     const event = (await import(filePath.href)).default;

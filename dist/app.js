@@ -7,6 +7,7 @@ const client = new Client({
 });
 (async () => {
     client.commands = new Collection();
+    client.cooldowns = new Collection();
     const commandFolderPath = "./commands/";
     const absoluteCommandsPath = new URL(commandFolderPath, import.meta.url);
     const commandFolders = fs.readdirSync(absoluteCommandsPath);
@@ -28,7 +29,6 @@ const client = new Client({
     const eventFiles = fs
         .readdirSync(eventsPath)
         .filter((file) => file.endsWith(".js"));
-    console.log("we now here");
     for (const file of eventFiles) {
         const filePath = new URL(file, eventsPath);
         const event = (await import(filePath.href)).default;
