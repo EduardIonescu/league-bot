@@ -34,9 +34,8 @@ const bet = {
     await interaction.deferReply();
     const summonerPUUID = interaction.options.getString("account");
     const account = accounts.find((acc) => acc.summonerPUUID === summonerPUUID);
-    console.log("account", account);
+
     if (account?.region) {
-      console.log("summonerPUUID", summonerPUUID);
       const game = await getSpectatorData(summonerPUUID, account.region);
       console.log("game", game);
       const isInGame = game?.gameId ? "is in game" : "is not in game";

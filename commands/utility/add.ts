@@ -1,8 +1,10 @@
 import { SlashCommandBuilder } from "discord.js";
+import { setTimeout } from "node:timers/promises";
 import {
   Account,
   getRiotId,
   getSummonerId,
+  toTitleCase,
   writeAccountToFile,
 } from "../../utils.js";
 
@@ -40,8 +42,8 @@ export default {
   async execute(interaction: any) {
     await interaction.deferReply();
 
-    const gameName = interaction.options.getString("name");
-    const tagLine = interaction.options.getString("tag");
+    const gameName: string = interaction.options.getString("name");
+    const tagLine: string = interaction.options.getString("tag");
     const region: Region = interaction.options.getString("region");
 
     const riotId = await getRiotId(gameName, tagLine);
@@ -49,8 +51,11 @@ export default {
       const summonerId = await getSummonerId(riotId, region);
       if (summonerId && !("status" in summonerId)) {
         await interaction.editReply(
-          `user found with puuid: ${summonerId.puuid}`
+          `Account found with puuid: ${summonerId.puuid}`
         );
+
+        // Wait for cool change
+        await setTimeout(2_000);
 
         const account: Account = {
           gameName,
@@ -61,7 +66,9 @@ export default {
         };
         const { error } = await writeAccountToFile(account);
         if (error.length === 0) {
-          await interaction.editReply("Account saved!");
+          const accountToShow =
+            toTitleCase(gameName) + "#" + tagLine.toUpperCase();
+          await interaction.editReply(`Account saved:  \`${accountToShow}\``);
           return;
         }
 

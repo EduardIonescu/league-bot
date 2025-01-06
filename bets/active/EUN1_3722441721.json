@@ -1,0 +1,35 @@
+{
+  "gameId": "EUN1_3722441721",
+  "player": "Xuessima#EUNE",
+  "inGameTime": 0,
+  "bets": [
+    {
+      "discordId": "string",
+      "amount": 10,
+      "win": true,
+      "timestamp": "2025-01-06T23:17:29.081Z",
+      "inGameTime": 0
+    },
+    {
+      "discordId": "245173407899975680",
+      "amount": 1,
+      "win": true,
+      "timestamp": "2025-01-06T23:17:37.865Z",
+      "inGameTime": 0
+    },
+    {
+      "discordId": "245173407899975680",
+      "amount": 10,
+      "win": true,
+      "timestamp": "2025-01-06T23:44:08.198Z",
+      "inGameTime": 0
+    },
+    {
+      "discordId": "245173407899975680",
+      "amount": 1,
+      "win": true,
+      "timestamp": "2025-01-06T23:44:20.342Z",
+      "inGameTime": 0
+    }
+  ]
+}

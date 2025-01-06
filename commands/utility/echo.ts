@@ -51,7 +51,6 @@ async function getSpectatorData(summonerId: any, region: Region) {
   const endpoint = `https://${region}.api.riotgames.com/lol/spectator/v5/active-games/by-summoner`;
 
   const url = `${endpoint}/${puuid}`;
-  console.log("url", url);
 
   try {
     const response = await fetch(url, {
