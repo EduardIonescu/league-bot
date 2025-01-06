@@ -1,27 +1,27 @@
 import { REST, Routes } from "discord.js";
 import * as fs from "node:fs";
-import * as path from "node:path";
 
 import * as dotenv from "dotenv";
 dotenv.config();
 
 const commands = [];
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const foldersPath = path.join(__dirname, "commands");
-const commandFolders = fs.readdirSync(foldersPath);
+const commandFolderPath = "./dist/commands/";
+const absoluteCommandsPath = new URL(commandFolderPath, import.meta.url);
+const commandFolders = fs.readdirSync(absoluteCommandsPath);
 
 for (const folder of commandFolders) {
   // Grab all the command files from the commands directory you created earlier
-  const commandsPath = path.join(foldersPath, folder);
+  const folderPath = new URL(folder + "/", absoluteCommandsPath);
   const commandFiles = fs
-    .readdirSync(commandsPath)
+    .readdirSync(folderPath)
     .filter((file) => file.endsWith(".js"));
+
+  console.log("commandFiles", commandFiles);
   // Grab the SlashCommandBuilder#toJSON() output of each command's data for deployment
   for (const file of commandFiles) {
-    const filePath = path.join(commandsPath, file);
-    const command = await import(filePath);
+    const filePath = new URL(file, folderPath);
+    const command = (await import(filePath.href))?.default;
     if ("data" in command && "execute" in command) {
       commands.push(command.data.toJSON());
     } else {
@@ -39,7 +39,6 @@ const rest = new REST().setToken(process.env.DISCORD_TOKEN);
     console.log(
       `Started refreshing ${commands.length} application (/) commands.`
     );
-    console.log(commands);
     const data = await rest.put(
       Routes.applicationCommands(process.env.APP_ID),
       { body: commands }

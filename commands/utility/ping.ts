@@ -6,6 +6,18 @@ export default {
     .setName("ping")
     .setDescription("Replies with Pong!"),
   async execute(interaction: any) {
-    await interaction.reply("Pong!");
+    const sent = await interaction.reply({
+      content: "Pinging...",
+      fetchReply: true,
+    });
+    interaction.editReply(
+      `Roundtrip latency: ${
+        sent.createdTimestamp - interaction.createdTimestamp
+      }ms`
+    );
+
+    // await interaction.followUp("Pong again!");
+    // await setTimeout(1000);
+    // await interaction.deleteReply();
   },
 };
