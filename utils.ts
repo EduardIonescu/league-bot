@@ -1,6 +1,6 @@
 import * as dotenv from "dotenv";
 import * as fs from "node:fs/promises";
-import { DEFAULT_USER } from "./constants.js";
+import { BETS_CLOSE_AT_GAME_LENGTH, DEFAULT_USER } from "./constants.js";
 
 dotenv.config();
 
@@ -189,4 +189,10 @@ export async function updateUser(user: BettingUser) {
   } catch (err) {
     return { error: "An error has occured." };
   }
+}
+
+export function canBetOnActiveGame(gameStartTime: number) {
+  const differenceInSeconds = Math.ceil((Date.now() - gameStartTime) / 1_000);
+
+  return differenceInSeconds <= BETS_CLOSE_AT_GAME_LENGTH * 60;
 }

@@ -36,6 +36,5 @@ export default {
     modal.addComponents(amountActionRow);
 
     await interaction.showModal(modal);
-    // console.log("interaction.user", interaction.user.id);
   },
 };

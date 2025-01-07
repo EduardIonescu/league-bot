@@ -110,10 +110,8 @@ export default {
     const riotId = await getRiotId(name, tag);
     if (riotId) {
       const summonerId = await getSummonerId(riotId, region);
-      console.log("summonerId", summonerId);
       if (summonerId) {
         const spectatorData = await getSpectatorData(summonerId, region);
-        console.log("spectatorData", spectatorData);
 
         if (spectatorData?.status?.status_code === 404) {
           interaction.reply(spectatorData.status.message);

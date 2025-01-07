@@ -23,3 +23,6 @@ export const DEFAULT_USER = {
     currencyLost: 0,
   },
 };
+
+/** The game length at which games should not be available anymore in MINUTES  */
+export const BETS_CLOSE_AT_GAME_LENGTH = 6;

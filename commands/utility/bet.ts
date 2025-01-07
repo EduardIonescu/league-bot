@@ -12,6 +12,7 @@ import { loseButtons, winButtons } from "../../constants.js";
 import {
   Account,
   Bet,
+  canBetOnActiveGame,
   getActiveGame,
   getBettingUser,
   getSpectatorData,
@@ -62,7 +63,6 @@ const bet = {
             summonerPUUID,
             account.region
           );
-          console.log("spectatorData", spectatorData);
           if (!spectatorData || spectatorData?.status?.status_code) {
             await interaction.editReply(`${player} is not in game`);
             return;
@@ -81,6 +81,7 @@ const bet = {
           return;
         }
       }
+
       const totalBetWin = game.bets.reduce(
         (acc, cur) => acc + (cur.win ? cur.amount : 0),
         0
@@ -104,6 +105,19 @@ const bet = {
         )
         .setTimestamp();
 
+      const canBetOnGame = canBetOnActiveGame(game.gameStartTime);
+      if (!canBetOnGame) {
+        await interaction.editReply({
+          embeds: [embed],
+          components: [],
+        });
+        interaction.followUp({
+          content: "Betting window has closed. Better luck on the next one!",
+          flags: MessageFlags.Ephemeral,
+        });
+        return;
+      }
+
       const winButtonsBuilders = winButtons.map((button) =>
         new ButtonBuilder()
           .setLabel(button.label)
@@ -122,6 +136,7 @@ const bet = {
       const loseRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
         ...loseButtonsBuilders
       );
+
       const response: Message = await interaction.editReply({
         embeds: [embed],
         components: [winRow, loseRow],
@@ -222,7 +237,6 @@ async function createCollector(
           0
         );
 
-        console.log("embed.data.fields", embed.data.fields);
         embed.setFields(
           { name: "\u200b", value: "\u200b" },
           { name: "Win", value: `${totalBetWin} Tzapi`, inline: true },
