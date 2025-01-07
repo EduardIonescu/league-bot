@@ -1,5 +1,4 @@
 import { SlashCommandBuilder } from "discord.js";
-import { setTimeout } from "node:timers/promises";
 import {
   Account,
   getSummonerId,
@@ -47,13 +46,6 @@ export default {
 
     const summonerId = await getSummonerId(gameName, tagLine);
     if (summonerId && !("status" in summonerId)) {
-      await interaction.editReply(
-        `Account found with puuid: ${summonerId.puuid}`
-      );
-
-      // Wait for cool change
-      await setTimeout(2_000);
-
       const account: Account = {
         gameName,
         tagLine,
