@@ -37,7 +37,9 @@ export type Bet = {
 export type Match = {
   gameId: string;
   player: string;
+  summonerId: string;
   inGameTime: number;
+  gameStartTime: number;
   bets: Bet[];
 };
 
@@ -159,11 +161,11 @@ export async function getBettingUser(discordId: string) {
   }
 }
 
-export async function getActiveGame(gameId: string) {
+export async function getActiveGame(summonerId: string) {
   try {
     const rootPath = import.meta.url.split("dist/")[0];
     const activeBetsFolder = new URL("bets/active/", rootPath);
-    const gameFile = new URL(`${gameId}.json`, activeBetsFolder);
+    const gameFile = new URL(`${summonerId}.json`, activeBetsFolder);
     if (await fileExists(gameFile)) {
       const game: Match = JSON.parse(await fs.readFile(gameFile, "utf8"));
       return { error: undefined, game };
@@ -182,11 +184,11 @@ export async function getActiveGame(gameId: string) {
 }
 
 export async function updateActiveGame(game: Match) {
-  const gameId = game.gameId;
+  const summonerId = game.summonerId;
   try {
     const rootPath = import.meta.url.split("dist/")[0];
     const activeBetsFolder = new URL("bets/active/", rootPath);
-    const gameFile = new URL(`${gameId}.json`, activeBetsFolder);
+    const gameFile = new URL(`${summonerId}.json`, activeBetsFolder);
     await fs.writeFile(gameFile, JSON.stringify(game));
 
     return { error: undefined };

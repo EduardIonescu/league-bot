@@ -3,18 +3,9 @@ import {
   ButtonBuilder,
   ButtonInteraction,
   ButtonStyle,
-  MessageFlags,
   SlashCommandBuilder,
 } from "discord.js";
 import { loseButtons, winButtons } from "../../constants.js";
-import {
-  Bet,
-  getActiveGame,
-  getBettingUser,
-  updateActiveGame,
-  updateUser,
-} from "../../utils.js";
-const gameId = "EUN1_3722441721";
 
 export default {
   data: new SlashCommandBuilder()
@@ -24,11 +15,6 @@ export default {
     await interaction.reply(
       `This server is ${interaction.guild.name} and has ${interaction.guild.memberCount} members`
     );
-
-    const { game, error } = await getActiveGame(gameId);
-    if (!game || error) {
-      return;
-    }
 
     const winButtonsBuilders = winButtons.map((button) =>
       new ButtonBuilder()
@@ -59,65 +45,6 @@ export default {
           filter: collectorFilter,
           time: 15 * 60_000,
         });
-      const winCustomIds = winButtons.map((b) => b.customId);
-      const loseCustomIds = loseButtons.map((b) => b.customId);
-      if (
-        winCustomIds.includes(buttonInteraction.customId) ||
-        loseCustomIds.includes(buttonInteraction.customId)
-      ) {
-        const win = winCustomIds.includes(buttonInteraction.customId);
-        const discordId = buttonInteraction.user.id;
-
-        // Do something else on modal TODO:
-        if (
-          buttonInteraction.customId === "win-custom" ||
-          buttonInteraction.customId === "lose-custom"
-        ) {
-          return;
-        }
-
-        const button = winButtons.find(
-          (b) => b.customId === buttonInteraction.customId
-        );
-        const betAmount = button!.amount!;
-        const { error, user: bettingUser } = await getBettingUser(discordId);
-
-        if (error) {
-          interaction.reply({ content: error, flags: MessageFlags.Ephemeral });
-        }
-
-        const currency = bettingUser!.currency;
-
-        if (betAmount > currency) {
-        } else {
-          bettingUser!.currency -= betAmount;
-          bettingUser!.timestamp = new Date();
-          bettingUser!.data.timesBet += 1;
-
-          const gameBet: Bet = {
-            discordId,
-            amount: betAmount,
-            win,
-            timestamp: new Date(),
-            inGameTime: game.inGameTime,
-          };
-          game.bets.push(gameBet);
-
-          const { error: activeGameError } = await updateActiveGame(game);
-          const { error: userError } = await updateUser(bettingUser!);
-          if (activeGameError || userError) {
-            await buttonInteraction.update({
-              content: `${activeGameError || userError}`,
-              components: [],
-            });
-          }
-        }
-
-        await buttonInteraction.update({
-          content: `${buttonInteraction.customId} has been pressed!`,
-          components: [],
-        });
-      }
     } catch (e) {
       await interaction.editReply({
         content: `Session expired. Use the command again.`,
