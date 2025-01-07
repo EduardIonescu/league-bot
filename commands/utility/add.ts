@@ -2,7 +2,6 @@ import { SlashCommandBuilder } from "discord.js";
 import { setTimeout } from "node:timers/promises";
 import {
   Account,
-  getRiotId,
   getSummonerId,
   toTitleCase,
   writeAccountToFile,
@@ -46,35 +45,31 @@ export default {
     const tagLine: string = interaction.options.getString("tag");
     const region: Region = interaction.options.getString("region");
 
-    const riotId = await getRiotId(gameName, tagLine);
-    if (riotId && !("status" in riotId)) {
-      const summonerId = await getSummonerId(riotId, region);
-      if (summonerId && !("status" in summonerId)) {
-        await interaction.editReply(
-          `Account found with puuid: ${summonerId.puuid}`
-        );
+    const summonerId = await getSummonerId(gameName, tagLine);
+    if (summonerId && !("status" in summonerId)) {
+      await interaction.editReply(
+        `Account found with puuid: ${summonerId.puuid}`
+      );
 
-        // Wait for cool change
-        await setTimeout(2_000);
+      // Wait for cool change
+      await setTimeout(2_000);
 
-        const account: Account = {
-          gameName,
-          tagLine,
-          summonerPUUID: summonerId.puuid,
-          riotIdPUUID: riotId.puuid,
-          region,
-        };
-        const { error } = await writeAccountToFile(account);
-        if (error.length === 0) {
-          const accountToShow =
-            toTitleCase(gameName) + "#" + tagLine.toUpperCase();
-          await interaction.editReply(`Account saved:  \`${accountToShow}\``);
-          return;
-        }
-
-        await interaction.editReply(error);
+      const account: Account = {
+        gameName,
+        tagLine,
+        summonerPUUID: summonerId.puuid,
+        region,
+      };
+      const { error } = await writeAccountToFile(account);
+      if (error.length === 0) {
+        const accountToShow =
+          toTitleCase(gameName) + "#" + tagLine.toUpperCase();
+        await interaction.editReply(`Account saved:  \`${accountToShow}\``);
         return;
       }
+
+      await interaction.editReply(error);
+      return;
     }
 
     await interaction.editReply("No user found");

@@ -15,6 +15,7 @@ import {
   getActiveGame,
   getBettingUser,
   getSpectatorData,
+  Match,
   updateActiveGame,
   updateUser,
 } from "../../utils.js";
@@ -55,7 +56,6 @@ const bet = {
     if (account?.region) {
       const player = account.gameName + "#" + account.tagLine;
       let { game, error } = await getActiveGame(summonerPUUID);
-      console.log("game", game);
       if (error || !game) {
         try {
           const spectatorData = await getSpectatorData(
@@ -81,14 +81,14 @@ const bet = {
           return;
         }
       }
-      console.log("game", game);
-      console.log(
-        "time now - game.gameStartTime",
-        (Date.now() - game.gameStartTime) / 1_000
+      const totalBetWin = game.bets.reduce(
+        (acc, cur) => acc + (cur.win ? cur.amount : 0),
+        0
       );
-      console.log("game.gameStartTime", game.gameStartTime);
-      console.log("Date.now()", Date.now());
-      console.log(new Date());
+      const totalBetLose = game.bets.reduce(
+        (acc, cur) => acc + (cur.win ? 0 : cur.amount),
+        0
+      );
 
       const embed = new EmbedBuilder()
         .setColor(0x0099ff)
@@ -97,10 +97,9 @@ const bet = {
         .setDescription(`We betting on \`${player}\`'s match`)
         .addFields(
           { name: "\u200b", value: "\u200b" },
-          { name: "Win", value: "15 Tzapi", inline: true },
-          { name: "Lose", value: "20 Tzapi", inline: true },
-
-          { name: "Total Bets Placed", value: "10" },
+          { name: "Win", value: `${totalBetWin} Tzapi`, inline: true },
+          { name: "Lose", value: `${totalBetLose} Tzapi`, inline: true },
+          { name: "Total Bets Placed", value: `${game.bets.length}` },
           { name: "\u200b", value: "\u200b" }
         )
         .setTimestamp();
@@ -117,97 +116,137 @@ const bet = {
           .setCustomId(button.customId)
           .setStyle(ButtonStyle.Danger)
       );
-      const winRow = new ActionRowBuilder().addComponents(
+      const winRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
         ...winButtonsBuilders
       );
-      const loseRow = new ActionRowBuilder().addComponents(
+      const loseRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
         ...loseButtonsBuilders
       );
       const response: Message = await interaction.editReply({
-        content: interaction.content,
         embeds: [embed],
         components: [winRow, loseRow],
       });
 
-      const collectorFilter = (i: any) => i.user.id === interaction.user.id;
-
-      try {
-        const buttonInteraction = await response.awaitMessageComponent({
-          filter: collectorFilter,
-          time: 15 * 60_000,
-        });
-
-        const winCustomIds = winButtons.map((b) => b.customId);
-        const loseCustomIds = loseButtons.map((b) => b.customId);
-        if (
-          winCustomIds.includes(buttonInteraction.customId) ||
-          loseCustomIds.includes(buttonInteraction.customId)
-        ) {
-          const win = winCustomIds.includes(buttonInteraction.customId);
-          const discordId = buttonInteraction.user.id;
-
-          // Do something else on modal TODO:
-          if (
-            buttonInteraction.customId === "win-custom" ||
-            buttonInteraction.customId === "lose-custom"
-          ) {
-            return;
-          }
-
-          const button = winButtons.find(
-            (b) => b.customId === buttonInteraction.customId
-          );
-          const betAmount = button!.amount!;
-          const { error, user: bettingUser } = await getBettingUser(discordId);
-
-          if (error) {
-            buttonInteraction.reply({
-              content: error,
-              flags: MessageFlags.Ephemeral,
-            });
-          }
-
-          const currency = bettingUser!.currency;
-
-          if (betAmount > currency) {
-          } else {
-            bettingUser!.currency -= betAmount;
-            bettingUser!.timestamp = new Date();
-            bettingUser!.data.timesBet += 1;
-
-            const gameBet: Bet = {
-              discordId,
-              amount: betAmount,
-              win,
-              timestamp: new Date(),
-              inGameTime: game.inGameTime,
-            };
-            game.bets.push(gameBet);
-
-            const { error: activeGameError } = await updateActiveGame(game);
-            const { error: userError } = await updateUser(bettingUser!);
-            if (activeGameError || userError) {
-              await buttonInteraction.update({
-                content: `${activeGameError || userError}`,
-                components: [],
-              });
-            }
-
-            await buttonInteraction.update({
-              content: `${buttonInteraction.customId} has been pressed!`,
-              components: [],
-            });
-          }
-        }
-      } catch (err) {
-        await interaction.editReply({ content: "Cancelling" });
-      }
-
-      return;
+      createCollector(response, interaction, game, embed, winRow, loseRow);
+    } else {
+      interaction.editReply(`idk some shit happened`);
     }
-
-    interaction.editReply(`idk some shit happened`);
   },
 };
+
+async function createCollector(
+  message: Message,
+  interaction: any,
+  game: Match,
+  embed: EmbedBuilder,
+  winRow: ActionRowBuilder<ButtonBuilder>,
+  loseRow: ActionRowBuilder<ButtonBuilder>
+) {
+  const collectorFilter = (i: any) => i.user.id === interaction.user.id;
+
+  const collector = await message.createMessageComponentCollector({
+    filter: collectorFilter,
+    time: 15 * 60_000,
+  });
+  collector.on("collect", async (buttonInteraction) => {
+    const winCustomIds = winButtons.map((b) => b.customId);
+    const loseCustomIds = loseButtons.map((b) => b.customId);
+    if (
+      winCustomIds.includes(buttonInteraction.customId) ||
+      loseCustomIds.includes(buttonInteraction.customId)
+    ) {
+      const win = winCustomIds.includes(buttonInteraction.customId);
+      const discordId = buttonInteraction.user.id;
+
+      // Do something else on modal TODO:
+      if (
+        buttonInteraction.customId === "win-custom" ||
+        buttonInteraction.customId === "lose-custom"
+      ) {
+        return;
+      }
+
+      const button = [...winButtons, ...loseButtons].find(
+        (b) => b.customId === buttonInteraction.customId
+      );
+      const betAmount = button!.amount!;
+      const { error, user: bettingUser } = await getBettingUser(discordId);
+
+      if (error || !bettingUser) {
+        buttonInteraction.reply({
+          content: error,
+          flags: MessageFlags.Ephemeral,
+        });
+        return;
+      }
+
+      const currency = bettingUser!.currency;
+
+      if (betAmount > currency) {
+        await buttonInteraction.reply({
+          content: `You don't have enough currency to bet ${betAmount}. You currently have ${currency}.`,
+          flags: MessageFlags.Ephemeral,
+        });
+        return;
+      } else {
+        bettingUser!.currency -= betAmount;
+        bettingUser!.timestamp = new Date();
+        bettingUser!.data.timesBet += 1;
+
+        const gameBet: Bet = {
+          discordId,
+          amount: betAmount,
+          win,
+          timestamp: new Date(),
+          inGameTime: game.inGameTime,
+        };
+        game.bets.push(gameBet);
+
+        const { error: activeGameError } = await updateActiveGame(game);
+        const { error: userError } = await updateUser(bettingUser!);
+
+        if (activeGameError || userError) {
+          await buttonInteraction.update({
+            content: `${activeGameError || userError}`,
+            components: [],
+          });
+          return;
+        }
+
+        const totalBetWin = game.bets.reduce(
+          (acc, cur) => acc + (cur.win ? cur.amount : 0),
+          0
+        );
+        const totalBetLose = game.bets.reduce(
+          (acc, cur) => acc + (cur.win ? 0 : cur.amount),
+          0
+        );
+
+        console.log("embed.data.fields", embed.data.fields);
+        embed.setFields(
+          { name: "\u200b", value: "\u200b" },
+          { name: "Win", value: `${totalBetWin} Tzapi`, inline: true },
+          { name: "Lose", value: `${totalBetLose} Tzapi`, inline: true },
+          { name: "Total Bets Placed", value: `${game.bets.length}` },
+          { name: "\u200b", value: "\u200b" }
+        );
+        await buttonInteraction.update({
+          embeds: [embed],
+          components: [winRow, loseRow],
+        });
+        await buttonInteraction.followUp({
+          content: `You've bet ${betAmount} Tzapi on ${win ? "win" : "lose"!}`,
+          flags: MessageFlags.Ephemeral,
+        });
+      }
+    }
+  });
+
+  collector.on("end", () => {
+    winRow.components.forEach((button) => button.setDisabled(true));
+    loseRow.components.forEach((button) => button.setDisabled(true));
+    message.edit({ components: [winRow, loseRow] });
+  });
+}
 
 export default bet;

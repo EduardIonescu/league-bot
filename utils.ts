@@ -4,13 +4,12 @@ import { DEFAULT_USER } from "./constants.js";
 
 dotenv.config();
 
-export type Region = "eun1" | "euw1";
-export type RiotId = { puuid: string; gameName: string; tagLine: string };
+export type Region = "eun1" | "euw1" | "na1";
+export type SummonerId = { puuid: string; gameName: string; tagLine: string };
 export type Account = {
   gameName: string;
   tagLine: string;
   summonerPUUID: string;
-  riotIdPUUID: string;
   region: Region;
 };
 
@@ -43,7 +42,7 @@ export type Match = {
   bets: Bet[];
 };
 
-export async function getRiotId(name: string, tag: string) {
+export async function getSummonerId(name: string, tag: string) {
   const endpoint =
     "https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id";
   const url = `${endpoint}/${name}/${tag}`;
@@ -55,27 +54,8 @@ export async function getRiotId(name: string, tag: string) {
       },
     });
 
-    const riotId = (await response.json()) as RiotId;
+    const summonerId = (await response.json()) as SummonerId;
 
-    return riotId;
-  } catch (err) {
-    console.error(err);
-    return;
-  }
-}
-
-export async function getSummonerId(riotId: RiotId, region: Region) {
-  const { puuid } = riotId;
-
-  const url = `https://${region}.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/${puuid}`;
-  try {
-    const response = await fetch(url, {
-      headers: {
-        "X-Riot-Token": process.env.LEAGUE_API ?? "",
-      },
-    });
-
-    const summonerId = await response.json();
     return summonerId;
   } catch (err) {
     console.error(err);
