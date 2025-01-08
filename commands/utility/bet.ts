@@ -102,6 +102,17 @@ const bet = {
             gameStartTime: spectatorData.gameStartTime,
             bets: [],
           };
+
+          const canBetOnGame = canBetOnActiveGame(game.gameStartTime);
+          if (!canBetOnGame) {
+            interaction.followUp({
+              content:
+                "Betting window has closed. Better luck on the next one!",
+              flags: MessageFlags.Ephemeral,
+            });
+            return;
+          }
+
           await updateActiveGame(game);
         } catch (err) {
           await interaction.editReply(`${player} is not in game`);
@@ -246,13 +257,13 @@ const bet = {
 
 async function createCollector(
   message: Message,
-  interaction: any,
+  _interaction: any,
   game: Match,
   embed: EmbedBuilder,
   winRow: ActionRowBuilder<ButtonBuilder>,
   loseRow: ActionRowBuilder<ButtonBuilder>
 ) {
-  const collectorFilter = (i: any) => i.user.id === interaction.user.id;
+  const collectorFilter = (_: any) => true;
 
   const collector = message.createMessageComponentCollector({
     filter: collectorFilter,
