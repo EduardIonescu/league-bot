@@ -28,4 +28,4 @@ export const DEFAULT_USER = {
 export const BETS_CLOSE_AT_GAME_LENGTH = 6;
 
 /** Check if an active game has ended every n seconds  */
-export const CHECK_GAME_FINISHED_INTERVAL = 10;
+export const CHECK_GAME_FINISHED_INTERVAL = 15;

@@ -15,9 +15,5 @@ export default {
         sent.createdTimestamp - interaction.createdTimestamp
       }ms`
     );
-
-    // await interaction.followUp("Pong again!");
-    // await setTimeout(1000);
-    // await interaction.deleteReply();
   },
 };
