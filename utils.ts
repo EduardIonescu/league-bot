@@ -342,3 +342,30 @@ export async function handleLoserBetResult(users: AmountByUser[]) {
 
   return (await Promise.all(losers)).filter((loser) => loser != undefined);
 }
+
+export async function getLeaderboard() {
+  try {
+    const rootPath = import.meta.url.split("dist/")[0];
+    const userFolderPath = new URL("users/", rootPath);
+    const userFolder = await fs.readdir(userFolderPath);
+
+    const users: BettingUser[] = [];
+    for (const userFile of userFolder) {
+      const filePath = new URL(userFile, userFolderPath);
+      const user: BettingUser = JSON.parse(await fs.readFile(filePath, "utf8"));
+      users.push(user);
+    }
+
+    users.sort((a, b) => b.currency - a.currency);
+
+    return {
+      error: undefined,
+      users,
+    };
+  } catch (err) {
+    return {
+      error: "Users not found.",
+      users: undefined,
+    };
+  }
+}
