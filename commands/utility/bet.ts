@@ -1,22 +1,35 @@
 import {
   ActionRowBuilder,
+  APIEmbedField,
   ButtonBuilder,
   ButtonStyle,
   EmbedBuilder,
   Message,
   MessageFlags,
+  RestOrArray,
   SlashCommandBuilder,
+  TextBasedChannel,
 } from "discord.js";
 import * as fs from "node:fs";
-import { loseButtons, winButtons } from "../../constants.js";
+import {
+  CHECK_GAME_FINISHED_INTERVAL,
+  loseButtons,
+  winButtons,
+} from "../../constants.js";
 import {
   Account,
   Bet,
+  calculateCurrencyOutcome,
   canBetOnActiveGame,
   getActiveGame,
   getBettingUser,
+  getFinishedMatch,
   getSpectatorData,
+  handleLoserBetResult,
+  handleMatchOutcome,
+  handleWinnerBetResult,
   Match,
+  moveFinishedGame,
   updateActiveGame,
   updateUser,
 } from "../../utils.js";
@@ -37,6 +50,9 @@ for (const file of accountFiles) {
   });
 }
 
+let intervalId: NodeJS.Timeout | null;
+let counter = 0;
+
 const bet = {
   cooldown: 10,
   data: new SlashCommandBuilder()
@@ -51,6 +67,17 @@ const bet = {
     ),
   async execute(interaction: any) {
     await interaction.deferReply();
+
+    const channel = interaction.channel as TextBasedChannel;
+    if (!channel.isSendable()) {
+      return;
+    }
+
+    if (intervalId) {
+      clearInterval(intervalId);
+      intervalId = null;
+    }
+
     const summonerPUUID = interaction.options.getString("account");
     const account = accounts.find((acc) => acc.summonerPUUID === summonerPUUID);
 
@@ -82,6 +109,75 @@ const bet = {
         }
       }
 
+      intervalId = setInterval(async () => {
+        counter += CHECK_GAME_FINISHED_INTERVAL;
+        if (counter > 10 * 60 * 60 * 60 && intervalId) {
+          clearInterval(intervalId);
+          intervalId = null;
+
+          channel.send(
+            `The game of ${game.player} with the id: ${game.gameId} is not valid. Everyone gets their Tzapi back.`
+          );
+          return;
+        }
+
+        const gameIdWithRegion = `${account.region.toUpperCase()}_${
+          game.gameId
+        }`;
+        const { active, match } = await getFinishedMatch(gameIdWithRegion);
+        if (!active && match?.info.endOfGameResult) {
+          const participant = match.info.participants.find(
+            (p) => p.puuid === summonerPUUID
+          );
+          if (participant) {
+            const betByUser = await handleMatchOutcome(game, participant.win);
+            const { winners, losers } = calculateCurrencyOutcome(betByUser);
+            const updatedWinners = await handleWinnerBetResult(winners);
+            const upodatedLosers = await handleLoserBetResult(losers);
+
+            const fieldsWinners: RestOrArray<APIEmbedField> = [
+              { name: "Winners :star_struck:", value: "Nice job bois" },
+              ...updatedWinners.map((winner) => ({
+                name: `\u200b`,
+                value: `<@${winner.updatedUser.discordId}> won ${winner.winnings} Tzapi!`,
+              })),
+            ];
+            const fieldsLosers: RestOrArray<APIEmbedField> = [
+              {
+                name: "Losers :person_in_manual_wheelchair:",
+                value: "Hahahaha git gut",
+              },
+              ...upodatedLosers.map((loser) => ({
+                name: `\u200b`,
+                value: `<@${loser.updatedUser.discordId}> lost ${loser.loss} Tzapi!`,
+              })),
+            ];
+            const embedOutcome = new EmbedBuilder()
+              .setColor(0x0099ff)
+              .setTitle("League Bets :coin:")
+              .setDescription(`The bet on \`${player}\`'s match has resolved.`)
+              .addFields(
+                { name: "Total Bets Placed", value: `${game.bets.length}` },
+                { name: "\u200b", value: "\u200b" },
+                ...fieldsWinners,
+                { name: "\u200b", value: "\u200b" },
+                ...fieldsLosers,
+                { name: "\u200b", value: "\u200b" }
+              )
+              .setTimestamp();
+            channel.send({ embeds: [embedOutcome] });
+
+            const { error } = await moveFinishedGame(game, participant.win);
+            if (error) {
+              console.log("Error moving finished game", error);
+            }
+            clearInterval(intervalId!);
+            intervalId = null;
+            return;
+          }
+        }
+      }, CHECK_GAME_FINISHED_INTERVAL * 1_000);
+
       const totalBetWin = game.bets.reduce(
         (acc, cur) => acc + (cur.win ? cur.amount : 0),
         0
@@ -93,9 +189,8 @@ const bet = {
 
       const embed = new EmbedBuilder()
         .setColor(0x0099ff)
-        .setTitle("League Bets")
-        .setAuthor({ name: "Ed" })
-        .setDescription(`We betting on \`${player}\`'s match`)
+        .setTitle("League Bets :coin:")
+        .setDescription(`We betting on \`${player}\`'s match.`)
         .addFields(
           { name: "\u200b", value: "\u200b" },
           { name: "Win", value: `${totalBetWin} Tzapi`, inline: true },
@@ -159,7 +254,7 @@ async function createCollector(
 ) {
   const collectorFilter = (i: any) => i.user.id === interaction.user.id;
 
-  const collector = await message.createMessageComponentCollector({
+  const collector = message.createMessageComponentCollector({
     filter: collectorFilter,
     time: 15 * 60_000,
   });
@@ -195,7 +290,7 @@ async function createCollector(
         return;
       }
 
-      const currency = bettingUser!.currency;
+      const currency = bettingUser.currency;
 
       if (betAmount > currency) {
         await buttonInteraction.reply({
@@ -204,9 +299,26 @@ async function createCollector(
         });
         return;
       } else {
-        bettingUser!.currency -= betAmount;
-        bettingUser!.timestamp = new Date();
-        bettingUser!.data.timesBet += 1;
+        const bettingUserBets = game.bets.filter(
+          (bet) => bet.discordId === bettingUser.discordId
+        );
+        if (bettingUserBets) {
+          const userBetOnOppositeOutcome = bettingUserBets.find(
+            (bet) => bet.win !== win
+          );
+          if (userBetOnOppositeOutcome) {
+            await buttonInteraction.reply({
+              content: `You fool! You tried to bet ${
+                win ? "win" : "loss"
+              } when you've already bet on the opposite!`,
+              flags: MessageFlags.Ephemeral,
+            });
+            return;
+          }
+        }
+        bettingUser.currency -= betAmount;
+        bettingUser.timestamp = new Date();
+        bettingUser.data.timesBet += 1;
 
         const gameBet: Bet = {
           discordId,

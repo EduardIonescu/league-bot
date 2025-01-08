@@ -26,3 +26,6 @@ export const DEFAULT_USER = {
 
 /** The game length at which games should not be available anymore in MINUTES  */
 export const BETS_CLOSE_AT_GAME_LENGTH = 6;
+
+/** Check if an active game has ended every n seconds  */
+export const CHECK_GAME_FINISHED_INTERVAL = 10;
