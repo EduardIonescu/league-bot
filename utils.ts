@@ -1,6 +1,13 @@
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
 import * as dotenv from "dotenv";
+import * as fsSync from "node:fs";
 import * as fs from "node:fs/promises";
-import { BETS_CLOSE_AT_GAME_LENGTH, DEFAULT_USER } from "./constants.js";
+import {
+  BETS_CLOSE_AT_GAME_LENGTH,
+  DEFAULT_USER,
+  loseButtons,
+  winButtons,
+} from "./constants.js";
 import { FailedRequest, MatchResult } from "./types.js";
 
 dotenv.config();
@@ -419,4 +426,69 @@ export async function getAccounts() {
       error: "Accounts not found.",
     };
   }
+}
+
+export function getAccountsSync() {
+  const accounts: Account[] = [];
+
+  const rootPath = import.meta.url.split("dist/")[0];
+  const accountsFolder = new URL("accounts/", rootPath);
+  const accountFiles = fsSync.readdirSync(accountsFolder);
+  for (const file of accountFiles) {
+    const filePath = new URL(file, accountsFolder);
+    const account = JSON.parse(fsSync.readFileSync(filePath, "utf8"));
+    accounts.push(account);
+  }
+
+  return accounts;
+}
+
+export type Choice = { name: string; value: string };
+export function formatChoices(accounts: Account[]) {
+  const choices: Choice[] = accounts.map((account) => ({
+    name: formatPlayerName(account.gameName, account.tagLine),
+    value: `${account.summonerPUUID}`,
+  }));
+
+  return choices;
+}
+
+export function formatPlayerName(gameName: string, tagLine: string) {
+  return `${toTitleCase(gameName)}#${tagLine.toUpperCase()}`;
+}
+
+export function bettingButtons() {
+  const winButtonsBuilders = winButtons.map((button) =>
+    new ButtonBuilder()
+      .setLabel(button.label)
+      .setCustomId(button.customId)
+      .setStyle(ButtonStyle.Primary)
+  );
+  const loseButtonsBuilders = loseButtons.map((button) =>
+    new ButtonBuilder()
+      .setLabel(button.label)
+      .setCustomId(button.customId)
+      .setStyle(ButtonStyle.Danger)
+  );
+  const winRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    ...winButtonsBuilders
+  );
+  const loseRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    ...loseButtonsBuilders
+  );
+
+  return { winRow, loseRow };
+}
+
+export function getTotalBets(bets: Bet[]) {
+  const totalBetWin = bets.reduce(
+    (acc, cur) => acc + (cur.win ? cur.amount : 0),
+    0
+  );
+  const totalBetLose = bets.reduce(
+    (acc, cur) => acc + (cur.win ? 0 : cur.amount),
+    0
+  );
+
+  return { totalBetWin, totalBetLose };
 }

@@ -1,42 +1,31 @@
 import {
   ActionRowBuilder,
   ButtonBuilder,
-  ButtonStyle,
+  CommandInteraction,
   EmbedBuilder,
   Message,
   MessageFlags,
   SlashCommandBuilder,
   TextBasedChannel,
 } from "discord.js";
-import * as fs from "node:fs";
 import { loseButtons, winButtons } from "../../constants.js";
 import {
-  Account,
   Bet,
+  bettingButtons,
   canBetOnActiveGame,
+  formatChoices,
+  getAccountsSync,
   getActiveGame,
   getBettingUser,
   getSpectatorData,
+  getTotalBets,
   Match,
   updateActiveGame,
   updateUser,
 } from "../../utils.js";
 
-let choices: { name: string; value: string }[] = [];
-const accounts: Account[] = [];
-
-const rootPath = import.meta.url.split("dist/")[0];
-const accountsFolder = new URL("accounts/", rootPath);
-const accountFiles = fs.readdirSync(accountsFolder);
-for (const file of accountFiles) {
-  const filePath = new URL(file, accountsFolder);
-  const account = JSON.parse(fs.readFileSync(filePath, "utf8"));
-  accounts.push(account);
-  choices.push({
-    name: `${account.gameName}#${account.tagLine}`,
-    value: `${account.summonerPUUID}`,
-  });
-}
+const accounts = getAccountsSync();
+const choices = formatChoices(accounts);
 
 const bet = {
   cooldown: 10,
@@ -99,14 +88,7 @@ const bet = {
         }
       }
 
-      const totalBetWin = game.bets.reduce(
-        (acc, cur) => acc + (cur.win ? cur.amount : 0),
-        0
-      );
-      const totalBetLose = game.bets.reduce(
-        (acc, cur) => acc + (cur.win ? 0 : cur.amount),
-        0
-      );
+      const { totalBetWin, totalBetLose } = getTotalBets(game.bets);
 
       const embed = new EmbedBuilder()
         .setColor(0x0099ff)
@@ -134,24 +116,7 @@ const bet = {
         return;
       }
 
-      const winButtonsBuilders = winButtons.map((button) =>
-        new ButtonBuilder()
-          .setLabel(button.label)
-          .setCustomId(button.customId)
-          .setStyle(ButtonStyle.Primary)
-      );
-      const loseButtonsBuilders = loseButtons.map((button) =>
-        new ButtonBuilder()
-          .setLabel(button.label)
-          .setCustomId(button.customId)
-          .setStyle(ButtonStyle.Danger)
-      );
-      const winRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
-        ...winButtonsBuilders
-      );
-      const loseRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
-        ...loseButtonsBuilders
-      );
+      const { winRow, loseRow } = bettingButtons();
 
       const response: Message = await interaction.editReply({
         embeds: [embed],
@@ -167,7 +132,7 @@ const bet = {
 
 async function createCollector(
   message: Message,
-  _interaction: any,
+  _interaction: CommandInteraction,
   game: Match,
   embed: EmbedBuilder,
   winRow: ActionRowBuilder<ButtonBuilder>,
@@ -177,7 +142,7 @@ async function createCollector(
 
   const collector = message.createMessageComponentCollector({
     filter: collectorFilter,
-    time: 15 * 60_000,
+    time: 7 * 60_000,
   });
   collector.on("collect", async (buttonInteraction) => {
     const winCustomIds = winButtons.map((b) => b.customId);
@@ -273,14 +238,7 @@ async function createCollector(
           return;
         }
 
-        const totalBetWin = game.bets.reduce(
-          (acc, cur) => acc + (cur.win ? cur.amount : 0),
-          0
-        );
-        const totalBetLose = game.bets.reduce(
-          (acc, cur) => acc + (cur.win ? 0 : cur.amount),
-          0
-        );
+        const { totalBetWin, totalBetLose } = getTotalBets(game.bets);
 
         embed.setFields(
           { name: "\u200b", value: "\u200b" },
