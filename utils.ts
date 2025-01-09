@@ -402,3 +402,25 @@ export async function getLeaderboard() {
     };
   }
 }
+
+export async function getAccounts() {
+  try {
+    const rootPath = import.meta.url.split("dist/")[0];
+    const accountsFolderPath = new URL("accounts/", rootPath);
+    const accountsFolder = await fs.readdir(accountsFolderPath);
+
+    const accounts: Account[] = [];
+    for (const accountFile of accountsFolder) {
+      const filePath = new URL(accountFile, accountsFolderPath);
+      const account: Account = JSON.parse(await fs.readFile(filePath, "utf8"));
+      accounts.push(account);
+    }
+
+    return { accounts, error: undefined };
+  } catch (err) {
+    return {
+      accounts: undefined,
+      error: "Accounts not found.",
+    };
+  }
+}
