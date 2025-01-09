@@ -41,6 +41,8 @@ export type Match = {
   summonerId: string;
   inGameTime: number;
   gameStartTime: number;
+  region: Region;
+  channelId: string;
   bets: Bet[];
 };
 
@@ -165,6 +167,32 @@ export async function getActiveGame(summonerId: string) {
   }
 }
 
+export async function getActiveGames() {
+  try {
+    const rootPath = import.meta.url.split("dist/")[0];
+    const activeBetsFolder = new URL("bets/active/", rootPath);
+    const gameFiles = await fs.readdir(activeBetsFolder);
+
+    if (gameFiles.length === 0) {
+      return {
+        games: undefined,
+        error: undefined,
+      };
+    }
+
+    const games: Match[] = [];
+    for (const gameFile of gameFiles) {
+      const filePath = new URL(gameFile, activeBetsFolder);
+      const game: Match = JSON.parse(await fs.readFile(filePath, "utf8"));
+      games.push(game);
+    }
+
+    return { games, error: undefined };
+  } catch (err) {
+    return { games: undefined, error: "Error occured getting active games" };
+  }
+}
+
 export async function moveFinishedGame(game: Match, win: boolean) {
   try {
     const rootPath = import.meta.url.split("dist/")[0];
@@ -219,6 +247,11 @@ export async function updateUser(user: BettingUser) {
 
 export function canBetOnActiveGame(gameStartTime: number) {
   const differenceInSeconds = Math.ceil((Date.now() - gameStartTime) / 1_000);
+  console.log("differenceInSeconds", differenceInSeconds);
+  console.log(
+    "differenceInSeconds <= BETS_CLOSE_AT_GAME_LENGTH * 60",
+    differenceInSeconds <= BETS_CLOSE_AT_GAME_LENGTH * 60
+  );
   return differenceInSeconds <= BETS_CLOSE_AT_GAME_LENGTH * 60;
 }
 
