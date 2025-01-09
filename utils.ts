@@ -50,6 +50,7 @@ export type Match = {
   gameStartTime: number;
   region: Region;
   channelId: string;
+  againstBot: boolean;
   bets: Bet[];
 };
 

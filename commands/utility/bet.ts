@@ -68,6 +68,7 @@ const bet = {
             summonerId: summonerPUUID,
             gameStartTime: spectatorData.gameStartTime,
             channelId: channel.id,
+            againstBot: false,
             bets: [],
           };
 
