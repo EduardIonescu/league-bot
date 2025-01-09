@@ -247,11 +247,7 @@ export async function updateUser(user: BettingUser) {
 
 export function canBetOnActiveGame(gameStartTime: number) {
   const differenceInSeconds = Math.ceil((Date.now() - gameStartTime) / 1_000);
-  console.log("differenceInSeconds", differenceInSeconds);
-  console.log(
-    "differenceInSeconds <= BETS_CLOSE_AT_GAME_LENGTH * 60",
-    differenceInSeconds <= BETS_CLOSE_AT_GAME_LENGTH * 60
-  );
+
   return differenceInSeconds <= BETS_CLOSE_AT_GAME_LENGTH * 60;
 }
 

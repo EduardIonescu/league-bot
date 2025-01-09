@@ -84,11 +84,7 @@ const bet = {
 
           const canBetOnGame = canBetOnActiveGame(game.gameStartTime);
           if (!canBetOnGame) {
-            await interaction.editReply({
-              embeds: [],
-              components: [],
-            });
-            interaction.followUp({
+            interaction.editReply({
               content:
                 "Betting window has closed. Better luck on the next one!",
               flags: MessageFlags.Ephemeral,
