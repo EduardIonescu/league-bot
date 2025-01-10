@@ -9,7 +9,6 @@ import { setTimeout } from "node:timers/promises";
 import { CHECK_GAME_FINISHED_INTERVAL } from "../constants.js";
 import {
   AmountByUser,
-  calculateCurrencyOutcome,
   getActiveGames,
   getFinishedMatch,
   handleLoserBetResult,
@@ -57,22 +56,18 @@ async function handleActiveBets(client: Client) {
     console.log("participant found");
     const betByUser = await handleMatchOutcome(game, participant.win);
     console.log("betByUser", betByUser);
+
     let winners: AmountByUser[] = [];
     let losers: AmountByUser[] = [];
-    if (game.againstBot) {
-      for (const bet of betByUser) {
-        if (bet.amount < 0) {
-          losers.push({ ...bet, loss: Math.abs(bet.amount) });
-          continue;
-        }
-
-        winners.push({ ...bet, winnings: bet.amount });
+    for (const bet of betByUser) {
+      if (bet.amount < 0) {
+        losers.push({ ...bet, loss: Math.abs(bet.amount) });
+        continue;
       }
-    } else {
-      const result = calculateCurrencyOutcome(betByUser);
-      winners = result.winners;
-      losers = result.losers;
+
+      winners.push({ ...bet, winnings: bet.amount });
     }
+
     console.log("winners", winners);
     console.log("losers", losers);
     const updatedWinners = await handleWinnerBetResult(winners);

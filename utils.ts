@@ -310,31 +310,6 @@ export async function handleMatchOutcome(game: Match, win: boolean) {
   return amountByUser;
 }
 
-export function calculateCurrencyOutcome(amountByUser: AmountByUser[]) {
-  const winners = amountByUser.filter((entry) => entry.amount > 0);
-  const losers = amountByUser.filter((entry) => entry.amount < 0);
-
-  const totalWinnerBet = winners.reduce((acc, cur) => acc + cur.amount, 0);
-  const totalLoserBet = Math.abs(
-    losers.reduce((acc, cur) => acc + cur.amount, 0)
-  );
-
-  const availablePot = Math.min(totalWinnerBet, totalLoserBet);
-  let remainingPot = availablePot;
-  winners.forEach((winner) => {
-    const winnerShare = (winner.amount / totalWinnerBet) * availablePot;
-    const winnings = Math.min(winner.amount, winnerShare);
-    winner.winnings = Math.floor(winnings * 10) / 10;
-    remainingPot -= winner.winnings;
-  });
-
-  losers.forEach((loser) => {
-    const loss = (Math.abs(loser.amount) / totalLoserBet) * availablePot;
-    loser.loss = Math.floor(loss * 10) / 10;
-  });
-
-  return { winners, losers };
-}
 export async function handleWinnerBetResult(users: AmountByUser[]) {
   const timestamp = new Date();
 
