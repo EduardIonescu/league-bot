@@ -38,7 +38,15 @@ export default {
 
       // Wait so you dont get too many requests status from the API
       await setTimeout(200);
-      if (!spectatorData || spectatorData.status) {
+      if (
+        !spectatorData ||
+        typeof spectatorData === "string" ||
+        spectatorData.status
+      ) {
+        continue;
+      }
+
+      if (!spectatorData.gameStartTime) {
         continue;
       }
 
@@ -58,6 +66,8 @@ export default {
     for (const account of accountsInGame) {
       const player = formatPlayerName(account.gameName, account.tagLine);
       const isInGameMessage = "is in game since";
+      console.log("account", account);
+      console.log("account.gameStartTime", account.gameStartTime);
       const relativeTime = time(
         new Date(account.gameStartTime),
         TimestampStyles.RelativeTime
