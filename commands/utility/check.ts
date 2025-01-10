@@ -5,7 +5,11 @@ import {
   TimestampStyles,
 } from "discord.js";
 import { setTimeout } from "node:timers/promises";
-import { getAccounts, getSpectatorData, toTitleCase } from "../../utils.js";
+import {
+  formatPlayerName,
+  getAccounts,
+  getSpectatorData,
+} from "../../utils.js";
 
 export default {
   cooldown: 10,
@@ -52,16 +56,14 @@ export default {
 
     const msg: string[] = [];
     for (const account of accountsInGame) {
-      const player = `${toTitleCase(
-        account.gameName
-      )}#${account.tagLine.toUpperCase()}`;
+      const player = formatPlayerName(account.gameName, account.tagLine);
       const isInGameMessage = "is in game since";
       const relativeTime = time(
         new Date(account.gameStartTime),
         TimestampStyles.RelativeTime
       );
 
-      msg.push(player + " " + isInGameMessage + " " + relativeTime);
+      msg.push(`\`${player}\` ${isInGameMessage} ${relativeTime}`);
     }
 
     await interaction.editReply(msg.join("\n"));
