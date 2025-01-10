@@ -66,8 +66,6 @@ export default {
     for (const account of accountsInGame) {
       const player = formatPlayerName(account.gameName, account.tagLine);
       const isInGameMessage = "is in game since";
-      console.log("account", account);
-      console.log("account.gameStartTime", account.gameStartTime);
       const relativeTime = time(
         new Date(account.gameStartTime),
         TimestampStyles.RelativeTime
