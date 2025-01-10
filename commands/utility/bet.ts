@@ -68,7 +68,7 @@ export default {
           summonerPUUID,
           account.region
         );
-        console.log("spectatorData", spectatorData);
+        // console.log("spectatorData", spectatorData);
         if (!spectatorData || spectatorData?.status?.status_code) {
           await interaction.editReply(`${player} is not in game`);
           return;
@@ -87,9 +87,9 @@ export default {
         console.log("game", game);
         const canBetOnGame = canBetOnActiveGame(game.gameStartTime);
         if (!canBetOnGame) {
-          interaction.followUp({
+          interaction.editReply({
             content: "Betting window has closed. Better luck on the next one!",
-            flags: MessageFlags.Ephemeral,
+            // flags: MessageFlags.Ephemeral,
           });
           return;
         }
@@ -191,6 +191,10 @@ async function createCollector(
     const { error, user: bettingUser } = await getBettingUser(discordId);
 
     if (error || !bettingUser) {
+      await buttonInteraction.update({
+        embeds: [embed],
+        components: [],
+      });
       buttonInteraction.followUp({
         content: error,
         flags: MessageFlags.Ephemeral,
@@ -201,6 +205,10 @@ async function createCollector(
     const currency = bettingUser.currency;
 
     if (betAmount > currency) {
+      await buttonInteraction.update({
+        embeds: [embed],
+        components: [],
+      });
       await buttonInteraction.followUp({
         content: `You don't have enough currency to bet ${betAmount}. You currently have ${currency}.`,
         flags: MessageFlags.Ephemeral,
@@ -216,6 +224,10 @@ async function createCollector(
         (bet) => bet.win !== win
       );
       if (userBetOnOppositeOutcome) {
+        await buttonInteraction.update({
+          embeds: [embed],
+          components: [],
+        });
         await buttonInteraction.followUp({
           content: `You fool! You tried to bet ${
             win ? "win" : "loss"
@@ -268,5 +280,11 @@ async function createCollector(
       content: `You've bet ${betAmount} Tzapi on ${win ? "win" : "lose"!}`,
       flags: MessageFlags.Ephemeral,
     });
+  });
+
+  collector.on("end", () => {
+    winRow.components.forEach((button) => button.setDisabled(true));
+    loseRow.components.forEach((button) => button.setDisabled(true));
+    message.edit({ components: [winRow, loseRow] });
   });
 }
