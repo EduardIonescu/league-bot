@@ -32,7 +32,7 @@ const choices = formatChoices(accounts);
 export default {
   cooldown: 10,
   data: new SlashCommandBuilder()
-    .setName("solo")
+    .setName("bet")
     .setDescription("Bet on League matches' outcomes vs the bot.")
     .addStringOption((option) =>
       option
@@ -106,7 +106,9 @@ export default {
     const embed = new EmbedBuilder()
       .setColor(0x0099ff)
       .setTitle("League Bets :coin:")
-      .setDescription(`We betting on \`${player}\`'s match.`)
+      .setDescription(
+        `We betting on \`${player}\`'s match against the COMPUTER.`
+      )
       .addFields(
         { name: "\u200b", value: "\u200b" },
         { name: "Win", value: `${totalBetWin} Tzapi`, inline: true },
