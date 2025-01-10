@@ -49,7 +49,7 @@ export default {
     const summonerPUUID = (
       interaction.options as CommandInteractionOptionResolver
     ).getString("account");
-
+    console.log("summonerPUUID", summonerPUUID);
     const account = accounts.find((acc) => acc.summonerPUUID === summonerPUUID);
 
     if (!summonerPUUID || !account) {
@@ -58,7 +58,7 @@ export default {
       );
       return;
     }
-
+    console.log("account", account);
     const player = formatPlayerName(account.gameName, account.tagLine);
     let { game, error } = await getActiveGame(summonerPUUID);
 
@@ -68,6 +68,7 @@ export default {
           summonerPUUID,
           account.region
         );
+        console.log("spectatorData", spectatorData);
         if (!spectatorData || spectatorData?.status?.status_code) {
           await interaction.editReply(`${player} is not in game`);
           return;
@@ -83,7 +84,7 @@ export default {
           againstBot: true,
           bets: [],
         };
-
+        console.log("game", game);
         const canBetOnGame = canBetOnActiveGame(game.gameStartTime);
         if (!canBetOnGame) {
           interaction.followUp({
