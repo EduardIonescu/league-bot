@@ -13,7 +13,7 @@ export const loseButtons = [
 ];
 
 export const DEFAULT_USER = {
-  currency: 100,
+  currency: { tzapi: 100, nicu: 0 },
   data: {
     currencyInActiveBets: [],
     timesBet: 0,
@@ -29,3 +29,5 @@ export const BETS_CLOSE_AT_GAME_LENGTH = 4;
 
 /** Check if an active game has ended every n seconds  */
 export const CHECK_GAME_FINISHED_INTERVAL = 30;
+
+export const NICU_IN_TZAPI = 1000;

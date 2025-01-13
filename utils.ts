@@ -24,7 +24,7 @@ export type Account = {
 
 export type BettingUser = {
   discordId: string;
-  currency: number;
+  currency: Currencies;
   timestamp: Date;
   data: {
     timesBet: number;
@@ -34,6 +34,7 @@ export type BettingUser = {
     currencyLost: number;
   };
 };
+export type Currencies = { tzapi: number; nicu: number };
 
 export type Bet = {
   discordId: string;
@@ -245,7 +246,7 @@ export async function updateUser(user: BettingUser) {
     const usersFolder = new URL("users/", rootPath);
     const userFile = new URL(`${discordId}.json`, usersFolder);
 
-    user.currency = Math.floor(user.currency * 10) / 10;
+    user.currency.tzapi = Math.floor(user.currency.tzapi * 10) / 10;
     await fs.writeFile(userFile, JSON.stringify(user));
     return { error: undefined };
   } catch (err) {
@@ -319,7 +320,9 @@ export async function handleWinnerBetResult(users: AmountByUser[]) {
       return;
     }
 
-    const currency = user.amount + (user.winnings ?? 0) + bettingUser.currency;
+    const tzapi =
+      user.amount + (user.winnings ?? 0) + bettingUser.currency.tzapi;
+    const currency = { ...bettingUser.currency, tzapi };
     const wins = bettingUser.data.wins + 1;
     const currencyWon = bettingUser.data.currencyWon + (user.winnings ?? 0);
     const data = { ...bettingUser.data, wins, currencyWon };
@@ -342,8 +345,9 @@ export async function handleLoserBetResult(users: AmountByUser[]) {
     }
 
     const loses = bettingUser.data.loses + 1;
-    const currency =
-      bettingUser.currency + Math.abs(user.amount) - (user.loss ?? 0);
+    const tzapi =
+      bettingUser.currency.tzapi + Math.abs(user.amount) - (user.loss ?? 0);
+    const currency = { ...bettingUser.currency, tzapi };
     const currencyLost = bettingUser.data.currencyLost + (user.loss ?? 0);
     const data = { ...bettingUser.data, loses, currencyLost };
     const updatedUser = { ...bettingUser, timestamp, currency, data };
@@ -368,7 +372,13 @@ export async function getLeaderboard() {
       users.push(user);
     }
 
-    users.sort((a, b) => b.currency - a.currency);
+    users.sort((a, b) => {
+      if (b.currency.nicu === a.currency.nicu) {
+        return b.currency.tzapi - a.currency.tzapi;
+      } else {
+        return b.currency.nicu - a.currency.nicu;
+      }
+    });
 
     return {
       error: undefined,

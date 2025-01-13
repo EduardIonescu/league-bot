@@ -16,7 +16,9 @@ export default {
     }
     const usersByCurrency = users!.map(
       (user, index) =>
-        `${index + 1}. <@${user.discordId}>\n${user.currency} Tzapi\n${
+        `${index + 1}. <@${user.discordId}>\n${user.currency.nicu} Nicu and ${
+          user.currency.tzapi
+        } Tzapi\n${
           Math.round(
             (user.data.wins / (user.data.wins + user.data.loses)) * 100 * 10
           ) / 10

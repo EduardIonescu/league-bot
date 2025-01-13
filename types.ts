@@ -1,3 +1,5 @@
+export type Currency = "nicu" | "tzapi";
+
 export interface MatchResult {
   metadata: Metadata;
   info: Info;

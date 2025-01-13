@@ -204,7 +204,7 @@ async function createCollector(
 
     const currency = bettingUser.currency;
 
-    if (betAmount > currency) {
+    if (betAmount > currency.tzapi) {
       await buttonInteraction.update({
         embeds: [embed],
         components: [],
@@ -238,7 +238,7 @@ async function createCollector(
       }
     }
 
-    bettingUser.currency -= betAmount;
+    bettingUser.currency.tzapi -= betAmount;
     bettingUser.timestamp = new Date();
     bettingUser.data.timesBet += 1;
 
