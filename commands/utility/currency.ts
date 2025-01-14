@@ -20,7 +20,7 @@ export default {
     }
 
     await interaction.editReply({
-      content: `You have ${bettingUser.currency} Tzapi left!`,
+      content: `You have ${bettingUser.currency.nicu} Nicu and ${bettingUser.currency.tzapi} Tzapi left!`,
     });
   },
 };
