@@ -46,6 +46,9 @@ export type Bet = {
 export type Match = {
   gameId: string;
   player: string;
+  gameType: string;
+  gameMode: string;
+  gameQueueConfigId: number;
   summonerId: string;
   inGameTime: number;
   gameStartTime: number;

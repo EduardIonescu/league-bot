@@ -73,9 +73,23 @@ export default {
           await interaction.editReply(`${player} is not in game`);
           return;
         }
+
+        if (
+          !(spectatorData.gameQueueConfigId === 420) &&
+          !(spectatorData.gameQueueConfigId === 440)
+        ) {
+          await interaction.editReply(
+            `You can't bet on ${spectatorData.gameMode} games. You can only bet on Ranked Solo/Duo and Ranked Flex games.`
+          );
+          return;
+        }
+
         game = {
           gameId: spectatorData.gameId,
           region: account.region,
+          gameQueueConfigId: spectatorData.gameQueueConfigId,
+          gameMode: spectatorData.gameMode,
+          gameType: spectatorData.gameType,
           player,
           inGameTime: spectatorData.gameLength,
           summonerId: summonerPUUID,
