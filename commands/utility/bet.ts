@@ -68,8 +68,12 @@ export default {
           summonerPUUID,
           account.region
         );
-        // console.log("spectatorData", spectatorData);
-        if (!spectatorData || spectatorData?.status?.status_code) {
+
+        if (
+          !spectatorData ||
+          typeof spectatorData === "string" ||
+          "status" in spectatorData
+        ) {
           await interaction.editReply(`${player} is not in game`);
           return;
         }
@@ -285,7 +289,7 @@ async function createCollector(
       { name: "Total Bets Placed", value: `${game.bets.length}` },
       { name: "\u200b", value: "\u200b" }
     );
-    console.log("bet made!");
+    console.log("bet made!", buttonInteraction.createdAt);
     await buttonInteraction.update({
       embeds: [embed],
       components: [winRow, loseRow],
