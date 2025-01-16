@@ -214,7 +214,7 @@ async function checkCollector(
 
     const browser = await puppeteer.launch();
     const page = await browser.newPage();
-    page.setViewport({ width: 1920, height: 800 });
+    page.setViewport({ width: 1920, height: 780 });
 
     const html = LiveGameHTML(participantsStats);
 
