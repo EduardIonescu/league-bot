@@ -8,7 +8,12 @@ import {
   loseButtons,
   winButtons,
 } from "./constants.js";
-import { FailedRequest, MatchResult } from "./types.js";
+import {
+  AccountData,
+  FailedRequest,
+  MatchResult,
+  SpectatorData,
+} from "./types.js";
 
 dotenv.config();
 
@@ -44,7 +49,7 @@ export type Bet = {
   inGameTime: number;
 };
 export type Match = {
-  gameId: string;
+  gameId: number;
   player: string;
   gameType: string;
   gameMode: string;
@@ -58,17 +63,17 @@ export type Match = {
   bets: Bet[];
 };
 
+const headers = {
+  "X-Riot-Token": process.env.LEAGUE_API ?? "",
+};
+
 export async function getSummonerId(name: string, tag: string) {
   const endpoint =
     "https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id";
   const url = `${endpoint}/${name}/${tag}`;
 
   try {
-    const response = await fetch(url, {
-      headers: {
-        "X-Riot-Token": process.env.LEAGUE_API ?? "",
-      },
-    });
+    const response = await fetch(url, { headers });
 
     const summonerId = (await response.json()) as SummonerId;
 
@@ -84,13 +89,9 @@ export async function getSpectatorData(summonerPUUID: string, region: Region) {
   const url = `${endpoint}/${summonerPUUID}`;
 
   try {
-    const response = await fetch(url, {
-      headers: {
-        "X-Riot-Token": process.env.LEAGUE_API ?? "",
-      },
-    });
+    const response = await fetch(url, { headers });
 
-    const spectatorData = await response.json();
+    const spectatorData: FailedRequest | SpectatorData = await response.json();
     return spectatorData;
   } catch (err) {
     console.error(err);
@@ -271,11 +272,7 @@ export async function getFinishedMatch(
   const endpoint = `https://${region}.api.riotgames.com/lol/match/v5/matches`;
   const url = `${endpoint}/${matchId.toUpperCase()}`;
   try {
-    const response = await fetch(url, {
-      headers: {
-        "X-Riot-Token": process.env.LEAGUE_API ?? "",
-      },
-    });
+    const response = await fetch(url, { headers });
 
     const match = (await response.json()) as FailedRequest | MatchResult;
 
@@ -287,6 +284,24 @@ export async function getFinishedMatch(
   } catch (err) {
     console.error(err);
     return { active: false, match: undefined };
+  }
+}
+
+/** It needs the `summonerId`, not to be confused with summonerPUUID  */
+export async function getAccountData(summonerId: string, region: Region) {
+  const url = `https://${region}.api.riotgames.com/lol/league/v4/entries/by-summoner/${summonerId}`;
+  try {
+    const response = await fetch(url, { headers });
+    const account = (await response.json()) as FailedRequest | AccountData[];
+
+    if (!account || typeof account === "string" || "status" in account) {
+      return { error: "Failed to fetch", account: undefined };
+    }
+
+    return { error: undefined, account };
+  } catch (err) {
+    console.error(err);
+    return { error: "Failed to fetch", account: undefined };
   }
 }
 

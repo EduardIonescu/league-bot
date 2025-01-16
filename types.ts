@@ -408,3 +408,65 @@ export interface FailedRequest {
     status_code: number;
   };
 }
+
+// SPECTATOR
+export interface SpectatorData {
+  gameId: number;
+  mapId: number;
+  gameMode: string;
+  gameType: string;
+  gameQueueConfigId: number;
+  participants: SpectatorParticipant[];
+  observers: Observers;
+  platformId: string;
+  bannedChampions: BannedChampion[];
+  gameStartTime: number;
+  gameLength: number;
+}
+
+export interface SpectatorParticipant {
+  puuid: string;
+  teamId: number;
+  spell1Id: number;
+  spell2Id: number;
+  championId: number;
+  profileIconId: number;
+  riotId: string;
+  bot: boolean;
+  summonerId: string;
+  gameCustomizationObjects: any[];
+  perks: Perks;
+}
+
+export interface Perks {
+  perkIds: number[];
+  perkStyle: number;
+  perkSubStyle: number;
+}
+
+export interface Observers {
+  encryptionKey: string;
+}
+
+export interface BannedChampion {
+  championId: number;
+  teamId: number;
+  pickTurn: number;
+}
+
+// League Entries API
+export interface AccountData {
+  leagueId: string;
+  queueType: string;
+  tier: string;
+  rank: string;
+  summonerId: string;
+  leaguePoints: number;
+  wins: number;
+  losses: number;
+  veteran: boolean;
+  inactive: boolean;
+  freshBlood: boolean;
+  hotStreak: boolean;
+}
+[];
