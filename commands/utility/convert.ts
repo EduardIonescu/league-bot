@@ -40,10 +40,6 @@ export default {
     }
 
     let amount = interaction.options.get("amount")?.value;
-    console.log(
-      ' interaction.options.get("amount", true)',
-      interaction.options.get("amount")
-    );
 
     if (typeof amount === "boolean") {
       console.log(
