@@ -21,7 +21,7 @@ export type ParticipantStats = {
 
 export function LiveGameHTML(participantsStats: ParticipantStats[]) {
   return `<!DOCTYPE html>
-  <html lang="en">
+  <html lang="en" style="font-family: sans-serif;">
     <head>
       <meta charset="UTF-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -110,13 +110,26 @@ function RankedArticle(rankedStats?: AccountData) {
   const totalGames = (wins ?? 0) + (losses ?? 0);
   const winrate = Math.floor(((wins ?? 0) / totalGames) * 100);
   let color = colorByWinrate(winrate);
+  const width = 180;
 
   return `
-  <div style="display: flex; flex-direction: column; gap: 0.25rem; width: 100%; font-size: 1.5rem;">
-    <p>
-      <span style="color: ${color}; font-weight: bold;">${winrate}%</span>${" "}
-      <span>(${totalGames} Played)</span>
-    </p>`;
+  <div style="display: flex; flex-direction: column; gap: 0.5rem; width: 100%; font-size: 1.5rem; position: relative; height: 100%;">
+    <div style="height:50%; position: relative;">  
+      <p style="position: absolute; bottom: 0; margin: 0;">
+        <span style="color: ${color}; font-weight: bold;">${winrate}%</span>${" "}
+        <span>(${totalGames} Played)</span>
+      </p>
+    </div>
+
+    <div style="height:50%; position: relative;">  
+      <div style="width: ${width}px; background-color: rgba(131, 131, 131, 0.3); height: 0.7rem; border-radius: 9px; box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px; position:absolute; top: 0;">
+        <div style="width: ${
+          (width * winrate) / 100
+        }px; background-color: ${color}; height: 0.7rem; border-radius: 9px;">
+        </div>
+      </div>  
+    </div>
+  </div>`;
 }
 
 function colorByWinrate(winrate: number) {
