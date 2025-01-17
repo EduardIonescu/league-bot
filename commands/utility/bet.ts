@@ -244,7 +244,7 @@ async function createCollector(
       if (userBetOnOppositeOutcome) {
         await buttonInteraction.update({
           embeds: [embed],
-          components: [],
+          components: [winRow, loseRow],
         });
         await buttonInteraction.followUp({
           content: `You fool! You tried to bet ${
