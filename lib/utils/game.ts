@@ -21,7 +21,7 @@ export async function writeAccountToFile(account: Account) {
   const nameAndTag = (account.gameName + "_" + account.tagLine).toLowerCase();
   try {
     const rootPath = import.meta.url.split("dist/")[0];
-    const accountsFolder = new URL("accounts/", rootPath);
+    const accountsFolder = new URL("data/accounts/", rootPath);
     const accountFile = new URL(`${nameAndTag}.json`, accountsFolder);
     if (await fileExists(accountFile)) {
       return { error: "The account is already saved." };
@@ -45,7 +45,7 @@ async function fileExists(filePath: URL) {
 export async function getBettingUser(discordId: string) {
   try {
     const rootPath = import.meta.url.split("dist/")[0];
-    const usersFolder = new URL("users/", rootPath);
+    const usersFolder = new URL("data/users/", rootPath);
     const userFile = new URL(`${discordId}.json`, usersFolder);
 
     if (await fileExists(userFile)) {
@@ -71,7 +71,7 @@ export async function getBettingUser(discordId: string) {
 export async function getActiveGame(summonerId: string) {
   try {
     const rootPath = import.meta.url.split("dist/")[0];
-    const activeBetsFolder = new URL("bets/active/", rootPath);
+    const activeBetsFolder = new URL("data/bets/active/", rootPath);
     const gameFile = new URL(`${summonerId}.json`, activeBetsFolder);
     if (await fileExists(gameFile)) {
       const game: Match = JSON.parse(await fs.readFile(gameFile, "utf8"));
@@ -93,7 +93,7 @@ export async function getActiveGame(summonerId: string) {
 export async function getActiveGames() {
   try {
     const rootPath = import.meta.url.split("dist/")[0];
-    const activeBetsFolder = new URL("bets/active/", rootPath);
+    const activeBetsFolder = new URL("data/bets/active/", rootPath);
     const gameFiles = await fs.readdir(activeBetsFolder);
 
     if (gameFiles.length === 0) {
@@ -119,7 +119,7 @@ export async function getActiveGames() {
 export async function moveFinishedGame(game: Match, win: boolean) {
   try {
     const rootPath = import.meta.url.split("dist/")[0];
-    const activeBetsFolder = new URL("bets/active/", rootPath);
+    const activeBetsFolder = new URL("data/bets/active/", rootPath);
     const gameFile = new URL(`${game.summonerId}.json`, activeBetsFolder);
     if (!(await fileExists(gameFile))) {
       return {
@@ -127,7 +127,7 @@ export async function moveFinishedGame(game: Match, win: boolean) {
       };
     }
 
-    const archiveBetsFolder = new URL("bets/archive/", rootPath);
+    const archiveBetsFolder = new URL("data/bets/archive/", rootPath);
     const newGameFile = new URL(`${game.summonerId}.json`, archiveBetsFolder);
     await fs.rename(gameFile, newGameFile);
     await fs.writeFile(newGameFile, JSON.stringify({ ...game, win }));
@@ -143,7 +143,7 @@ export async function updateActiveGame(game: Match) {
   const summonerId = game.summonerId;
   try {
     const rootPath = import.meta.url.split("dist/")[0];
-    const activeBetsFolder = new URL("bets/active/", rootPath);
+    const activeBetsFolder = new URL("data/bets/active/", rootPath);
     const gameFile = new URL(`${summonerId}.json`, activeBetsFolder);
     await fs.writeFile(gameFile, JSON.stringify(game));
 
@@ -157,7 +157,7 @@ export async function updateUser(user: BettingUser) {
   const { discordId } = user;
   try {
     const rootPath = import.meta.url.split("dist/")[0];
-    const usersFolder = new URL("users/", rootPath);
+    const usersFolder = new URL("data/users/", rootPath);
     const userFile = new URL(`${discordId}.json`, usersFolder);
 
     user.currency.tzapi = Math.floor(user.currency.tzapi * 10) / 10;
@@ -242,7 +242,7 @@ export async function handleLoserBetResult(users: AmountByUser[]) {
 export async function getLeaderboard() {
   try {
     const rootPath = import.meta.url.split("dist/")[0];
-    const userFolderPath = new URL("users/", rootPath);
+    const userFolderPath = new URL("data/users/", rootPath);
     const userFolder = await fs.readdir(userFolderPath);
 
     const users: BettingUser[] = [];
@@ -275,7 +275,7 @@ export async function getLeaderboard() {
 export async function getAccounts() {
   try {
     const rootPath = import.meta.url.split("dist/")[0];
-    const accountsFolderPath = new URL("accounts/", rootPath);
+    const accountsFolderPath = new URL("data/accounts/", rootPath);
     const accountsFolder = await fs.readdir(accountsFolderPath);
 
     const accounts: Account[] = [];
@@ -298,7 +298,7 @@ export function getAccountsSync() {
   const accounts: Account[] = [];
 
   const rootPath = import.meta.url.split("dist/")[0];
-  const accountsFolder = new URL("accounts/", rootPath);
+  const accountsFolder = new URL("data/accounts/", rootPath);
   const accountFiles = fsSync.readdirSync(accountsFolder);
   for (const file of accountFiles) {
     const filePath = new URL(file, accountsFolder);
