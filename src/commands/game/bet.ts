@@ -141,7 +141,7 @@ export default {
         embeds: [embed],
         components: [],
       });
-      interaction.followUp({
+      await interaction.followUp({
         content: "Betting window has closed. Better luck on the next one!",
         flags: MessageFlags.Ephemeral,
       });
@@ -194,7 +194,7 @@ async function createCollector(
         embeds: [embed],
         components: [],
       });
-      buttonInteraction.followUp({
+      await buttonInteraction.followUp({
         content: "Betting window has closed. Better luck on the next one!",
         flags: MessageFlags.Ephemeral,
       });
@@ -212,7 +212,7 @@ async function createCollector(
         embeds: [embed],
         components: [],
       });
-      buttonInteraction.followUp({
+      await buttonInteraction.followUp({
         content: error,
         flags: MessageFlags.Ephemeral,
       });
