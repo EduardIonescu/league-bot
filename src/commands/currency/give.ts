@@ -36,6 +36,13 @@ export default {
       return;
     }
 
+    if (giverDiscordId === receiverDiscordId) {
+      await interaction.editReply({
+        content: "You fool. You tried to give tzapi to yourself!",
+      });
+      return;
+    }
+
     const { error: receiverError, user: receiverUser } = await getBettingUser(
       receiverDiscordId
     );
