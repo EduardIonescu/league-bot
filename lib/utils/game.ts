@@ -1,5 +1,4 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
-import * as dotenv from "dotenv";
 import * as fsSync from "node:fs";
 import * as fs from "node:fs/promises";
 import {
@@ -7,97 +6,16 @@ import {
   DEFAULT_USER,
   loseButtons,
   winButtons,
-} from "./constants.js";
+} from "../constants.js";
 import {
-  AccountData,
-  FailedRequest,
-  MatchResult,
-  SpectatorData,
-} from "./types.js";
-
-dotenv.config();
-
-export type RegionRiot = "americas" | "europe";
-export type Region = "eun1" | "euw1" | "na1";
-export type SummonerId = { puuid: string; gameName: string; tagLine: string };
-export type Account = {
-  gameName: string;
-  tagLine: string;
-  summonerPUUID: string;
-  region: Region;
-};
-
-export type BettingUser = {
-  discordId: string;
-  currency: Currencies;
-  timestamp: Date;
-  data: {
-    timesBet: number;
-    wins: number;
-    loses: number;
-    currencyWon: number;
-    currencyLost: number;
-  };
-};
-export type Currencies = { tzapi: number; nicu: number };
-
-export type Bet = {
-  discordId: string;
-  amount: number;
-  win: boolean;
-  timestamp: Date;
-  inGameTime: number;
-};
-export type Match = {
-  gameId: number;
-  player: string;
-  gameType: string;
-  gameMode: string;
-  gameQueueConfigId: number;
-  summonerId: string;
-  inGameTime: number;
-  gameStartTime: number;
-  region: Region;
-  channelId: string;
-  againstBot: boolean;
-  bets: Bet[];
-};
-
-const headers = {
-  "X-Riot-Token": process.env.LEAGUE_API ?? "",
-};
-
-export async function getSummonerId(name: string, tag: string) {
-  const endpoint =
-    "https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id";
-  const url = `${endpoint}/${name}/${tag}`;
-
-  try {
-    const response = await fetch(url, { headers });
-
-    const summonerId = (await response.json()) as SummonerId;
-
-    return summonerId;
-  } catch (err) {
-    console.error(err);
-    return;
-  }
-}
-
-export async function getSpectatorData(summonerPUUID: string, region: Region) {
-  const endpoint = `https://${region}.api.riotgames.com/lol/spectator/v5/active-games/by-summoner`;
-  const url = `${endpoint}/${summonerPUUID}`;
-
-  try {
-    const response = await fetch(url, { headers });
-
-    const spectatorData: FailedRequest | SpectatorData = await response.json();
-    return spectatorData;
-  } catch (err) {
-    console.error(err);
-    return;
-  }
-}
+  AmountByUser,
+  Bet,
+  BettingUser,
+  Choice,
+  Match,
+} from "../types/common.js";
+import { Account } from "../types/riot";
+import { toTitleCase } from "./common.js";
 
 export async function writeAccountToFile(account: Account) {
   const nameAndTag = (account.gameName + "_" + account.tagLine).toLowerCase();
@@ -122,14 +40,6 @@ async function fileExists(filePath: URL) {
   } catch (err) {
     return false;
   }
-}
-
-export function toTitleCase(str: string) {
-  return str
-    .toLocaleLowerCase()
-    .split(" ")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ");
 }
 
 export async function getBettingUser(discordId: string) {
@@ -263,54 +173,6 @@ export function canBetOnActiveGame(gameStartTime: number) {
 
   return differenceInSeconds <= BETS_CLOSE_AT_GAME_LENGTH * 60;
 }
-
-/** @param matchId is for example `NA1_5201383209`. It needs the region prefix */
-export async function getFinishedMatch(
-  matchId: string,
-  region: RegionRiot = "europe"
-) {
-  const endpoint = `https://${region}.api.riotgames.com/lol/match/v5/matches`;
-  const url = `${endpoint}/${matchId.toUpperCase()}`;
-  try {
-    const response = await fetch(url, { headers });
-
-    const match = (await response.json()) as FailedRequest | MatchResult;
-
-    if (!match || ("status" in match && match.status.status_code)) {
-      return { active: true, match: undefined };
-    }
-
-    return { active: false, match: match as MatchResult };
-  } catch (err) {
-    console.error(err);
-    return { active: false, match: undefined };
-  }
-}
-
-/** It needs the `summonerId`, not to be confused with summonerPUUID  */
-export async function getAccountData(summonerId: string, region: Region) {
-  const url = `https://${region}.api.riotgames.com/lol/league/v4/entries/by-summoner/${summonerId}`;
-  try {
-    const response = await fetch(url, { headers });
-    const account = (await response.json()) as FailedRequest | AccountData[];
-
-    if (!account || typeof account === "string" || "status" in account) {
-      return { error: "Failed to fetch", account: undefined };
-    }
-
-    return { error: undefined, account };
-  } catch (err) {
-    console.error(err);
-    return { error: "Failed to fetch", account: undefined };
-  }
-}
-
-export type AmountByUser = {
-  discordId: string;
-  amount: number;
-  winnings?: number;
-  loss?: number;
-};
 
 export async function handleMatchOutcome(game: Match, win: boolean) {
   const { error, game: activeGame } = await getActiveGame(game.summonerId);
@@ -447,7 +309,6 @@ export function getAccountsSync() {
   return accounts;
 }
 
-export type Choice = { name: string; value: string };
 export function formatChoices(accounts: Account[]) {
   const choices: Choice[] = accounts.map((account) => ({
     name: formatPlayerName(account.gameName, account.tagLine),

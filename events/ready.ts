@@ -6,16 +6,16 @@ import {
   RestOrArray,
 } from "discord.js";
 import { setTimeout } from "node:timers/promises";
-import { CHECK_GAME_FINISHED_INTERVAL } from "../constants.js";
+import { CHECK_GAME_FINISHED_INTERVAL } from "../lib/constants.js";
+import { AmountByUser } from "../lib/types/common.js";
 import {
-  AmountByUser,
   getActiveGames,
-  getFinishedMatch,
   handleLoserBetResult,
   handleMatchOutcome,
   handleWinnerBetResult,
   moveFinishedGame,
-} from "../utils.js";
+} from "../lib/utils/game.js";
+import { getFinishedMatch } from "../lib/utils/riot.js";
 
 export default {
   name: Events.ClientReady,

@@ -1,5 +1,5 @@
 import { CommandInteraction, SlashCommandBuilder } from "discord.js";
-import { getLeaderboard } from "../../utils.js";
+import { getLeaderboard } from "../../lib/utils/game.js";
 
 export default {
   cooldown: 5,

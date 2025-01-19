@@ -11,15 +11,10 @@ import {
 } from "discord.js";
 import { setTimeout } from "node:timers/promises";
 import puppeteer from "puppeteer";
-import { LiveGameHTML } from "../../components.js";
-import { SpectatorParticipant } from "../../types.js";
-import {
-  formatPlayerName,
-  getAccountData,
-  getAccounts,
-  getSpectatorData,
-  Region,
-} from "../../utils.js";
+import { LiveGameHTML } from "../../lib/components.js";
+import { Region, SpectatorParticipant } from "../../lib/types/riot.js";
+import { formatPlayerName, getAccounts } from "../../lib/utils/game.js";
+import { getAccountData, getSpectatorData } from "../../lib/utils/riot.js";
 
 export default {
   cooldown: 10,
@@ -76,6 +71,7 @@ export default {
     const playerButtonsRow = new ActionRowBuilder<ButtonBuilder>();
     for (const account of accountsInGame) {
       const player = formatPlayerName(account.gameName, account.tagLine);
+
       const isInGameMessage = "is in game since";
       const relativeTime = time(
         new Date(account.gameStartTime),

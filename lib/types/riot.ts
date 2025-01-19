@@ -1,17 +1,25 @@
-export type Currency = "nicu" | "tzapi";
+export type RegionRiot = "americas" | "europe";
+export type Region = "eun1" | "euw1" | "na1";
+export type SummonerId = { puuid: string; gameName: string; tagLine: string };
+export type Account = {
+  gameName: string;
+  tagLine: string;
+  summonerPUUID: string;
+  region: Region;
+};
 
-export interface MatchResult {
+export type MatchResult = {
   metadata: Metadata;
   info: Info;
-}
+};
 
-export interface Metadata {
+export type Metadata = {
   dataVersion: string;
   matchId: string;
   participants: string[];
-}
+};
 
-export interface Info {
+export type Info = {
   endOfGameResult: string;
   gameCreation: number;
   gameDuration: number;
@@ -28,9 +36,9 @@ export interface Info {
   queueId: number;
   teams: Team[];
   tournamentCode: string;
-}
+};
 
-export interface Participant {
+export type Participant = {
   allInPings: number;
   assistMePings: number;
   assists: number;
@@ -164,9 +172,9 @@ export interface Participant {
   wardsKilled: number;
   wardsPlaced: number;
   win: boolean;
-}
+};
 
-export interface Challenges {
+export type Challenges = {
   "12AssistStreakCount": number;
   HealFromMapSources: number;
   InfernalScalePickup: number;
@@ -304,9 +312,9 @@ export interface Challenges {
   firstTurretKilledTime?: number;
   highestCrowdControlScore?: number;
   highestWardKills?: number;
-}
+};
 
-export interface Missions {
+export type Missions = {
   playerScore0: number;
   playerScore1: number;
   playerScore2: number;
@@ -319,45 +327,45 @@ export interface Missions {
   playerScore9: number;
   playerScore10: number;
   playerScore11: number;
-}
+};
 
-export interface Perks {
+export type Perks = {
   statPerks: StatPerks;
   styles: Style[];
-}
+};
 
-export interface StatPerks {
+export type StatPerks = {
   defense: number;
   flex: number;
   offense: number;
-}
+};
 
-export interface Style {
+export type Style = {
   description: string;
   selections: Selection[];
   style: number;
-}
+};
 
-export interface Selection {
+export type Selection = {
   perk: number;
   var1: number;
   var2: number;
   var3: number;
-}
+};
 
-export interface Team {
+export type Team = {
   bans: Ban[];
   objectives: Objectives;
   teamId: number;
   win: boolean;
-}
+};
 
-export interface Ban {
+export type Ban = {
   championId: number;
   pickTurn: number;
-}
+};
 
-export interface Objectives {
+export type Objectives = {
   baron: Baron;
   champion: Champion;
   dragon: Dragon;
@@ -365,52 +373,52 @@ export interface Objectives {
   inhibitor: Inhibitor;
   riftHerald: RiftHerald;
   tower: Tower;
-}
+};
 
-export interface Baron {
+export type Baron = {
   first: boolean;
   kills: number;
-}
+};
 
-export interface Champion {
+export type Champion = {
   first: boolean;
   kills: number;
-}
+};
 
-export interface Dragon {
+export type Dragon = {
   first: boolean;
   kills: number;
-}
+};
 
-export interface Horde {
+export type Horde = {
   first: boolean;
   kills: number;
-}
+};
 
-export interface Inhibitor {
+export type Inhibitor = {
   first: boolean;
   kills: number;
-}
+};
 
-export interface RiftHerald {
+export type RiftHerald = {
   first: boolean;
   kills: number;
-}
+};
 
-export interface Tower {
+export type Tower = {
   first: boolean;
   kills: number;
-}
+};
 
-export interface FailedRequest {
+export type FailedRequest = {
   status: {
     message: string;
     status_code: number;
   };
-}
+};
 
 // SPECTATOR
-export interface SpectatorData {
+export type SpectatorData = {
   gameId: number;
   mapId: number;
   gameMode: string;
@@ -422,9 +430,9 @@ export interface SpectatorData {
   bannedChampions: BannedChampion[];
   gameStartTime: number;
   gameLength: number;
-}
+};
 
-export interface SpectatorParticipant {
+export type SpectatorParticipant = {
   puuid: string;
   teamId: number;
   spell1Id: number;
@@ -435,27 +443,27 @@ export interface SpectatorParticipant {
   bot: boolean;
   summonerId: string;
   gameCustomizationObjects: any[];
-  perks: Perks;
-}
+  perks: SpectatorPerks;
+};
 
-export interface Perks {
+export type SpectatorPerks = {
   perkIds: number[];
   perkStyle: number;
   perkSubStyle: number;
-}
+};
 
-export interface Observers {
+export type Observers = {
   encryptionKey: string;
-}
+};
 
-export interface BannedChampion {
+export type BannedChampion = {
   championId: number;
   teamId: number;
   pickTurn: number;
-}
+};
 
 // League Entries API
-export interface AccountData {
+export type AccountData = {
   leagueId: string;
   queueType: string;
   tier: string;
@@ -468,5 +476,5 @@ export interface AccountData {
   inactive: boolean;
   freshBlood: boolean;
   hotStreak: boolean;
-}
+};
 [];

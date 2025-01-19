@@ -17,7 +17,7 @@ for (const folder of commandFolders) {
     .readdirSync(folderPath)
     .filter((file) => file.endsWith(".js"));
 
-  console.log("commandFiles", commandFiles);
+  console.log(folder, commandFiles);
   // Grab the SlashCommandBuilder#toJSON() output of each command's data for deployment
   for (const file of commandFiles) {
     const filePath = new URL(file, folderPath);

@@ -9,9 +9,9 @@ import {
   SlashCommandBuilder,
   TextBasedChannel,
 } from "discord.js";
-import { loseButtons, winButtons } from "../../constants.js";
+import { loseButtons, winButtons } from "../../lib/constants.js";
+import { Bet, Match } from "../../lib/types/common.js";
 import {
-  Bet,
   bettingButtons,
   canBetOnActiveGame,
   formatChoices,
@@ -19,12 +19,11 @@ import {
   getAccountsSync,
   getActiveGame,
   getBettingUser,
-  getSpectatorData,
   getTotalBets,
-  Match,
   updateActiveGame,
   updateUser,
-} from "../../utils.js";
+} from "../../lib/utils/game.js";
+import { getSpectatorData } from "../../lib/utils/riot.js";
 
 const accounts = getAccountsSync();
 const choices = formatChoices(accounts);

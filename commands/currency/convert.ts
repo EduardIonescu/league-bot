@@ -1,7 +1,7 @@
 import { CommandInteraction, SlashCommandBuilder } from "discord.js";
-import { NICU_IN_TZAPI } from "../../constants.js";
-import { Currency } from "../../types.js";
-import { Currencies, getBettingUser, updateUser } from "../../utils.js";
+import { NICU_IN_TZAPI } from "../../lib/constants.js";
+import { Currencies, Currency } from "../../lib/types/common.js";
+import { getBettingUser, updateUser } from "../../lib/utils/game.js";
 
 const convertChoices = [
   { name: "Tzapi", value: "tzapi" },

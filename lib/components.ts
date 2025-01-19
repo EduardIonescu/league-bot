@@ -1,5 +1,5 @@
-import summonerSpells from "./assets/summonerSpells.js";
-import { AccountData } from "./types.js";
+import summonerSpells from "../assets/summonerSpells.js";
+import { AccountData } from "./types/riot.js";
 
 export type Player = {
   rankedStats?: AccountData | undefined;

@@ -1,10 +1,8 @@
 import { SlashCommandBuilder } from "discord.js";
-import {
-  Account,
-  getSummonerId,
-  toTitleCase,
-  writeAccountToFile,
-} from "../../utils.js";
+import { Account } from "../../lib/types/riot";
+import { toTitleCase } from "../../lib/utils/common.js";
+import { writeAccountToFile } from "../../lib/utils/game.js";
+import { getSummonerId } from "../../lib/utils/riot.js";
 
 type Region = "eun1" | "euw1";
 

@@ -1,5 +1,5 @@
 import { CommandInteraction, SlashCommandBuilder } from "discord.js";
-import { getBettingUser, updateUser } from "../../utils.js";
+import { getBettingUser, updateUser } from "../../lib/utils/game.js";
 
 export default {
   cooldown: 10,
