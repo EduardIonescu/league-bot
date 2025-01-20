@@ -46,3 +46,13 @@ export type AmountByUser = {
 };
 
 export type Choice = { name: string; value: string };
+
+export type Lane = "top" | "jungle" | "mid" | "bot" | "support";
+export type Champion = { id: number; name: string; lanes: Lane[] };
+
+export type SummonerSpell = {
+  key: number;
+  name: string;
+  id: string;
+  weights: { [key in Lane]?: number };
+};

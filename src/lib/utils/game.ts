@@ -1,6 +1,9 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
 import * as fsSync from "node:fs";
 import * as fs from "node:fs/promises";
+import champions from "../../assets/champions.js";
+import summonerSpells from "../../assets/summonerSpells.js";
+import { ParticipantStats } from "../components.js";
 import {
   BETS_CLOSE_AT_GAME_LENGTH,
   DEFAULT_USER,
@@ -12,9 +15,10 @@ import {
   Bet,
   BettingUser,
   Choice,
+  Lane,
   Match,
 } from "../types/common.js";
-import { Account } from "../types/riot.js";
+import { Account, SpectatorParticipant } from "../types/riot.js";
 import { toTitleCase } from "./common.js";
 
 export async function writeAccountToFile(account: Account) {
@@ -356,4 +360,90 @@ export function getTotalBets(bets: Bet[]) {
   );
 
   return { totalBetWin, totalBetLose };
+}
+
+export function calculateLaneWeights(participant: SpectatorParticipant) {
+  const spell1 = summonerSpells[participant.spell1Id];
+  const spell2 = summonerSpells[participant.spell2Id];
+
+  const weights: { [key in Lane]: number } = {
+    top: 0,
+    jungle: 0,
+    mid: 0,
+    bot: 0,
+    support: 0,
+  };
+
+  if (spell1.name === "Smite" || spell2.name === "Smite") {
+    weights.jungle += 100;
+    return weights;
+  }
+
+  const champion = champions.find((c) => c.id === participant.championId);
+
+  Object.entries(spell1.weights).forEach(
+    ([lane, weight]) => (weights[lane as Lane] += weight)
+  );
+  Object.entries(spell2.weights).forEach(
+    ([lane, weight]) => (weights[lane as Lane] += weight)
+  );
+
+  if (champion) {
+    // - 0.1 * index so the first lanes have more importance
+    champion.lanes.forEach((lane, index) =>
+      lane === "support"
+        ? (weights[lane] += 0.5 - 0.1 * index)
+        : (weights[lane] += 0.3 - 0.1 * index)
+    );
+  }
+
+  return weights;
+}
+
+export function guessTeamLanes(participants: ParticipantStats[]) {
+  const participantsByLane: ParticipantStats[] = [];
+  let { participantLane: top, newParticipants } = highestWeightLane(
+    "top",
+    participants
+  );
+  participantsByLane.push(top);
+
+  let { participantLane: jungle, newParticipants: newParticipants1 } =
+    highestWeightLane("jungle", newParticipants);
+  newParticipants = newParticipants1;
+  participantsByLane.push(jungle);
+
+  let { participantLane: mid, newParticipants: newParticipants2 } =
+    highestWeightLane("mid", newParticipants);
+  newParticipants = newParticipants2;
+  participantsByLane.push(mid);
+
+  let { participantLane: bot, newParticipants: newParticipants3 } =
+    highestWeightLane("bot", newParticipants);
+  newParticipants = newParticipants3;
+  participantsByLane.push(bot);
+
+  participantsByLane.push(newParticipants[0]);
+
+  return participantsByLane;
+}
+
+export function highestWeightLane(
+  lane: Lane,
+  participants: ParticipantStats[]
+) {
+  let participantLane: ParticipantStats = participants[0];
+  for (const participant of participants) {
+    if (
+      (participant.weights[lane] ?? 0) > (participantLane.weights[lane] ?? 0)
+    ) {
+      participantLane = participant;
+    }
+  }
+
+  const newParticipants = participants.filter(
+    (participant) => participant.riotId !== participantLane.riotId
+  );
+
+  return { participantLane, newParticipants };
 }

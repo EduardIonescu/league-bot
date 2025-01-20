@@ -1,5 +1,7 @@
 import summonerSpells from "../assets/summonerSpells.js";
+import { Lane } from "./types/common.js";
 import { AccountData } from "./types/riot.js";
+import { guessTeamLanes } from "./utils/game.js";
 
 export type Player = {
   rankedStats?: AccountData | undefined;
@@ -17,9 +19,13 @@ export type ParticipantStats = {
   championId: number;
   spell1Id: number;
   spell2Id: number;
+  weights: { [key in Lane]?: number };
 };
 
 export function LiveGameHTML(participantsStats: ParticipantStats[]) {
+  const blueSideParticipants = guessTeamLanes(participantsStats.slice(0, 5));
+  const redSideParticipants = guessTeamLanes(participantsStats.slice(5, 10));
+
   return `<!DOCTYPE html>
   <html lang="en" style="font-family: sans-serif;">
     <head>
@@ -32,8 +38,7 @@ export function LiveGameHTML(participantsStats: ParticipantStats[]) {
         <div style="font-size:40px; font-weight:bold; color: #5383E8;">
           Blue Team
         </div>
-        ${participantsStats
-          .slice(0, 5)
+        ${blueSideParticipants
           .map((p) => {
             return PlayerCard(p);
           })
@@ -44,8 +49,7 @@ export function LiveGameHTML(participantsStats: ParticipantStats[]) {
         <div style="font-size:40px; font-weight:bold; color: #E84057">
           Red Team
         </div>
-        ${participantsStats
-          .slice(5, 10)
+        ${redSideParticipants
           .map((p) => {
             return PlayerCard(p);
           })

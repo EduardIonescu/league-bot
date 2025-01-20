@@ -11,9 +11,13 @@ import {
 } from "discord.js";
 import { setTimeout } from "node:timers/promises";
 import puppeteer from "puppeteer";
-import { LiveGameHTML } from "../../lib/components.js";
+import { LiveGameHTML, ParticipantStats } from "../../lib/components.js";
 import { Region, SpectatorParticipant } from "../../lib/types/riot.js";
-import { formatPlayerName, getAccounts } from "../../lib/utils/game.js";
+import {
+  calculateLaneWeights,
+  formatPlayerName,
+  getAccounts,
+} from "../../lib/utils/game.js";
 import { getAccountData, getSpectatorData } from "../../lib/utils/riot.js";
 
 export default {
@@ -169,13 +173,15 @@ async function checkCollector(
       return;
     }
 
-    const participantsStats = [];
+    const participantsStats: ParticipantStats[] = [];
 
     for (const participant of account.participants) {
       const { error, account: participantAccount } = await getAccountData(
         participant.summonerId,
         account.region
       );
+
+      const weights = calculateLaneWeights(participant);
 
       if (participantAccount && participantAccount.length > 0) {
         const rankedStats = participantAccount.find(
@@ -189,6 +195,7 @@ async function checkCollector(
           championId: participant.championId,
           spell1Id: participant.spell1Id,
           spell2Id: participant.spell2Id,
+          weights,
         });
       } else {
         participantsStats.push({
@@ -197,6 +204,7 @@ async function checkCollector(
           championId: participant.championId,
           spell1Id: participant.spell1Id,
           spell2Id: participant.spell2Id,
+          weights,
         });
       }
     }
