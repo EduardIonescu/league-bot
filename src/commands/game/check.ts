@@ -237,7 +237,27 @@ async function checkCollector(
       content: message.content,
       components: message.components,
     });
-    await channel.send({ files: [image] });
+
+    const playerAccount = accountsInGame.find(
+      (acc) => acc.summonerPUUID === summonerPUUID
+    );
+    if (!playerAccount) {
+      await channel.send({ files: [image] });
+      return;
+    }
+
+    const player = formatPlayerName(
+      playerAccount.gameName,
+      playerAccount.tagLine
+    );
+    const button = new ButtonBuilder()
+      .setCustomId(`start-bet-${summonerPUUID}`)
+      .setLabel(`Start Bet`)
+      .setStyle(ButtonStyle.Primary);
+
+    const row = new ActionRowBuilder<ButtonBuilder>().setComponents(button);
+
+    await channel.send({ files: [image], components: [row] });
   });
 
   collector.on("end", () => {
