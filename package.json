@@ -7,7 +7,7 @@
   "scripts": {
     "start": "tsc && node ./dist/app.js",
     "dev": "concurrently --kill-others \"tsc --watch\" \"nodemon ./dist/app.js\"",
-    "register": "tsc && node deploy-commands.js"
+    "register": "tsc && node src/deploy-commands.js"
   },
   "keywords": [],
   "author": "Hara",

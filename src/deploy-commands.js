@@ -6,7 +6,7 @@ dotenv.config();
 
 const commands = [];
 
-const commandFolderPath = "./dist/commands/";
+const commandFolderPath = "../dist/commands/";
 const absoluteCommandsPath = new URL(commandFolderPath, import.meta.url);
 const commandFolders = fs.readdirSync(absoluteCommandsPath);
 
