@@ -19,7 +19,7 @@ import {
   Match,
 } from "../types/common.js";
 import { Account, SpectatorParticipant } from "../types/riot.js";
-import { toTitleCase } from "./common.js";
+import { filePathExists, formatDate, toTitleCase } from "./common.js";
 
 export async function writeAccountToFile(account: Account) {
   const nameAndTag = (account.gameName + "_" + account.tagLine).toLowerCase();
@@ -27,7 +27,7 @@ export async function writeAccountToFile(account: Account) {
     const rootPath = import.meta.url.split("dist/")[0];
     const accountsFolder = new URL("src/data/accounts/", rootPath);
     const accountFile = new URL(`${nameAndTag}.json`, accountsFolder);
-    if (await fileExists(accountFile)) {
+    if (await filePathExists(accountFile)) {
       return { error: "The account is already saved." };
     }
     await fs.writeFile(accountFile, JSON.stringify(account));
@@ -37,22 +37,13 @@ export async function writeAccountToFile(account: Account) {
   }
 }
 
-async function fileExists(filePath: URL) {
-  try {
-    await fs.access(filePath);
-    return true;
-  } catch (err) {
-    return false;
-  }
-}
-
 export async function getBettingUser(discordId: string) {
   try {
     const rootPath = import.meta.url.split("dist/")[0];
     const usersFolder = new URL("src/data/users/", rootPath);
     const userFile = new URL(`${discordId}.json`, usersFolder);
 
-    if (await fileExists(userFile)) {
+    if (await filePathExists(userFile)) {
       const user: BettingUser = JSON.parse(await fs.readFile(userFile, "utf8"));
       return { error: undefined, user };
     } else {
@@ -77,7 +68,7 @@ export async function getActiveGame(summonerId: string) {
     const rootPath = import.meta.url.split("dist/")[0];
     const activeBetsFolder = new URL("src/data/bets/active/", rootPath);
     const gameFile = new URL(`${summonerId}.json`, activeBetsFolder);
-    if (await fileExists(gameFile)) {
+    if (await filePathExists(gameFile)) {
       const game: Match = JSON.parse(await fs.readFile(gameFile, "utf8"));
       return { error: undefined, game };
     } else {
@@ -125,20 +116,27 @@ export async function moveFinishedGame(game: Match, win: boolean) {
     const rootPath = import.meta.url.split("dist/")[0];
     const activeBetsFolder = new URL("src/data/bets/active/", rootPath);
     const gameFile = new URL(`${game.summonerId}.json`, activeBetsFolder);
-    if (!(await fileExists(gameFile))) {
+    if (!(await filePathExists(gameFile))) {
       return {
         error: "Game not found.",
       };
     }
 
-    const archiveBetsFolder = new URL("src/data/bets/archive/", rootPath);
-    const newGameFile = new URL(`${game.summonerId}.json`, archiveBetsFolder);
+    const archiveBetsFolder = new URL(
+      `src/data/bets/archive/${game.summonerId}/`,
+      rootPath
+    );
+    if (!(await filePathExists(archiveBetsFolder))) {
+      await fs.mkdir(archiveBetsFolder);
+    }
+    const date = formatDate(new Date());
+    const newGameFile = new URL(`${date}.json`, archiveBetsFolder);
     await fs.rename(gameFile, newGameFile);
     await fs.writeFile(newGameFile, JSON.stringify({ ...game, win }));
     return { error: undefined };
   } catch (err) {
     return {
-      error: "Game not found.",
+      error: err,
     };
   }
 }
