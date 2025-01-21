@@ -14,6 +14,11 @@ export default {
       (acc) => acc.summonerPUUID === summonerPUUID
     );
 
-    await placeBet(interaction, account);
+    try {
+      await placeBet(interaction, account);
+      return;
+    } catch {
+      return;
+    }
   },
 };
