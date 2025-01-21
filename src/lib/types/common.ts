@@ -33,7 +33,7 @@ export type Match = {
   inGameTime: number;
   gameStartTime: number;
   region: Region;
-  channelId: string;
+  sentIn: { channelId: string; messageIds: string[] }[];
   againstBot: boolean;
   bets: Bet[];
 };

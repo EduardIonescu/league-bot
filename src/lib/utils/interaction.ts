@@ -9,7 +9,7 @@ import {
   TextBasedChannel,
 } from "discord.js";
 import { loseButtons, winButtons } from "../constants.js";
-import { Bet, Match } from "../types/common.js";
+import { Bet } from "../types/common.js";
 import { Account } from "../types/riot.js";
 import {
   bettingButtons,
@@ -41,6 +41,8 @@ export async function placeBet(
   const player = formatPlayerName(account.gameName, account.tagLine);
   let { game, error } = await getActiveGame(summonerPUUID);
 
+  const channel = interaction.channel as TextBasedChannel;
+
   if (error || !game) {
     try {
       const spectatorData = await getSpectatorData(
@@ -67,8 +69,6 @@ export async function placeBet(
         return;
       }
 
-      const channel = interaction.channel as TextBasedChannel;
-
       game = {
         gameId: spectatorData.gameId,
         region: account.region,
@@ -79,7 +79,7 @@ export async function placeBet(
         inGameTime: spectatorData.gameLength,
         summonerId: summonerPUUID,
         gameStartTime: spectatorData.gameStartTime,
-        channelId: channel.id,
+        sentIn: [{ channelId: channel.id, messageIds: [] }],
         againstBot: true,
         bets: [],
       };
@@ -135,12 +135,26 @@ export async function placeBet(
     components: [winRow, loseRow],
   });
 
-  createBetCollector(response, game, embed, winRow, loseRow);
+  const channelInGame = game.sentIn.find((s) => s.channelId === channel.id);
+  if (!channelInGame) {
+    game.sentIn.push({ channelId: channel.id, messageIds: [response.id] });
+    await updateActiveGame(game);
+  } else {
+    const isMessageIdSaved = channelInGame.messageIds.find(
+      (messageId) => messageId === response.id
+    );
+    if (!isMessageIdSaved) {
+      channelInGame.messageIds.push(response.id);
+      await updateActiveGame(game);
+    }
+  }
+
+  await createBetCollector(response, summonerPUUID, embed, winRow, loseRow);
 }
 
 export async function createBetCollector(
   message: Message,
-  game: Match,
+  summonerPUUID: string,
   embed: EmbedBuilder,
   winRow: ActionRowBuilder<ButtonBuilder>,
   loseRow: ActionRowBuilder<ButtonBuilder>
@@ -160,6 +174,22 @@ export async function createBetCollector(
       !winCustomIds.includes(buttonInteraction.customId) &&
       !loseCustomIds.includes(buttonInteraction.customId)
     ) {
+      return;
+    }
+
+    const { error: getActiveGameError, game } = await getActiveGame(
+      summonerPUUID
+    );
+
+    if (getActiveGameError || !game) {
+      await buttonInteraction.update({
+        embeds: [embed],
+        components: [],
+      });
+      await buttonInteraction.followUp({
+        content: "Game is not active",
+        flags: MessageFlags.Ephemeral,
+      });
       return;
     }
 
@@ -267,6 +297,35 @@ export async function createBetCollector(
       { name: "\u200b", value: "\u200b" }
     );
     console.log("bet made!", buttonInteraction.createdAt);
+
+    // Update all bet messages
+    for (const sentIn of game.sentIn) {
+      const channel = await buttonInteraction.client.channels.fetch(
+        sentIn.channelId
+      );
+      if (!channel || !channel.isSendable()) {
+        await buttonInteraction.update({
+          content: `Error`,
+          components: [],
+        });
+        return;
+      }
+      for (const messageId of sentIn.messageIds) {
+        try {
+          const message = await channel.messages.fetch(messageId);
+
+          if (message) {
+            await message.edit({
+              embeds: [embed],
+              components: [winRow, loseRow],
+            });
+          }
+        } catch (err) {
+          console.log(err);
+        }
+      }
+    }
+
     await buttonInteraction.update({
       embeds: [embed],
       components: [winRow, loseRow],
@@ -277,9 +336,15 @@ export async function createBetCollector(
     });
   });
 
-  collector.on("end", () => {
+  collector.on("end", async () => {
     winRow.components.forEach((button) => button.setDisabled(true));
     loseRow.components.forEach((button) => button.setDisabled(true));
-    message.edit({ components: [winRow, loseRow] });
+    try {
+      if (message && message.editable) {
+        await message.edit({ components: [winRow, loseRow] });
+      }
+    } catch (err) {
+      console.log("Error in interaction.ts ", err);
+    }
   });
 }

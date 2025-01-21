@@ -104,15 +104,18 @@ async function handleActiveBets(client: Client) {
         { name: "\u200b", value: "\u200b" }
       )
       .setTimestamp();
-    try {
-      const channel = await client.channels.fetch(game.channelId);
-      if (channel?.isSendable()) {
-        channel.send({ embeds: [embedOutcome] });
-      } else {
-        console.log("channel is not sendable");
+
+    for (const sentIn of game.sentIn) {
+      try {
+        const channel = await client.channels.fetch(sentIn.channelId);
+        if (channel?.isSendable()) {
+          channel.send({ embeds: [embedOutcome] });
+        } else {
+          console.log("channel is not sendable");
+        }
+      } catch (err) {
+        console.log(err);
       }
-    } catch (err) {
-      console.log(err);
     }
 
     const { error } = await moveFinishedGame(game, participant.win);

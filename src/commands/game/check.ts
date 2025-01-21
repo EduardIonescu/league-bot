@@ -260,10 +260,16 @@ async function checkCollector(
     await channel.send({ files: [image], components: [row] });
   });
 
-  collector.on("end", () => {
+  collector.on("end", async () => {
     playerButtonsColumns.forEach((row) =>
       row.components.forEach((button) => button.setDisabled(true))
     );
-    message.edit({ components: playerButtonsColumns });
+    try {
+      if (message && message.editable) {
+        await message.edit({ components: playerButtonsColumns });
+      }
+    } catch (err) {
+      console.log("Error in check.ts ", err);
+    }
   });
 }
