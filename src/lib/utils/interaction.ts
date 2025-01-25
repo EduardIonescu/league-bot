@@ -232,7 +232,7 @@ export async function createBetCollector(
     if (betAmount > currency.tzapi) {
       await buttonInteraction.update({
         embeds: [embed],
-        components: [],
+        components: [winRow, loseRow],
       });
       await buttonInteraction.followUp({
         content: `You don't have enough currency to bet ${betAmount}. You currently have ${currency}.`,
