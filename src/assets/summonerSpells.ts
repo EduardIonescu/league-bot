@@ -5,13 +5,13 @@ export default {
     key: 21,
     name: "Barrier",
     id: "SummonerBarrier",
-    weights: { bot: 0.3, support: 0.1, mid: 0.3 },
+    weights: { bot: 0.3, support: 0.2, mid: 0.3 },
   },
   1: {
     key: 1,
     name: "Cleanse",
     id: "SummonerBoost",
-    weights: { bot: 0.3, mid: 0.2 },
+    weights: { bot: 0.4, mid: 0.2 },
   },
   14: {
     key: 14,
