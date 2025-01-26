@@ -1,17 +1,24 @@
+import { Currencies } from "./types/common";
+
 export const winButtons = [
-  { customId: "win-1", label: "Bet 1", amount: 1 },
-  { customId: "win-10", label: "Bet 10", amount: 10 },
-  { customId: "win-100", label: "Bet 100", amount: 100 },
+  { customId: "win-1", label: "1 Tzapi", amount: 1 },
+  { customId: "win-10", label: "10 Tzapi", amount: 10 },
+  { customId: "win-100", label: "100 Tzapi", amount: 100 },
+  { customId: "win-1-nicu", label: "1 Nicu", amount: 1 },
+  { customId: "win-10-nicu", label: "10 Nicu", amount: 10 },
   // { customId: "win-custom", label: "Bet Custom" },
 ];
 
 export const loseButtons = [
-  { customId: "lose-1", label: "Bet 1", amount: 1 },
-  { customId: "lose-10", label: "Bet 10", amount: 10 },
-  { customId: "lose-100", label: "Bet 100", amount: 100 },
+  { customId: "lose-1", label: "1 Tzapi", amount: 1 },
+  { customId: "lose-10", label: "10 Tzapi", amount: 10 },
+  { customId: "lose-100", label: "100 Tzapi", amount: 100 },
+  { customId: "lose-1-nicu", label: "1 Nicu", amount: 1 },
+  { customId: "lose-10-nicu", label: "10 Nicu", amount: 10 },
   // { customId: "lose-custom", label: "Bet Custom" },
 ];
 
+export const ZERO_CURRENCIES: Currencies = { tzapi: 0, nicu: 0 };
 export const DEFAULT_USER = {
   currency: { tzapi: 100, nicu: 0 },
   data: {
@@ -19,8 +26,8 @@ export const DEFAULT_USER = {
     timesBet: 0,
     wins: 0,
     loses: 0,
-    currencyWon: 0,
-    currencyLost: 0,
+    currencyWon: ZERO_CURRENCIES,
+    currencyLost: ZERO_CURRENCIES,
   },
 };
 
