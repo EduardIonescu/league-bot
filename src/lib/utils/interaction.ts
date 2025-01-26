@@ -9,7 +9,7 @@ import {
   TextBasedChannel,
 } from "discord.js";
 import { loseButtons, winButtons } from "../constants.js";
-import { Bet } from "../types/common.js";
+import { Bet, Currency } from "../types/common.js";
 import { Account } from "../types/riot.js";
 import {
   bettingButtons,
@@ -102,14 +102,24 @@ export async function placeBet(
 
   const { totalBetWin, totalBetLose } = getTotalBets(game.bets);
 
+  const totalNicuMsg = `${totalBetWin.nicu} Nicu `;
+
   const embed = new EmbedBuilder()
     .setColor(0x0099ff)
     .setTitle("League Bets :coin:")
     .setDescription(`We betting on \`${player}\`'s match against the COMPUTER.`)
     .addFields(
       { name: "\u200b", value: "\u200b" },
-      { name: "Win", value: `${totalBetWin} Tzapi`, inline: true },
-      { name: "Lose", value: `${totalBetLose} Tzapi`, inline: true },
+      {
+        name: "Win",
+        value: `${totalNicuMsg}${totalBetWin.tzapi} Tzapi`,
+        inline: true,
+      },
+      {
+        name: "Lose",
+        value: `${totalNicuMsg}${totalBetLose.tzapi} Tzapi`,
+        inline: true,
+      },
       { name: "Total Bets Placed", value: `${game.bets.length}` },
       { name: "\u200b", value: "\u200b" }
     )
@@ -195,6 +205,14 @@ export async function createBetCollector(
 
     const win = winCustomIds.includes(buttonInteraction.customId);
     const discordId = buttonInteraction.user.id;
+    const currencyType: Currency = buttonInteraction.customId.includes("nicu")
+      ? "nicu"
+      : "tzapi";
+    const oppositeCurrencyType: Currency = buttonInteraction.customId.includes(
+      "nicu"
+    )
+      ? "tzapi"
+      : "nicu";
 
     const canBetOnGame = canBetOnActiveGame(game.gameStartTime);
     if (!canBetOnGame) {
@@ -227,15 +245,15 @@ export async function createBetCollector(
       return;
     }
 
-    const currency = bettingUser.currency;
+    const currency = bettingUser.currency[currencyType];
 
-    if (betAmount > currency.tzapi) {
+    if (betAmount > currency) {
       await buttonInteraction.update({
         embeds: [embed],
         components: [winRow, loseRow],
       });
       await buttonInteraction.followUp({
-        content: `You don't have enough currency to bet ${betAmount}. You currently have ${currency}.`,
+        content: `You don't have enough currency to bet ${betAmount}. You currently have ${currency} ${currencyType}.`,
         flags: MessageFlags.Ephemeral,
       });
       return;
@@ -263,13 +281,14 @@ export async function createBetCollector(
       }
     }
 
-    bettingUser.currency.tzapi -= betAmount;
+    bettingUser.currency[currencyType] -= betAmount;
     bettingUser.timestamp = new Date();
     bettingUser.data.timesBet += 1;
 
     const gameBet: Bet = {
       discordId,
-      amount: betAmount,
+      //@ts-ignore
+      amount: { [currencyType]: betAmount, [oppositeCurrencyType]: 0 },
       win,
       timestamp: new Date(),
       inGameTime: game.inGameTime,
@@ -289,10 +308,19 @@ export async function createBetCollector(
 
     const { totalBetWin, totalBetLose } = getTotalBets(game.bets);
 
+    const totalNicuMsg = `${totalBetWin.nicu} Nicu `;
     embed.setFields(
       { name: "\u200b", value: "\u200b" },
-      { name: "Win", value: `${totalBetWin} Tzapi`, inline: true },
-      { name: "Lose", value: `${totalBetLose} Tzapi`, inline: true },
+      {
+        name: "Win",
+        value: `${totalNicuMsg}${totalBetWin.tzapi} Tzapi`,
+        inline: true,
+      },
+      {
+        name: "Lose",
+        value: `${totalNicuMsg}${totalBetLose.tzapi} Tzapi`,
+        inline: true,
+      },
       { name: "Total Bets Placed", value: `${game.bets.length}` },
       { name: "\u200b", value: "\u200b" }
     );

@@ -9,6 +9,7 @@ import {
   DEFAULT_USER,
   loseButtons,
   winButtons,
+  ZERO_CURRENCIES,
 } from "../constants.js";
 import {
   AmountByUser,
@@ -183,9 +184,16 @@ export async function handleMatchOutcome(game: Match, win: boolean) {
     const accumulatedUser = acc.find(
       (user) => user.discordId === cur.discordId
     );
-    const amount = win === cur.win ? cur.amount : -cur.amount;
+    const outcome = win === cur.win ? 1 : -1;
+    const amount = {
+      tzapi: cur.amount.tzapi * outcome,
+      nicu: cur.amount.nicu * outcome,
+    };
     if (accumulatedUser) {
-      accumulatedUser.amount = amount + accumulatedUser.amount;
+      accumulatedUser.amount = {
+        tzapi: amount.tzapi + accumulatedUser.amount.tzapi,
+        nicu: amount.nicu + accumulatedUser.amount.nicu,
+      };
       return acc;
     }
     return [...acc, { discordId: cur.discordId, amount }];
@@ -203,15 +211,22 @@ export async function handleWinnerBetResult(users: AmountByUser[]) {
     }
 
     const tzapi =
-      user.amount + (user.winnings ?? 0) + bettingUser.currency.tzapi;
-    const currency = { ...bettingUser.currency, tzapi };
+      user.amount.tzapi +
+      (user.winnings?.tzapi ?? 0) +
+      bettingUser.currency.tzapi;
+    const nicu =
+      user.amount.nicu + (user.winnings?.nicu ?? 0) + bettingUser.currency.nicu;
+    const currency = { ...bettingUser.currency, tzapi, nicu };
     const wins = bettingUser.data.wins + 1;
-    const currencyWon = bettingUser.data.currencyWon + (user.winnings ?? 0);
+    const currencyWon = {
+      tzapi: bettingUser.data.currencyWon.tzapi + (user.winnings?.tzapi ?? 0),
+      nicu: bettingUser.data.currencyWon.nicu + (user.winnings?.nicu ?? 0),
+    };
     const data = { ...bettingUser.data, wins, currencyWon };
     const updatedUser = { ...bettingUser, timestamp, currency, data };
 
     await updateUser(updatedUser);
-    return { updatedUser, winnings: user.winnings ?? 0 };
+    return { updatedUser, winnings: user.winnings ?? ZERO_CURRENCIES };
   });
 
   return (await Promise.all(winners)).filter((winner) => winner != undefined);
@@ -228,14 +243,23 @@ export async function handleLoserBetResult(users: AmountByUser[]) {
 
     const loses = bettingUser.data.loses + 1;
     const tzapi =
-      bettingUser.currency.tzapi + Math.abs(user.amount) - (user.loss ?? 0);
-    const currency = { ...bettingUser.currency, tzapi };
-    const currencyLost = bettingUser.data.currencyLost + (user.loss ?? 0);
+      bettingUser.currency.tzapi +
+      Math.abs(user.amount.tzapi) -
+      (user.loss?.tzapi ?? 0);
+    const nicu =
+      bettingUser.currency.nicu +
+      Math.abs(user.amount.nicu) -
+      (user.loss?.nicu ?? 0);
+    const currency = { ...bettingUser.currency, tzapi, nicu };
+    const currencyLost = {
+      tzapi: bettingUser.data.currencyLost.tzapi + (user.loss?.tzapi ?? 0),
+      nicu: bettingUser.data.currencyLost.nicu + (user.loss?.nicu ?? 0),
+    };
     const data = { ...bettingUser.data, loses, currencyLost };
     const updatedUser = { ...bettingUser, timestamp, currency, data };
 
     await updateUser(updatedUser);
-    return { updatedUser, loss: user.loss ?? 0 };
+    return { updatedUser, loss: user.loss ?? ZERO_CURRENCIES };
   });
 
   return (await Promise.all(losers)).filter((loser) => loser != undefined);
@@ -349,12 +373,19 @@ export function bettingButtons() {
 
 export function getTotalBets(bets: Bet[]) {
   const totalBetWin = bets.reduce(
-    (acc, cur) => acc + (cur.win ? cur.amount : 0),
-    0
+    (acc, cur) => ({
+      tzapi: acc.tzapi + (cur.win ? cur.amount.tzapi : 0),
+      nicu: acc.nicu + (cur.win ? cur.amount.nicu : 0),
+    }),
+    ZERO_CURRENCIES
   );
   const totalBetLose = bets.reduce(
-    (acc, cur) => acc + (cur.win ? 0 : cur.amount),
-    0
+    (acc, cur) => ({
+      tzapi: acc.tzapi + (cur.win ? 0 : cur.amount.tzapi),
+      nicu: acc.nicu + (cur.win ? 0 : cur.amount.nicu),
+    }),
+
+    ZERO_CURRENCIES
   );
 
   return { totalBetWin, totalBetLose };

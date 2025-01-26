@@ -8,8 +8,8 @@ export type BettingUser = {
     timesBet: number;
     wins: number;
     loses: number;
-    currencyWon: number;
-    currencyLost: number;
+    currencyWon: Currencies;
+    currencyLost: Currencies;
   };
 };
 export type Currencies = { tzapi: number; nicu: number };
@@ -17,7 +17,7 @@ export type Currency = "nicu" | "tzapi";
 
 export type Bet = {
   discordId: string;
-  amount: number;
+  amount: Currencies;
   win: boolean;
   timestamp: Date;
   inGameTime: number;
@@ -40,9 +40,9 @@ export type Match = {
 
 export type AmountByUser = {
   discordId: string;
-  amount: number;
-  winnings?: number;
-  loss?: number;
+  amount: Currencies;
+  winnings?: Currencies;
+  loss?: Currencies;
 };
 
 export type Choice = { name: string; value: string };

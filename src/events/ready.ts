@@ -40,7 +40,7 @@ async function handleActiveBets(client: Client) {
     const summonerPUUID = game.summonerId;
     const gameIdWithRegion = `${game.region.toUpperCase()}_${game.gameId}`;
     const { active, match } = await getFinishedMatch(gameIdWithRegion);
-    if (active || !match?.info.endOfGameResult) {
+    if (active || !match?.info?.endOfGameResult) {
       await setTimeout(1_000);
       continue;
     }
@@ -60,8 +60,15 @@ async function handleActiveBets(client: Client) {
     let winners: AmountByUser[] = [];
     let losers: AmountByUser[] = [];
     for (const bet of betByUser) {
-      if (bet.amount < 0) {
-        losers.push({ ...bet, loss: Math.abs(bet.amount) });
+      if (bet.amount.tzapi < 0 || bet.amount.nicu < 0) {
+        losers.push({
+          ...bet,
+          loss: {
+            ...bet.loss,
+            tzapi: Math.abs(bet.amount.tzapi),
+            nicu: Math.abs(bet.amount.nicu),
+          },
+        });
         continue;
       }
 
@@ -76,20 +83,31 @@ async function handleActiveBets(client: Client) {
     console.log("updatedLosers", updatedLosers);
     const fieldsWinners: RestOrArray<APIEmbedField> = [
       { name: "Winners :star_struck:", value: "Nice job bois" },
-      ...updatedWinners.map((winner) => ({
-        name: `\u200b`,
-        value: `<@${winner.updatedUser.discordId}> won ${winner.winnings} Tzapi!`,
-      })),
+      ...updatedWinners.map((winner) => {
+        const { tzapi, nicu } = winner.winnings;
+        const tzapiMsg = tzapi ? `${tzapi} Tzapi` : "";
+        const nicuMsg = nicu ? `${nicu} Nicu ` : "";
+        return {
+          name: `\u200b`,
+          value: `<@${winner.updatedUser.discordId}> won ${nicuMsg}${tzapiMsg}!`,
+        };
+      }),
     ];
     const fieldsLosers: RestOrArray<APIEmbedField> = [
       {
         name: "Losers :person_in_manual_wheelchair:",
         value: "Hahahaha git gut",
       },
-      ...updatedLosers.map((loser) => ({
-        name: `\u200b`,
-        value: `<@${loser.updatedUser.discordId}> lost ${loser.loss} Tzapi!`,
-      })),
+      ...updatedLosers.map((loser) => {
+        const { tzapi, nicu } = loser.loss;
+        const tzapiMsg = tzapi ? `${tzapi} Tzapi` : "";
+        const nicuMsg = nicu ? `${nicu} Nicu ` : "";
+
+        return {
+          name: `\u200b`,
+          value: `<@${loser.updatedUser.discordId}> lost ${nicuMsg}${tzapiMsg}!`,
+        };
+      }),
     ];
     const embedOutcome = new EmbedBuilder()
       .setColor(0x0099ff)
@@ -114,7 +132,7 @@ async function handleActiveBets(client: Client) {
           console.log("channel is not sendable");
         }
       } catch (err) {
-        console.log(err);
+        console.log("error sending message", err);
       }
     }
 
