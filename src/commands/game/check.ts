@@ -146,6 +146,10 @@ async function checkCollector(
     if (!buttonInteraction.customId.startsWith(`check-`)) {
       return;
     }
+    if (!message.editable) {
+      console.log("Message is not editable", message);
+      return;
+    }
 
     // The buttons are of format `check-${summonerPUUID}` so slice at `-` to get it
     const summonerPUUID = buttonInteraction.customId.slice(6);
@@ -246,10 +250,6 @@ async function checkCollector(
       return;
     }
 
-    const player = formatPlayerName(
-      playerAccount.gameName,
-      playerAccount.tagLine
-    );
     const button = new ButtonBuilder()
       .setCustomId(`start-bet-${summonerPUUID}`)
       .setLabel(`Start Bet`)
