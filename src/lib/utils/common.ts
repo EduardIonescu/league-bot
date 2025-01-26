@@ -26,3 +26,14 @@ export async function filePathExists(filePath: URL) {
     return false;
   }
 }
+
+export async function capitalize(sentence: string) {
+  let newSentenceArray = [];
+  const splitSentence = sentence.split(" ");
+  for (const word of splitSentence) {
+    const capitalizedWord = word[0].toUpperCase() + word.slice(1);
+    newSentenceArray.push(capitalizedWord);
+  }
+
+  return newSentenceArray.join(" ");
+}

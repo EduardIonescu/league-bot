@@ -11,6 +11,7 @@ import {
 import { loseButtons, winButtons } from "../constants.js";
 import { Bet, Currency } from "../types/common.js";
 import { Account } from "../types/riot.js";
+import { capitalize } from "./common.js";
 import {
   bettingButtons,
   canBetOnActiveGame,
@@ -102,7 +103,10 @@ export async function placeBet(
 
   const { totalBetWin, totalBetLose } = getTotalBets(game.bets);
 
-  const totalNicuMsg = `${totalBetWin.nicu} Nicu `;
+  const totalNicuWinMsg = totalBetWin.nicu ? `${totalBetWin.nicu} Nicu ` : "";
+  const totalNicuLoseMsg = totalBetLose.nicu
+    ? `${totalBetLose.nicu} Nicu `
+    : "";
 
   const embed = new EmbedBuilder()
     .setColor(0x0099ff)
@@ -112,12 +116,12 @@ export async function placeBet(
       { name: "\u200b", value: "\u200b" },
       {
         name: "Win",
-        value: `${totalNicuMsg}${totalBetWin.tzapi} Tzapi`,
+        value: `${totalNicuWinMsg}${totalBetWin.tzapi} Tzapi`,
         inline: true,
       },
       {
         name: "Lose",
-        value: `${totalNicuMsg}${totalBetLose.tzapi} Tzapi`,
+        value: `${totalNicuLoseMsg}${totalBetLose.tzapi} Tzapi`,
         inline: true,
       },
       { name: "Total Bets Placed", value: `${game.bets.length}` },
@@ -253,7 +257,9 @@ export async function createBetCollector(
         components: [winRow, loseRow],
       });
       await buttonInteraction.followUp({
-        content: `You don't have enough currency to bet ${betAmount}. You currently have ${currency} ${currencyType}.`,
+        content: `You don't have enough currency to bet ${betAmount}. You currently have ${currency} ${capitalize(
+          currencyType
+        )}.`,
         flags: MessageFlags.Ephemeral,
       });
       return;
@@ -308,17 +314,20 @@ export async function createBetCollector(
 
     const { totalBetWin, totalBetLose } = getTotalBets(game.bets);
 
-    const totalNicuMsg = `${totalBetWin.nicu} Nicu `;
+    const totalNicuWinMsg = totalBetWin.nicu ? `${totalBetWin.nicu} Nicu ` : "";
+    const totalNicuLoseMsg = totalBetLose.nicu
+      ? `${totalBetLose.nicu} Nicu `
+      : "";
     embed.setFields(
       { name: "\u200b", value: "\u200b" },
       {
         name: "Win",
-        value: `${totalNicuMsg}${totalBetWin.tzapi} Tzapi`,
+        value: `${totalNicuWinMsg}${totalBetWin.tzapi} Tzapi`,
         inline: true,
       },
       {
         name: "Lose",
-        value: `${totalNicuMsg}${totalBetLose.tzapi} Tzapi`,
+        value: `${totalNicuLoseMsg}${totalBetLose.tzapi} Tzapi`,
         inline: true,
       },
       { name: "Total Bets Placed", value: `${game.bets.length}` },
@@ -359,7 +368,9 @@ export async function createBetCollector(
       components: [winRow, loseRow],
     });
     await buttonInteraction.followUp({
-      content: `You've bet ${betAmount} Tzapi on ${win ? "win" : "lose"!}`,
+      content: `You've bet ${betAmount} ${capitalize(currencyType)} on ${
+        win ? "win" : "lose"!
+      }`,
       flags: MessageFlags.Ephemeral,
     });
   });
