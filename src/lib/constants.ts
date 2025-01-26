@@ -31,10 +31,14 @@ export const DEFAULT_USER = {
   },
 };
 
-/** The game length at which games should not be available anymore in MINUTES  */
+/** The game length at which games should not be available anymore in MINUTES */
 export const BETS_CLOSE_AT_GAME_LENGTH = 4;
 
-/** Check if an active game has ended every n seconds  */
+/** When a match should be considered a remake in MINUTES */
+export const REMAKE_GAME_LENGTH_CAP = 10;
+
+/** Check if an active game has ended every n seconds */
 export const CHECK_GAME_FINISHED_INTERVAL = 30;
 
+/** For currency exchange */
 export const NICU_IN_TZAPI = 1000;

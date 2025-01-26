@@ -6,14 +6,19 @@ import {
   RestOrArray,
 } from "discord.js";
 import { setTimeout } from "node:timers/promises";
-import { CHECK_GAME_FINISHED_INTERVAL } from "../lib/constants.js";
+import {
+  CHECK_GAME_FINISHED_INTERVAL,
+  REMAKE_GAME_LENGTH_CAP,
+} from "../lib/constants.js";
 import { AmountByUser } from "../lib/types/common.js";
 import {
   getActiveGames,
   handleLoserBetResult,
   handleMatchOutcome,
+  handleRemake,
   handleWinnerBetResult,
   moveFinishedGame,
+  refundUsers,
 } from "../lib/utils/game.js";
 import { getFinishedMatch } from "../lib/utils/riot.js";
 
@@ -45,6 +50,64 @@ async function handleActiveBets(client: Client) {
       continue;
     }
 
+    // Handle Remake
+    if (match.info.gameDuration < REMAKE_GAME_LENGTH_CAP * 60) {
+      const betByUser = await handleRemake(game);
+
+      const updatedUsers = await refundUsers(betByUser);
+
+      const usersFields: RestOrArray<APIEmbedField> = [
+        { name: "Refunds :triumph:", value: `\u200b` },
+        ...updatedUsers.map((user) => {
+          const { tzapi, nicu } = user.refund;
+          const tzapiMsg = tzapi ? `${tzapi} Tzapi` : "";
+          const nicuMsg = nicu ? `${nicu} Nicu ` : "";
+          return {
+            name: `\u200b`,
+            value: `<@${user.updatedUser.discordId}> was refunded ${nicuMsg}${tzapiMsg}!`,
+          };
+        }),
+      ];
+
+      const embedOutcome = new EmbedBuilder()
+        .setColor(0x0099ff)
+        .setTitle("League Bets :coin:")
+        .setDescription(
+          `The bet on \`${game.player}\`'s match has resolved. It was a remake`
+        )
+        .addFields(
+          { name: "Total Bets Placed", value: `${game.bets.length}` },
+          { name: "\u200b", value: "\u200b" },
+          ...usersFields,
+          { name: "\u200b", value: "\u200b" }
+        )
+        .setTimestamp();
+
+      for (const sentIn of game.sentIn) {
+        try {
+          const channel = await client.channels.fetch(sentIn.channelId);
+          if (channel?.isSendable()) {
+            channel.send({ embeds: [embedOutcome] });
+          } else {
+            console.log("channel is not sendable");
+          }
+        } catch (err) {
+          console.log("error sending message", err);
+        }
+      }
+
+      const { error } = await moveFinishedGame(game, "remake");
+      if (error) {
+        console.log("Error moving finished game", error);
+      }
+      console.log("refund done");
+
+      // wait a second
+      await setTimeout(1_000);
+      continue;
+    }
+
+    // Handle win and lose
     const participant = match.info.participants.find(
       (p) => p.puuid === summonerPUUID
     );
@@ -75,12 +138,9 @@ async function handleActiveBets(client: Client) {
       winners.push({ ...bet, winnings: bet.amount });
     }
 
-    console.log("winners", winners);
-    console.log("losers", losers);
     const updatedWinners = await handleWinnerBetResult(winners);
     const updatedLosers = await handleLoserBetResult(losers);
-    console.log("updatedWinners`", updatedWinners);
-    console.log("updatedLosers", updatedLosers);
+
     const fieldsWinners: RestOrArray<APIEmbedField> = [
       { name: "Winners :star_struck:", value: "Nice job bois" },
       ...updatedWinners.map((winner) => {

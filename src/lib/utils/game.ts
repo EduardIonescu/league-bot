@@ -112,7 +112,7 @@ export async function getActiveGames() {
   }
 }
 
-export async function moveFinishedGame(game: Match, win: boolean) {
+export async function moveFinishedGame(game: Match, win: boolean | "remake") {
   try {
     const rootPath = import.meta.url.split("dist/")[0];
     const activeBetsFolder = new URL("src/data/bets/active/", rootPath);
@@ -199,6 +199,50 @@ export async function handleMatchOutcome(game: Match, win: boolean) {
     return [...acc, { discordId: cur.discordId, amount }];
   }, [] as AmountByUser[]);
   return amountByUser;
+}
+
+export async function handleRemake(game: Match) {
+  const { error, game: activeGame } = await getActiveGame(game.summonerId);
+
+  const amountByUser = activeGame!.bets.reduce((acc, cur) => {
+    const accumulatedUser = acc.find(
+      (user) => user.discordId === cur.discordId
+    );
+    if (accumulatedUser) {
+      accumulatedUser.amount = {
+        tzapi: cur.amount.tzapi + accumulatedUser.amount.tzapi,
+        nicu: cur.amount.nicu + accumulatedUser.amount.nicu,
+      };
+      return acc;
+    }
+    return [...acc, { discordId: cur.discordId, amount: cur.amount }];
+  }, [] as AmountByUser[]);
+  return amountByUser;
+}
+
+export async function refundUsers(users: AmountByUser[]) {
+  const timestamp = new Date();
+
+  const bettingUsers = users.map(async (user) => {
+    const { error, user: bettingUser } = await getBettingUser(user.discordId);
+
+    if (!bettingUser) {
+      return;
+    }
+
+    const tzapi = user.amount.tzapi + bettingUser.currency.tzapi;
+    const nicu = user.amount.nicu + bettingUser.currency.nicu;
+
+    const currency = { ...bettingUser.currency, tzapi, nicu };
+
+    const updatedUser = { ...bettingUser, timestamp, currency };
+
+    await updateUser(updatedUser);
+
+    return { updatedUser, refund: user.amount ?? ZERO_CURRENCIES };
+  });
+
+  return (await Promise.all(bettingUsers)).filter((user) => user != undefined);
 }
 
 export async function handleWinnerBetResult(users: AmountByUser[]) {
