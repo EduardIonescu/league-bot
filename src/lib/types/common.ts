@@ -12,6 +12,15 @@ export type BettingUser = {
     currencyLost: Currencies;
   };
 };
+export type RefundedBettingUser = {
+  updatedUser: BettingUser;
+  refund: Currencies;
+};
+export type LoserBetingUser = { updatedUser: BettingUser; loss: Currencies };
+export type WinnerBetingUser = {
+  updatedUser: BettingUser;
+  winnings: Currencies;
+};
 export type Currencies = { tzapi: number; nicu: number };
 export type Currency = "nicu" | "tzapi";
 
@@ -23,6 +32,7 @@ export type Bet = {
   inGameTime: number;
 };
 
+export type SentIn = { channelId: string; messageIds: string[] }[];
 export type Match = {
   gameId: number;
   player: string;
@@ -33,7 +43,7 @@ export type Match = {
   inGameTime: number;
   gameStartTime: number;
   region: Region;
-  sentIn: { channelId: string; messageIds: string[] }[];
+  sentIn: SentIn;
   againstBot: boolean;
   bets: Bet[];
 };

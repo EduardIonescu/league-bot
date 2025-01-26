@@ -1,4 +1,12 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
+import {
+  ActionRowBuilder,
+  APIEmbedField,
+  ButtonBuilder,
+  ButtonStyle,
+  Client,
+  EmbedBuilder,
+  RestOrArray,
+} from "discord.js";
 import * as fsSync from "node:fs";
 import * as fs from "node:fs/promises";
 import champions from "../../assets/champions.js";
@@ -17,7 +25,11 @@ import {
   BettingUser,
   Choice,
   Lane,
+  LoserBetingUser,
   Match,
+  RefundedBettingUser,
+  SentIn,
+  WinnerBetingUser,
 } from "../types/common.js";
 import { Account, SpectatorParticipant } from "../types/riot.js";
 import { filePathExists, formatDate, toTitleCase } from "./common.js";
@@ -519,4 +531,118 @@ export function highestWeightLane(
   );
 
   return { participantLane, newParticipants };
+}
+export function createRemakeEmbed(
+  game: Match,
+  updatedUsers: RefundedBettingUser[]
+) {
+  const usersFields: RestOrArray<APIEmbedField> = [
+    { name: "Refunds :triumph:", value: `\u200b` },
+    ...updatedUsers.map((user) => {
+      const { tzapi, nicu } = user.refund;
+      const tzapiMsg = tzapi ? `${tzapi} Tzapi` : "";
+      const nicuMsg = nicu ? `${nicu} Nicu ` : "";
+      return {
+        name: `\u200b`,
+        value: `<@${user.updatedUser.discordId}> was refunded ${nicuMsg}${tzapiMsg}!`,
+      };
+    }),
+  ];
+
+  return new EmbedBuilder()
+    .setColor(0x0099ff)
+    .setTitle("League Bets :coin:")
+    .setDescription(
+      `The bet on \`${game.player}\`'s match has resolved. It was a remake`
+    )
+    .addFields(
+      { name: "Total Bets Placed", value: `${game.bets.length}` },
+      { name: "\u200b", value: "\u200b" },
+      ...usersFields,
+      { name: "\u200b", value: "\u200b" }
+    )
+    .setTimestamp();
+}
+
+export async function sendEmbedToChannels(
+  client: Client,
+  sentIn: SentIn,
+  embed: EmbedBuilder
+) {
+  for (const { channelId } of sentIn) {
+    try {
+      const channel = await client.channels.fetch(channelId);
+      if (channel?.isSendable()) {
+        channel.send({ embeds: [embed] });
+      } else {
+        console.log("channel is not sendable");
+      }
+    } catch (err) {
+      console.log("error sending message", err);
+    }
+  }
+}
+
+export function splitBets(betByUser: AmountByUser[]) {
+  let winners: AmountByUser[] = [];
+  let losers: AmountByUser[] = [];
+  for (const bet of betByUser) {
+    if (bet.amount.tzapi < 0 || bet.amount.nicu < 0) {
+      losers.push({
+        ...bet,
+        loss: {
+          ...bet.loss,
+          tzapi: Math.abs(bet.amount.tzapi),
+          nicu: Math.abs(bet.amount.nicu),
+        },
+      });
+      continue;
+    }
+
+    winners.push({ ...bet, winnings: bet.amount });
+  }
+
+  return { winners, losers };
+}
+
+export function createResultEmbed(
+  game: Match,
+  updatedWinners: WinnerBetingUser[],
+  updatedLosers: LoserBetingUser[]
+) {
+  const fieldsWinners: RestOrArray<APIEmbedField> = [
+    { name: "Winners :star_struck:", value: "Nice job bois" },
+    ...updatedWinners.map((winner) => ({
+      name: `\u200b`,
+      value: `<@${winner.updatedUser.discordId}> won ${
+        winner.winnings.nicu || ""
+      } ${winner.winnings.tzapi || ""}!`,
+    })),
+  ];
+  const fieldsLosers: RestOrArray<APIEmbedField> = [
+    {
+      name: "Losers :person_in_manual_wheelchair:",
+      value: "Hahahaha git gut",
+    },
+    ...updatedLosers.map((loser) => ({
+      name: `\u200b`,
+      value: `<@${loser.updatedUser.discordId}> lost ${loser.loss.nicu || ""} ${
+        loser.loss.tzapi
+      }!`,
+    })),
+  ];
+
+  return new EmbedBuilder()
+    .setColor(0x0099ff)
+    .setTitle("League Bets :coin:")
+    .setDescription(`The bet on \`${game.player}\`'s match has resolved.`)
+    .addFields(
+      { name: "Total Bets Placed", value: `${game.bets.length}` },
+      { name: "\u200b", value: "\u200b" },
+      ...fieldsWinners,
+      { name: "\u200b", value: "\u200b" },
+      ...fieldsLosers,
+      { name: "\u200b", value: "\u200b" }
+    )
+    .setTimestamp();
 }
