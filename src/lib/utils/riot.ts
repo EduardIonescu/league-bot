@@ -65,7 +65,7 @@ export async function getFinishedMatch(
 
     return { active: false, match: match as MatchResult };
   } catch (err) {
-    console.error(err);
+    console.log(err);
     return { active: false, match: undefined };
   }
 }
@@ -83,7 +83,7 @@ export async function getAccountData(summonerId: string, region: Region) {
 
     return { error: undefined, account };
   } catch (err) {
-    console.error(err);
+    console.log(err);
     return { error: "Failed to fetch", account: undefined };
   }
 }

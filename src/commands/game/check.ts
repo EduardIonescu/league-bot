@@ -187,30 +187,37 @@ async function checkCollector(
 
       const weights = calculateLaneWeights(participant);
 
-      if (participantAccount && participantAccount.length > 0) {
-        const rankedStats = participantAccount.find(
-          (acc) => acc.queueType === "RANKED_SOLO_5x5"
-        );
-
-        participantsStats.push({
-          rankedStats,
-          teamId: participant.teamId,
-          riotId: participant.riotId,
-          championId: participant.championId,
-          spell1Id: participant.spell1Id,
-          spell2Id: participant.spell2Id,
-          weights,
-        });
-      } else {
-        participantsStats.push({
-          teamId: participant.teamId,
-          riotId: participant.riotId,
-          championId: participant.championId,
-          spell1Id: participant.spell1Id,
-          spell2Id: participant.spell2Id,
-          weights,
-        });
+      if (error || !participantAccount || participantAccount.length === 0) {
+        console.log("error", error);
+        console.log("error", participantAccount);
+        console.log("participant", participant);
+        console.log("account", account);
+        {
+          participantsStats.push({
+            teamId: participant.teamId,
+            riotId: participant.riotId,
+            championId: participant.championId,
+            spell1Id: participant.spell1Id,
+            spell2Id: participant.spell2Id,
+            weights,
+          });
+        }
+        continue;
       }
+
+      const rankedStats = participantAccount.find(
+        (acc) => acc.queueType === "RANKED_SOLO_5x5"
+      );
+
+      participantsStats.push({
+        rankedStats,
+        teamId: participant.teamId,
+        riotId: participant.riotId,
+        championId: participant.championId,
+        spell1Id: participant.spell1Id,
+        spell2Id: participant.spell2Id,
+        weights,
+      });
     }
 
     const channel = buttonInteraction.channel;
@@ -264,9 +271,13 @@ async function checkCollector(
     playerButtonsColumns.forEach((row) =>
       row.components.forEach((button) => button.setDisabled(true))
     );
+    console.log("playerButtonsColumns", playerButtonsColumns);
     try {
       if (message && message.editable) {
-        await message.edit({ components: playerButtonsColumns });
+        await message.edit({
+          content: message.content,
+          components: playerButtonsColumns,
+        });
       }
     } catch (err) {
       console.log("Error in check.ts ", err);
