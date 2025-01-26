@@ -615,8 +615,10 @@ export function createResultEmbed(
     ...updatedWinners.map((winner) => ({
       name: `\u200b`,
       value: `<@${winner.updatedUser.discordId}> won ${
-        winner.winnings.nicu || ""
-      } ${winner.winnings.tzapi || ""}!`,
+        winner.winnings.nicu ? winner.winnings.nicu.toString() + "Nicu" : ""
+      } ${
+        winner.winnings.tzapi ? winner.winnings.tzapi.toString() + " Tzapi" : ""
+      }!`,
     })),
   ];
   const fieldsLosers: RestOrArray<APIEmbedField> = [
@@ -626,9 +628,9 @@ export function createResultEmbed(
     },
     ...updatedLosers.map((loser) => ({
       name: `\u200b`,
-      value: `<@${loser.updatedUser.discordId}> lost ${loser.loss.nicu || ""} ${
-        loser.loss.tzapi
-      }!`,
+      value: `<@${loser.updatedUser.discordId}> lost ${
+        loser.loss.nicu ? loser.loss.nicu.toString() + " Nicu" : ""
+      } ${loser.loss.tzapi ? loser.loss.tzapi.toString() + " Tzapi" : ""}!`,
     })),
   ];
 
