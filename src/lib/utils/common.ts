@@ -27,7 +27,7 @@ export async function filePathExists(filePath: URL) {
   }
 }
 
-export async function capitalize(sentence: string) {
+export function capitalize(sentence: string) {
   let newSentenceArray = [];
   const splitSentence = sentence.split(" ");
   for (const word of splitSentence) {
