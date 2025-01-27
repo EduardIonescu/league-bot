@@ -50,6 +50,26 @@ export async function writeAccountToFile(account: Account) {
   }
 }
 
+export async function removeAccountFile(nameAndTag: string) {
+  try {
+    const rootPath = import.meta.url.split("dist/")[0];
+    const accountsFolder = new URL("src/data/accounts/", rootPath);
+    const accountFile = new URL(`${nameAndTag}.json`, accountsFolder);
+
+    if (!(await filePathExists(accountFile))) {
+      return { error: "The account doesn't exist." };
+    }
+    await fs.rm(accountFile);
+    return { error: undefined };
+  } catch (error) {
+    console.log(error);
+    return {
+      error:
+        "An error has occured. The account might not exist. Try again if it does.",
+    };
+  }
+}
+
 export async function getBettingUser(discordId: string) {
   try {
     const rootPath = import.meta.url.split("dist/")[0];
@@ -359,11 +379,19 @@ export function getAccountsSync() {
   return accounts;
 }
 
-export function formatChoices(accounts: Account[]) {
-  const choices: Choice[] = accounts.map((account) => ({
-    name: formatPlayerName(account.gameName, account.tagLine),
-    value: `${account.summonerPUUID}`,
-  }));
+export function formatChoices(
+  accounts: Account[],
+  valueIsSummonerPUUID: boolean = true
+) {
+  const choices: Choice[] = accounts.map((account) => {
+    const nameAndTag = (account.gameName + "_" + account.tagLine).toLowerCase();
+    const value = valueIsSummonerPUUID ? account.summonerPUUID : nameAndTag;
+
+    return {
+      name: formatPlayerName(account.gameName, account.tagLine),
+      value,
+    };
+  });
 
   return choices;
 }
