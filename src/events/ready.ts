@@ -1,4 +1,4 @@
-import { Client, Events } from "discord.js";
+import { ActionRowBuilder, ButtonBuilder, Client, Events } from "discord.js";
 import { setTimeout } from "node:timers/promises";
 import {
   CHECK_GAME_FINISHED_INTERVAL,
@@ -17,6 +17,7 @@ import {
   sendEmbedToChannels,
   splitBets,
 } from "../lib/utils/game.js";
+import { getLeaderboardButton } from "../lib/utils/leaderboard.js";
 import { getFinishedMatch } from "../lib/utils/riot.js";
 
 export default {
@@ -47,13 +48,19 @@ async function handleActiveBets(client: Client) {
       continue;
     }
 
+    const components = new ActionRowBuilder<ButtonBuilder>().addComponents(
+      getLeaderboardButton()
+    );
+
     // Handle Remake
     if (match.info.gameDuration < REMAKE_GAME_LENGTH_CAP * 60) {
       const betByUser = await handleRemake(game);
       const updatedUsers = await refundUsers(betByUser);
 
       const embedOutcome = createRemakeEmbed(game, updatedUsers);
-      await sendEmbedToChannels(client, game.sentIn, embedOutcome);
+      await sendEmbedToChannels(client, game.sentIn, embedOutcome, [
+        components,
+      ]);
 
       const { error } = await moveFinishedGame(game, "remake");
       if (error) {
@@ -81,7 +88,8 @@ async function handleActiveBets(client: Client) {
     const updatedLosers = await handleLoserBetResult(losers);
 
     const embedOutcome = createResultEmbed(game, updatedWinners, updatedLosers);
-    await sendEmbedToChannels(client, game.sentIn, embedOutcome);
+
+    await sendEmbedToChannels(client, game.sentIn, embedOutcome, [components]);
 
     const { error } = await moveFinishedGame(game, participant.win);
     if (error) {
