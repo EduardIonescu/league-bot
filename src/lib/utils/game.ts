@@ -142,7 +142,8 @@ export async function moveFinishedGame(game: Match, win: boolean | "remake") {
     if (!(await filePathExists(archiveBetsFolder))) {
       await fs.mkdir(archiveBetsFolder);
     }
-    const date = formatDate(new Date());
+
+    const date = formatDate(new Date(game.gameStartTime));
     const newGameFile = new URL(`${date}.json`, archiveBetsFolder);
     await fs.rename(gameFile, newGameFile);
     await fs.writeFile(newGameFile, JSON.stringify({ ...game, win }));
