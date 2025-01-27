@@ -12,7 +12,7 @@ import {
 import { setTimeout } from "node:timers/promises";
 import puppeteer from "puppeteer";
 import { LiveGameHTML, ParticipantStats } from "../../lib/components.js";
-import { Region, SpectatorParticipant } from "../../lib/types/riot.js";
+import { Account, Region, SpectatorParticipant } from "../../lib/types/riot.js";
 import {
   calculateLaneWeights,
   formatPlayerName,
@@ -38,7 +38,11 @@ export default {
       return;
     }
 
-    const accountsInGame = [];
+    const accountsInGame: (Account & {
+      gameStartTime: number;
+      participants: SpectatorParticipant[];
+      gameMode: string;
+    })[] = [];
     for (const account of accounts) {
       const spectatorData = await getSpectatorData(
         account.summonerPUUID,
@@ -61,6 +65,7 @@ export default {
         ...account,
         gameStartTime: spectatorData.gameStartTime,
         participants: spectatorData.participants,
+        gameMode: spectatorData.gameMode,
       });
     }
 
@@ -82,6 +87,13 @@ export default {
         TimestampStyles.RelativeTime
       );
 
+      msg.push(`\`${player}\` ${isInGameMessage} ${relativeTime}`);
+
+      /** Only allow summoners rift  */
+      if (account.gameMode.toLowerCase() !== "Classic".toLowerCase()) {
+        continue;
+      }
+
       // Can only add 5 x 5 buttons to a message (use pagination if you want more)
       if (
         playerButtonsColumns.length === 5 &&
@@ -101,8 +113,6 @@ export default {
         playerButtonsColumns.push(playerButtonsRow);
         playerButtonsRow.setComponents(playerButton);
       }
-
-      msg.push(`\`${player}\` ${isInGameMessage} ${relativeTime}`);
     }
 
     playerButtonsColumns.push(playerButtonsRow);
