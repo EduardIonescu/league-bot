@@ -1,4 +1,5 @@
 import {
+  ActionRowBuilder,
   ButtonBuilder,
   ButtonInteraction,
   ButtonStyle,
@@ -6,6 +7,7 @@ import {
 } from "discord.js";
 import * as fs from "node:fs/promises";
 import { BettingUser } from "../types/common.js";
+import { getCheckButton } from "./check.js";
 
 export async function showLeaderboard(
   interaction: CommandInteraction | ButtonInteraction
@@ -27,9 +29,12 @@ export async function showLeaderboard(
         ) / 10
       }% Winrate`
   );
-  const reply = `Leaderboard\n${usersByCurrency.join("\n\n")}`;
+  const content = `Leaderboard\n${usersByCurrency.join("\n\n")}\n`;
 
-  await interaction.editReply(reply);
+  const components = [
+    new ActionRowBuilder<ButtonBuilder>().addComponents(getCheckButton()),
+  ];
+  await interaction.editReply({ content, components });
 }
 
 async function getLeaderboard() {

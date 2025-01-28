@@ -4,6 +4,7 @@ import {
   CHECK_GAME_FINISHED_INTERVAL,
   REMAKE_GAME_LENGTH_CAP,
 } from "../lib/constants.js";
+import { getCheckButton } from "../lib/utils/check.js";
 import {
   createRemakeEmbed,
   createResultEmbed,
@@ -49,7 +50,8 @@ async function handleActiveBets(client: Client) {
     }
 
     const components = new ActionRowBuilder<ButtonBuilder>().addComponents(
-      getLeaderboardButton()
+      getLeaderboardButton(),
+      getCheckButton()
     );
 
     // Handle Remake
