@@ -14,14 +14,18 @@ export function FinishedMatchHTML(
   const { win, teamId } = participants[0];
   const firstTeam = {
     name: teamId === BLUE_TEAM_ID ? "Blue team" : "Red team",
-    backgroundColor: win ? "#28344E" : "#59343b",
-    color: win ? "blue" : "red",
+    backgroundColor: win
+      ? "linear-gradient(rgba(48, 69, 201, .1), rgba(48, 69, 201, .2))"
+      : "linear-gradient(hsla(3, 91%, 67%, .1), hsla(3, 91%, 67%, .2))",
+    color: win ? "#4A90E2" : "#E63946",
     outcome: win ? "Victory" : "Defeat",
   };
   const secondTeam = {
     name: teamId === BLUE_TEAM_ID ? "Red team" : "Blue team",
-    backgroundColor: win ? "#59343b" : "#28344E",
-    color: win ? "red" : "blue",
+    backgroundColor: win
+      ? "linear-gradient(hsla(3, 91%, 67%, .1), hsla(3, 91%, 67%, .2))"
+      : "linear-gradient(rgba(48, 69, 201, .1), rgba(48, 69, 201, .2))",
+    color: win ? "#E63946" : "#4A90E2",
     outcome: win ? "Defeat" : "Victory",
   };
 
@@ -45,12 +49,12 @@ export function FinishedMatchHTML(
     style="
       display: flex;
       margin: 0;
-      background-color: #303238;
+      background-color: rgb(13, 15, 16);
       color: #dddddd;
       font-family: Roboto, sans-serif;
     "
   >
-    <table style="width: 100%; border-spacing: 0">
+    <table style="width: 100%; border-spacing: 0;">
       <colgroup>
         <col width="60" />
         <col width="18" />
@@ -62,7 +66,7 @@ export function FinishedMatchHTML(
         <col width="300" />
       </colgroup>
 
-       <thead style="height: 2.5rem; font-size: 24px; opacity: 0.8">
+       <thead style="height: 3rem; font-size: 24px; opacity: 0.8">
         <tr>
           <th style="text-align: start; padding-left: 0.5rem" colspan="4">
             <span style="font-weight: 900; color: ${firstTeam.color}">${
@@ -76,7 +80,7 @@ export function FinishedMatchHTML(
         </tr>
       </thead>
 
-      <tbody style="background-color: ${firstTeam.backgroundColor};">
+      <tbody style="background: ${firstTeam.backgroundColor};">
        
       ${participants
         .slice(0, 5)
@@ -87,8 +91,7 @@ export function FinishedMatchHTML(
       
       </tbody>
       
-      
-      <thead style="height: 2.5rem; font-size: 24px; opacity: 0.8">
+      <thead style="height: 3rem; font-size: 24px; opacity: 0.8">
         <tr>
           <th style="text-align: start; padding-left: 0.5rem" colspan="4">
             <span style="font-weight: 900; color: ${secondTeam.color}">${
@@ -102,7 +105,7 @@ export function FinishedMatchHTML(
         </tr>
       </thead>
 
-      <tbody style="background-color: ${
+      <tbody style="background: ${
         secondTeam.backgroundColor
       }; border-color: #703c47">
        
@@ -114,7 +117,6 @@ export function FinishedMatchHTML(
         .join("")}
       
       </tbody>
-
 
     </table>
   </body>
@@ -250,7 +252,7 @@ function PlayerCard(
                   style="
                     width: ${damagePercentage}%; 
                     height: 100%;
-                    background-color: rgba(255, 0, 0, 0.9)
+                    background-color: rgba(220, 10, 10, 0.8)
                   "
                 ></div>
               </div>
