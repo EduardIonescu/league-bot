@@ -11,7 +11,7 @@ import * as fsSync from "node:fs";
 import * as fs from "node:fs/promises";
 import champions from "../../assets/champions.js";
 import summonerSpells from "../../assets/summonerSpells.js";
-import { ParticipantStats } from "../components.js";
+import { ParticipantStats } from "../components/spectatorMatch.js";
 import {
   BETS_CLOSE_AT_GAME_LENGTH,
   DEFAULT_USER,
@@ -24,6 +24,8 @@ import {
   Bet,
   BettingUser,
   Choice,
+  FinishedMatch,
+  FinishedMatchParticipant,
   Lane,
   LoserBetingUser,
   Match,
@@ -31,8 +33,8 @@ import {
   SentIn,
   WinnerBetingUser,
 } from "../types/common.js";
-import { Account, SpectatorParticipant } from "../types/riot.js";
-import { filePathExists, formatDate, toTitleCase } from "./common.js";
+import { Account, MatchResult, SpectatorParticipant } from "../types/riot.js";
+import { encodeBase1114111, filePathExists, toTitleCase } from "./common.js";
 
 export async function writeAccountToFile(account: Account) {
   const nameAndTag = (account.gameName + "_" + account.tagLine).toLowerCase();
@@ -144,7 +146,38 @@ export async function getActiveGames() {
   }
 }
 
-export async function moveFinishedGame(game: Match, win: boolean | "remake") {
+export async function getFinishedGame(summonerPUUID: string, gameId: string) {
+  try {
+    const rootPath = import.meta.url.split("dist/")[0];
+    const activeBetsFolder = new URL(
+      `src/data/bets/archive/${summonerPUUID}/`,
+      rootPath
+    );
+    const gameFile = new URL(`${gameId}.json`, activeBetsFolder);
+    if (!(await filePathExists(gameFile))) {
+      return { match: undefined, error: "Game not found." };
+    }
+
+    const match: FinishedMatch = JSON.parse(
+      await fs.readFile(gameFile, "utf8")
+    );
+
+    if (!match) {
+      return { match: undefined, error: "Game found, but no data found." };
+    }
+
+    return { match, error: undefined };
+  } catch (err) {
+    console.log(err);
+    return { match: undefined, error: "Failed to get the finished match." };
+  }
+}
+
+export async function moveFinishedGame(
+  game: Match,
+  matchResult: MatchResult,
+  win: boolean | "remake"
+) {
   try {
     const rootPath = import.meta.url.split("dist/")[0];
     const activeBetsFolder = new URL("src/data/bets/active/", rootPath);
@@ -163,10 +196,74 @@ export async function moveFinishedGame(game: Match, win: boolean | "remake") {
       await fs.mkdir(archiveBetsFolder);
     }
 
-    const date = formatDate(new Date(game.gameStartTime));
-    const newGameFile = new URL(`${date}.json`, archiveBetsFolder);
+    const newGameFile = new URL(
+      `${matchResult.metadata.matchId}.json`,
+      archiveBetsFolder
+    );
     await fs.rename(gameFile, newGameFile);
-    await fs.writeFile(newGameFile, JSON.stringify({ ...game, win }));
+
+    const participants: FinishedMatchParticipant[] =
+      matchResult.info.participants.map((participant) => {
+        const {
+          kills,
+          assists,
+          deaths,
+          totalDamageDealtToChampions,
+          teamPosition,
+          championId,
+          champLevel,
+          summoner1Id,
+          summoner2Id,
+          totalMinionsKilled,
+          item0,
+          item1,
+          item2,
+          item3,
+          item4,
+          item5,
+          item6,
+          perks,
+          puuid,
+          riotIdGameName,
+          riotIdTagline,
+          teamId,
+          neutralMinionsKilled,
+          win,
+        } = participant;
+        return {
+          kills,
+          assists,
+          deaths,
+          totalDamageDealtToChampions,
+          teamPosition,
+          championId,
+          champLevel,
+          summoner1Id,
+          summoner2Id,
+          totalMinionsKilled,
+          item0,
+          item1,
+          item2,
+          item3,
+          item4,
+          item5,
+          item6,
+          perks,
+          puuid,
+          riotIdGameName,
+          riotIdTagline,
+          teamId,
+          neutralMinionsKilled,
+          win,
+        };
+      });
+
+    const gameDuration = matchResult.info.gameDuration;
+
+    await fs.writeFile(
+      newGameFile,
+      JSON.stringify({ ...game, win, participants, gameDuration })
+    );
     return { error: undefined };
   } catch (err) {
     return {
@@ -644,4 +741,62 @@ export function createResultEmbed(
       { name: "\u200b", value: "\u200b" }
     )
     .setTimestamp();
+}
+
+export function getCheckFinishedMatchButton(
+  summonerPUUID: string,
+  matchId: string
+) {
+  const encodedSummonerPUUIDAndMatchId = encodeBase1114111(
+    summonerPUUID + "@" + matchId
+  );
+  const customId = `show-finished-match${encodedSummonerPUUIDAndMatchId}`;
+  return new ButtonBuilder()
+    .setLabel("Show Match Result")
+    .setCustomId(customId)
+    .setStyle(ButtonStyle.Primary);
+}
+
+export function colorByWinrate(winrate: number) {
+  if (winrate < 30) {
+    // Red
+    return "#B71C1C";
+  }
+  if (winrate < 50) {
+    // Gray
+    return "#838383";
+  }
+  if (winrate < 60) {
+    // Green
+    return "#43A047";
+  }
+  if (winrate < 70) {
+    // Blue
+    return "#1E88E5";
+  }
+
+  // Orange
+  return "#FB8C00";
+}
+
+export function colorByKDA(winrate: number) {
+  if (winrate < 1) {
+    // Red
+    return "#B71C1C";
+  }
+  if (winrate < 2) {
+    // Gray
+    return "#838383";
+  }
+  if (winrate < 4) {
+    // Green
+    return "#43A047";
+  }
+  if (winrate < 6) {
+    // Blue
+    return "#1E88E5";
+  }
+
+  // Orange
+  return "#FB8C00";
 }

@@ -11,7 +11,10 @@ import {
 } from "discord.js";
 import { setTimeout } from "node:timers/promises";
 import puppeteer from "puppeteer";
-import { LiveGameHTML, ParticipantStats } from "../components.js";
+import {
+  LiveGameHTML,
+  ParticipantStats,
+} from "../components/spectatorMatch.js";
 import { Account, Region, SpectatorParticipant } from "../types/riot.js";
 import { calculateLaneWeights, formatPlayerName, getAccounts } from "./game.js";
 import { getAccountData, getSpectatorData } from "./riot.js";
@@ -273,7 +276,6 @@ async function checkCollector(
     playerButtonsColumns.forEach((row) =>
       row.components.forEach((button) => button.setDisabled(true))
     );
-    console.log("playerButtonsColumns", playerButtonsColumns);
     try {
       if (message && message.editable) {
         await message.edit({

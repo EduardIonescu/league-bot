@@ -1,7 +1,7 @@
-import summonerSpells from "../assets/summonerSpells.js";
-import { Lane } from "./types/common.js";
-import { AccountData } from "./types/riot.js";
-import { guessTeamLanes } from "./utils/game.js";
+import summonerSpells from "../../assets/summonerSpells.js";
+import { Lane } from "../types/common.js";
+import { AccountData } from "../types/riot.js";
+import { colorByWinrate, guessTeamLanes } from "../utils/game.js";
 
 export type Player = {
   rankedStats?: AccountData | undefined;
@@ -134,26 +134,4 @@ function RankedArticle(rankedStats?: AccountData) {
       </div>  
     </div>
   </div>`;
-}
-
-function colorByWinrate(winrate: number) {
-  if (winrate < 30) {
-    // Red
-    return "#B71C1C";
-  }
-  if (winrate < 50) {
-    // Gray
-    return "#838383";
-  }
-  if (winrate < 60) {
-    // Green
-    return "#43A047";
-  }
-  if (winrate < 70) {
-    // Blue
-    return "#1E88E5";
-  }
-
-  // Orange
-  return "#FB8C00";
 }

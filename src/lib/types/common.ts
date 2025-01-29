@@ -1,4 +1,4 @@
-import { Region } from "./riot";
+import { Perks, Region } from "./riot";
 
 export type BettingUser = {
   discordId: string;
@@ -48,6 +48,12 @@ export type Match = {
   bets: Bet[];
 };
 
+export type FinishedMatch = Match & {
+  win: boolean | "remake";
+  participants: FinishedMatchParticipant[];
+  gameDuration: number;
+};
+
 export type AmountByUser = {
   discordId: string;
   amount: Currencies;
@@ -65,4 +71,32 @@ export type SummonerSpell = {
   name: string;
   id: string;
   weights: { [key in Lane]?: number };
+};
+
+export type FinishedMatchParticipant = {
+  kills: number;
+  assists: number;
+  deaths: number;
+  totalDamageDealtToChampions: number;
+  teamPosition: string;
+  championId: number;
+  champLevel: number;
+  summoner1Id: number;
+  summoner2Id: number;
+  totalMinionsKilled: number;
+  // Jungle monsters + epic camps etc
+  neutralMinionsKilled: number;
+  item0: number;
+  item1: number;
+  item2: number;
+  item3: number;
+  item4: number;
+  item5: number;
+  item6: number;
+  perks: Perks;
+  puuid: string;
+  riotIdGameName: string;
+  riotIdTagline: string;
+  teamId: number;
+  win: boolean;
 };

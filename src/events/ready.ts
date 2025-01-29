@@ -9,6 +9,7 @@ import {
   createRemakeEmbed,
   createResultEmbed,
   getActiveGames,
+  getCheckFinishedMatchButton,
   handleLoserBetResult,
   handleMatchOutcome,
   handleRemake,
@@ -43,19 +44,22 @@ async function handleActiveBets(client: Client) {
   for (const game of games) {
     const summonerPUUID = game.summonerId;
     const gameIdWithRegion = `${game.region.toUpperCase()}_${game.gameId}`;
-    const { active, match } = await getFinishedMatch(gameIdWithRegion);
-    if (active || !match?.info?.endOfGameResult) {
+    const { active, match: matchResult } = await getFinishedMatch(
+      gameIdWithRegion
+    );
+    if (active || !matchResult?.info?.endOfGameResult) {
       await setTimeout(1_000);
       continue;
     }
 
     const components = new ActionRowBuilder<ButtonBuilder>().addComponents(
+      getCheckFinishedMatchButton(summonerPUUID, matchResult.metadata.matchId),
       getLeaderboardButton(),
       getCheckButton()
     );
 
     // Handle Remake
-    if (match.info.gameDuration < REMAKE_GAME_LENGTH_CAP * 60) {
+    if (matchResult.info.gameDuration < REMAKE_GAME_LENGTH_CAP * 60) {
       const betByUser = await handleRemake(game);
       const updatedUsers = await refundUsers(betByUser);
 
@@ -64,7 +68,7 @@ async function handleActiveBets(client: Client) {
         components,
       ]);
 
-      const { error } = await moveFinishedGame(game, "remake");
+      const { error } = await moveFinishedGame(game, matchResult, "remake");
       if (error) {
         console.log("Error moving finished game", error);
       }
@@ -75,7 +79,7 @@ async function handleActiveBets(client: Client) {
     }
 
     // Handle win and lose
-    const participant = match.info.participants.find(
+    const participant = matchResult.info.participants.find(
       (p) => p.puuid === summonerPUUID
     );
 
@@ -93,7 +97,11 @@ async function handleActiveBets(client: Client) {
 
     await sendEmbedToChannels(client, game.sentIn, embedOutcome, [components]);
 
-    const { error } = await moveFinishedGame(game, participant.win);
+    const { error } = await moveFinishedGame(
+      game,
+      matchResult,
+      participant.win
+    );
     if (error) {
       console.log("Error moving finished game", error);
     }
