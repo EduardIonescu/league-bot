@@ -44,3 +44,5 @@ export const CHECK_GAME_FINISHED_INTERVAL = 30;
 export const NICU_IN_TZAPI = 1000;
 
 export const BLUE_TEAM_ID = 100;
+
+export const DEFAULT_CHAMPION_PATH = `src/assets/img/champion/Aatrox.png`;

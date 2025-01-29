@@ -1,6 +1,9 @@
+import champions from "../../assets/champions.js";
 import summonerSpells from "../../assets/summonerSpells.js";
+import { DEFAULT_CHAMPION_PATH } from "../constants.js";
 import { Lane } from "../types/common.js";
 import { AccountData } from "../types/riot.js";
+import { htmlImgSrcFromPath } from "../utils/common.js";
 import { colorByWinrate, guessTeamLanes } from "../utils/game.js";
 
 export type Player = {
@@ -63,16 +66,30 @@ export function LiveGameHTML(participantsStats: ParticipantStats[]) {
 function PlayerCard(player: Player) {
   const { championId, spell1Id, spell2Id, rankedStats, riotId } = player;
 
+  const champion = champions.find((c) => c.id === championId);
+
+  const championImagePath = champion
+    ? `src/assets/img/champion/${champion.name}.png`
+    : DEFAULT_CHAMPION_PATH;
+  const championSrc = htmlImgSrcFromPath(championImagePath);
+
+  const summonerSpell1Name = summonerSpells[spell1Id].id;
+  const summonerSpell2Name = summonerSpells[spell2Id].id;
+  const spell1ImagePath = `src/assets/img/spell/${summonerSpell1Name}.png`;
+  const spell2ImagePath = `src/assets/img/spell/${summonerSpell2Name}.png`;
+  const spell1Src = htmlImgSrcFromPath(spell1ImagePath);
+  const spell2Src = htmlImgSrcFromPath(spell2ImagePath);
+
   return `
   <article style="display: flex; gap: 0.5rem; align-items: center;">
-    <img src="https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/${championId}.png" alt="" width="128px" height="128px" />
+    <img src="${championSrc}" 
+      alt="" 
+      width="128px" 
+      height="128px" 
+    />
     <div style="display: flex; flex-direction: column; justify-content: space-between;">
-      <img src="https://ddragon.leagueoflegends.com/cdn/15.1.1/img/spell/${
-        summonerSpells[spell1Id].id
-      }.png" alt="" width="60px" height="60px" />
-      <img src="https://ddragon.leagueoflegends.com/cdn/15.1.1/img/spell/${
-        summonerSpells[spell2Id].id
-      }.png" alt="" width="60px" height="60px" />
+      <img src="${spell1Src}" alt="" width="60px" height="60px" />
+      <img src="${spell2Src}" alt="" width="60px" height="60px" />
     </div>
   
     ${DivisionArticle(riotId, rankedStats)}

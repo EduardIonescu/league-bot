@@ -9,7 +9,6 @@ import {
   time,
   TimestampStyles,
 } from "discord.js";
-import { setTimeout } from "node:timers/promises";
 import puppeteer from "puppeteer";
 import {
   LiveGameHTML,
@@ -239,9 +238,6 @@ async function checkCollector(
     const html = LiveGameHTML(participantsStats);
 
     await page.setContent(html, { waitUntil: "domcontentloaded" });
-
-    // Wait for images to load
-    await setTimeout(180);
 
     const screenshot = await page.screenshot({ fullPage: true });
     await browser.close();
