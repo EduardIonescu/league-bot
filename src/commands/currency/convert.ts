@@ -117,7 +117,12 @@ export default {
       return;
     }
 
-    console.log("Conversion completed for: ", discordId);
+    console.log(
+      "Conversion completed for: ",
+      discordId,
+      " - ",
+      interaction.user.username
+    );
     await interaction.editReply(
       `Conversion completed!\n<@${discordId}> now has ${tzapi} Tzapi and ${nicu} Nicu.`
     );
