@@ -2,6 +2,7 @@ node_modules
 .env
 dist/
 dist copy/
+dist copy 2/
 accounts/
 bets/
 users/
