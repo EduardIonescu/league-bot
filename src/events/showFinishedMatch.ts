@@ -1,5 +1,4 @@
 import { AttachmentBuilder, ButtonInteraction, Events } from "discord.js";
-import { setTimeout } from "node:timers/promises";
 import puppeteer from "puppeteer";
 import { FinishedMatchHTML } from "../lib/components/finishedMatch.js";
 import { decodeBase1114111 } from "../lib/utils/common.js";
@@ -8,7 +7,7 @@ import { getFinishedGame } from "../lib/utils/game.js";
 export default {
   name: Events.InteractionCreate,
   async execute(interaction: ButtonInteraction) {
-    if (!interaction.customId.startsWith("show-finished-match")) {
+    if (!interaction.customId?.startsWith("show-finished-match")) {
       return;
     }
     await interaction.deferReply();
@@ -41,9 +40,6 @@ export default {
     const html = FinishedMatchHTML(match.participants, match.gameDuration);
 
     await page.setContent(html, { waitUntil: "domcontentloaded" });
-
-    // Wait for images to load
-    await setTimeout(400);
 
     const screenshot = await page.screenshot({ fullPage: true });
     await browser.close();
