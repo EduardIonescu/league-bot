@@ -54,8 +54,8 @@ async function handleActiveBets(client: Client) {
 
     const components = new ActionRowBuilder<ButtonBuilder>().addComponents(
       getCheckFinishedMatchButton(summonerPUUID, matchResult.metadata.matchId),
-      getLeaderboardButton(),
-      getCheckButton()
+      getLeaderboardButton(false),
+      getCheckButton(false)
     );
 
     // Handle Remake

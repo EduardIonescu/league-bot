@@ -289,9 +289,9 @@ async function checkCollector(
   });
 }
 
-export function getCheckButton() {
+export function getCheckButton(primary: boolean = true) {
   return new ButtonBuilder()
     .setLabel("Check Live Games")
     .setCustomId("check")
-    .setStyle(ButtonStyle.Primary);
+    .setStyle(primary ? ButtonStyle.Primary : ButtonStyle.Secondary);
 }

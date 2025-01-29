@@ -70,9 +70,9 @@ async function getLeaderboard() {
   }
 }
 
-export function getLeaderboardButton() {
+export function getLeaderboardButton(primary: boolean) {
   return new ButtonBuilder()
     .setLabel("Leaderboard")
     .setCustomId("leaderboard")
-    .setStyle(ButtonStyle.Primary);
+    .setStyle(primary ? ButtonStyle.Primary : ButtonStyle.Secondary);
 }
