@@ -42,3 +42,5 @@ export const CHECK_GAME_FINISHED_INTERVAL = 30;
 
 /** For currency exchange */
 export const NICU_IN_TZAPI = 1000;
+
+export const BLUE_TEAM_ID = 100;

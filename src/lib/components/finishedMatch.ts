@@ -1,12 +1,11 @@
 import champions from "../../assets/champions.js";
 import perks from "../../assets/perks.js";
 import summonerSpells from "../../assets/summonerSpells.js";
+import { BLUE_TEAM_ID } from "../constants.js";
 import { FinishedMatchParticipant } from "../types/common.js";
 import { Style } from "../types/riot.js";
 import { htmlImgSrcFromPath } from "../utils/common.js";
 import { colorByKDA, formatPlayerName } from "../utils/game.js";
-
-const BLUE_TEAM_ID = 100;
 
 export function FinishedMatchHTML(
   participants: FinishedMatchParticipant[],
@@ -409,14 +408,16 @@ function ItemIcon(itemId: number, isTrinket: boolean = false) {
       display: inline-block;
       margin-left: 2px;
       vertical-align: middle;
-      border-radius: 6px;
-      overflow: hidden;
-      ${isTrinket ? "border-radius:50%" : ""}
+      
     "
   >
     <div style="position: relative">
       <img
         src="${src}"
+        style="border-radius: ${isTrinket ? "50%" : "6px"};
+        box-shadow: rgba(0, 0, 0, 0.12) 0px 1px 3px,
+          rgba(0, 0, 0, 0.24) 0px 1px 2px;
+        "
         width="32"
       />
     </div>
