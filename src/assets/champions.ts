@@ -81,6 +81,7 @@ export default [
   { id: 90, name: "Malzahar", lanes: ["mid", "support"] },
   { id: 57, name: "Maokai", lanes: ["top", "support"] },
   { id: 11, name: "MasterYi", lanes: ["jungle"] },
+  { id: 902, name: "Milio", lanes: ["support"] },
   { id: 21, name: "MissFortune", lanes: ["bot", "support"] },
   { id: 82, name: "Mordekaiser", lanes: ["top", "jungle"] },
   { id: 25, name: "Morgana", lanes: ["support", "mid"] },
