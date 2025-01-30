@@ -1,11 +1,12 @@
-import champions from "../../assets/champions.js";
-import perks from "../../assets/perks.js";
-import summonerSpells from "../../assets/summonerSpells.js";
-import { DEFAULT_CHAMPION_PATH } from "../constants.js";
 import { Lane } from "../types/common.js";
 import { AccountData, SpectatorPerks } from "../types/riot.js";
-import { htmlImgSrcFromPath } from "../utils/common.js";
-import { colorByWinrate, guessTeamLanes } from "../utils/game.js";
+import {
+  colorByWinrate,
+  getChampionSrc,
+  getPerkSrc,
+  getSummonerSpellSrc,
+  guessTeamLanes,
+} from "../utils/game.js";
 
 export type Player = {
   rankedStats?: AccountData | undefined;
@@ -68,48 +69,27 @@ export function LiveGameHTML(participantsStats: ParticipantStats[]) {
 function PlayerCard(participant: ParticipantStats) {
   const { championId, spell1Id, spell2Id, rankedStats, riotId } = participant;
 
-  const champion = champions.find((c) => c.id === championId);
-
-  const championImagePath = champion
-    ? `src/assets/img/champion/${champion.name}.png`
-    : DEFAULT_CHAMPION_PATH;
-  const championSrc = htmlImgSrcFromPath(championImagePath);
-
-  const summonerSpell1Name = summonerSpells[spell1Id].id;
-  const summonerSpell2Name = summonerSpells[spell2Id].id;
-  const spell1ImagePath = `src/assets/img/spell/${summonerSpell1Name}.png`;
-  const spell2ImagePath = `src/assets/img/spell/${summonerSpell2Name}.png`;
-  const spell1Src = htmlImgSrcFromPath(spell1ImagePath);
-  const spell2Src = htmlImgSrcFromPath(spell2ImagePath);
-
-  const perk1 = perks.find((p) => p.id === participant.perks.perkIds[0]);
-  const perk2 = perks.find((p) => p.id === participant.perks.perkSubStyle);
-  const perk1ImagePath = `src/assets/img/${perk1?.icon}`;
-  const perk2ImagePath = `src/assets/img/${perk2?.icon}`;
-  const perk1Src = htmlImgSrcFromPath(perk1ImagePath);
-  const perk2Src = htmlImgSrcFromPath(perk2ImagePath);
-
   return `
   <article style="display: flex; gap: 0.5rem; align-items: center;">
-    <img src="${championSrc}" 
+    <img src="${getChampionSrc(championId)}" 
       alt="" 
       width="128px" 
       height="128px" 
     />
     <div style="display: flex; flex-direction: column; justify-content: space-between;">
-      <img src="${spell1Src}" alt="" width="60px" height="60px" />
-      <img src="${spell2Src}" alt="" width="60px" height="60px" />
+      <img src="${getSummonerSpellSrc(spell1Id)}" width="60px" height="60px" />
+      <img src="${getSummonerSpellSrc(spell2Id)}" width="60px" height="60px" />
     </div>
 
     <div style="display: flex; flex-direction: column; justify-content: space-between;">
-      <img src="${perk1Src}" 
+      <img src="${getPerkSrc(participant.perks.perkIds[0])}" 
         width="60px" 
         height="60px" 
         style="
           background-color: rgba(0, 0, 0, 0.3);
           border-radius: 50%;" 
       />
-      <img src="${perk2Src}" 
+      <img src="${getPerkSrc(participant.perks.perkSubStyle)}" 
         width="60px" 
         height="60px" 
         style="

@@ -45,4 +45,5 @@ export const NICU_IN_TZAPI = 1000;
 
 export const BLUE_TEAM_ID = 100;
 
-export const DEFAULT_CHAMPION_PATH = `src/assets/img/champion/Aatrox.png`;
+/** Default image if src not found so they don't break the UI  */
+export const IMAGE_NOT_FOUND = `src/assets/img/not-found.png`;

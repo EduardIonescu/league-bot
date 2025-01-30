@@ -10,11 +10,13 @@ import {
 import * as fsSync from "node:fs";
 import * as fs from "node:fs/promises";
 import champions from "../../assets/champions.js";
+import perks from "../../assets/perks.js";
 import summonerSpells from "../../assets/summonerSpells.js";
 import { ParticipantStats } from "../components/spectatorMatch.js";
 import {
   BETS_CLOSE_AT_GAME_LENGTH,
   DEFAULT_USER,
+  IMAGE_NOT_FOUND,
   loseButtons,
   winButtons,
   ZERO_CURRENCIES,
@@ -34,7 +36,12 @@ import {
   WinnerBetingUser,
 } from "../types/common.js";
 import { Account, MatchResult, SpectatorParticipant } from "../types/riot.js";
-import { encodeBase1114111, filePathExists, toTitleCase } from "./common.js";
+import {
+  encodeBase1114111,
+  filePathExists,
+  htmlImgSrcFromPath,
+  toTitleCase,
+} from "./common.js";
 
 export async function writeAccountToFile(account: Account) {
   const nameAndTag = (account.gameName + "_" + account.tagLine).toLowerCase();
@@ -799,4 +806,41 @@ export function colorByKDA(winrate: number) {
 
   // Orange
   return "#FB8C00";
+}
+
+export function getChampionSrc(id: number) {
+  const champion = champions.find((c) => c.id === id);
+  const championImagePath = `src/assets/img/champion/${champion?.name}.png`;
+
+  const championSrc = htmlImgSrcFromPath(championImagePath);
+  if (!championSrc) {
+    return htmlImgSrcFromPath(IMAGE_NOT_FOUND);
+  }
+
+  return championSrc;
+}
+
+export function getSummonerSpellSrc(id: number) {
+  const spellName = summonerSpells[id].id;
+  const spellImagePath = `src/assets/img/spell/${spellName}.png`;
+  const spellSrc = htmlImgSrcFromPath(spellImagePath);
+
+  if (!spellSrc) {
+    return htmlImgSrcFromPath(IMAGE_NOT_FOUND);
+  }
+
+  return spellSrc;
+}
+
+export function getPerkSrc(id: number) {
+  const perk = perks.find((p) => p.id === id);
+  const perkImagePath = `src/assets/img/${perk?.icon}`;
+
+  const perkSrc = htmlImgSrcFromPath(perkImagePath);
+
+  if (!perkSrc) {
+    return htmlImgSrcFromPath(IMAGE_NOT_FOUND);
+  }
+
+  return perkSrc;
 }
