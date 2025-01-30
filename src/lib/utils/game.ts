@@ -716,7 +716,7 @@ export function createResultEmbed(
     ...updatedWinners.map((winner) => ({
       name: `\u200b`,
       value: `<@${winner.updatedUser.discordId}> won ${
-        winner.winnings.nicu ? winner.winnings.nicu.toString() + "Nicu" : ""
+        winner.winnings.nicu ? winner.winnings.nicu.toString() + " Nicu" : ""
       } ${
         winner.winnings.tzapi ? winner.winnings.tzapi.toString() + " Tzapi" : ""
       }!`,
