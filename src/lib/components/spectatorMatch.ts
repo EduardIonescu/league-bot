@@ -1,8 +1,9 @@
 import champions from "../../assets/champions.js";
+import perks from "../../assets/perks.js";
 import summonerSpells from "../../assets/summonerSpells.js";
 import { DEFAULT_CHAMPION_PATH } from "../constants.js";
 import { Lane } from "../types/common.js";
-import { AccountData } from "../types/riot.js";
+import { AccountData, SpectatorPerks } from "../types/riot.js";
 import { htmlImgSrcFromPath } from "../utils/common.js";
 import { colorByWinrate, guessTeamLanes } from "../utils/game.js";
 
@@ -22,6 +23,7 @@ export type ParticipantStats = {
   championId: number;
   spell1Id: number;
   spell2Id: number;
+  perks: SpectatorPerks;
   weights: { [key in Lane]?: number };
 };
 
@@ -63,8 +65,8 @@ export function LiveGameHTML(participantsStats: ParticipantStats[]) {
   `;
 }
 
-function PlayerCard(player: Player) {
-  const { championId, spell1Id, spell2Id, rankedStats, riotId } = player;
+function PlayerCard(participant: ParticipantStats) {
+  const { championId, spell1Id, spell2Id, rankedStats, riotId } = participant;
 
   const champion = champions.find((c) => c.id === championId);
 
@@ -80,6 +82,13 @@ function PlayerCard(player: Player) {
   const spell1Src = htmlImgSrcFromPath(spell1ImagePath);
   const spell2Src = htmlImgSrcFromPath(spell2ImagePath);
 
+  const perk1 = perks.find((p) => p.id === participant.perks.perkIds[0]);
+  const perk2 = perks.find((p) => p.id === participant.perks.perkSubStyle);
+  const perk1ImagePath = `src/assets/img/${perk1?.icon}`;
+  const perk2ImagePath = `src/assets/img/${perk2?.icon}`;
+  const perk1Src = htmlImgSrcFromPath(perk1ImagePath);
+  const perk2Src = htmlImgSrcFromPath(perk2ImagePath);
+
   return `
   <article style="display: flex; gap: 0.5rem; align-items: center;">
     <img src="${championSrc}" 
@@ -90,6 +99,23 @@ function PlayerCard(player: Player) {
     <div style="display: flex; flex-direction: column; justify-content: space-between;">
       <img src="${spell1Src}" alt="" width="60px" height="60px" />
       <img src="${spell2Src}" alt="" width="60px" height="60px" />
+    </div>
+
+    <div style="display: flex; flex-direction: column; justify-content: space-between;">
+      <img src="${perk1Src}" 
+        width="60px" 
+        height="60px" 
+        style="
+          background-color: rgba(0, 0, 0, 0.3);
+          border-radius: 50%;" 
+      />
+      <img src="${perk2Src}" 
+        width="60px" 
+        height="60px" 
+        style="
+          background-color: rgba(0, 0, 0, 0.3);
+          border-radius: 50%;" 
+      />
     </div>
   
     ${DivisionArticle(riotId, rankedStats)}

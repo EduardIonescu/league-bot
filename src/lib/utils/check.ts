@@ -203,6 +203,7 @@ async function checkCollector(
             championId: participant.championId,
             spell1Id: participant.spell1Id,
             spell2Id: participant.spell2Id,
+            perks: participant.perks,
             weights,
           });
         }
@@ -220,6 +221,7 @@ async function checkCollector(
         championId: participant.championId,
         spell1Id: participant.spell1Id,
         spell2Id: participant.spell2Id,
+        perks: participant.perks,
         weights,
       });
     }
