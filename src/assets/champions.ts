@@ -20,6 +20,7 @@ export default [
   { id: 53, name: "Blitzcrank", lanes: ["support"] },
   { id: 63, name: "Brand", lanes: ["support", "mid"] },
   { id: 201, name: "Braum", lanes: ["support"] },
+  { id: 233, name: "Briar", lanes: ["jungle", "top"] },
   { id: 51, name: "Caitlyn", lanes: ["bot"] },
   { id: 164, name: "Camille", lanes: ["top", "support", "jungle"] },
   { id: 69, name: "Cassiopeia", lanes: ["mid", "top", "bot"] },
