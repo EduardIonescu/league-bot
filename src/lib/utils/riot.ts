@@ -75,7 +75,10 @@ export async function getAccountData(summonerId: string, region: Region) {
   const url = `https://${region}.api.riotgames.com/lol/league/v4/entries/by-summoner/${summonerId}`;
   try {
     const response = await fetch(url, { headers });
-    const account = (await response.json()) as FailedRequest | AccountData[];
+    const account = (await response.json()) as
+      | FailedRequest
+      | AccountData[]
+      | AccountData;
 
     if (!account || typeof account === "string" || "status" in account) {
       return { error: "Failed to fetch", account: undefined };
