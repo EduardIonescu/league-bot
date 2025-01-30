@@ -112,17 +112,23 @@ export async function check(
 
   playerButtonsColumns.push(playerButtonsRow);
 
-  const message = await interaction.editReply({
-    content: msg.join("\n"),
-    components: playerButtonsColumns,
-  });
+  if (playerButtonsColumns.length) {
+    const message = await interaction.editReply({
+      content: msg.join("\n"),
+      components: playerButtonsColumns,
+    });
+    await checkCollector(
+      message,
+      interaction,
+      playerButtonsColumns,
+      accountsInGame
+    );
+    return;
+  }
 
-  await checkCollector(
-    message,
-    interaction,
-    playerButtonsColumns,
-    accountsInGame
-  );
+  await interaction.editReply({
+    content: msg.join("\n"),
+  });
   return;
 }
 
