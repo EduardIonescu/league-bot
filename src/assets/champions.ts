@@ -28,7 +28,7 @@ export default [
   { id: 122, name: "Darius", lanes: ["top", "mid"] },
   { id: 131, name: "Diana", lanes: ["jungle", "mid"] },
   { id: 119, name: "Draven", lanes: ["bot"] },
-  { id: 36, name: "DrMmundo", lanes: ["top", "jungle"] },
+  { id: 36, name: "DrMundo", lanes: ["top", "jungle"] },
   { id: 245, name: "Ekko", lanes: ["mid", "jungle"] },
   { id: 60, name: "Elise", lanes: ["jungle", "support"] },
   { id: 28, name: "Evelynn", lanes: ["jungle"] },
