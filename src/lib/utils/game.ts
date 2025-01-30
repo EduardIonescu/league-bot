@@ -586,31 +586,29 @@ export function calculateLaneWeights(participant: SpectatorParticipant) {
 }
 
 export function guessTeamLanes(participants: ParticipantStats[]) {
-  const participantsByLane: ParticipantStats[] = [];
-  let { participantLane: top, newParticipants } = highestWeightLane(
-    "top",
+  let top, jungle, mid, bot, support;
+
+  let { participantLane: jungleTemp, newParticipants } = highestWeightLane(
+    "jungle",
     participants
   );
-  participantsByLane.push(top);
+  jungle = jungleTemp;
 
-  let { participantLane: jungle, newParticipants: newParticipants1 } =
-    highestWeightLane("jungle", newParticipants);
-  newParticipants = newParticipants1;
-  participantsByLane.push(jungle);
+  let { participantLane: supportTemp, newParticipants: newParticipants1 } =
+    highestWeightLane("support", newParticipants);
+  support = supportTemp;
 
-  let { participantLane: mid, newParticipants: newParticipants2 } =
-    highestWeightLane("mid", newParticipants);
-  newParticipants = newParticipants2;
-  participantsByLane.push(mid);
+  let { participantLane: topTemp, newParticipants: newParticipants2 } =
+    highestWeightLane("top", newParticipants1);
+  top = topTemp;
 
-  let { participantLane: bot, newParticipants: newParticipants3 } =
-    highestWeightLane("bot", newParticipants);
-  newParticipants = newParticipants3;
-  participantsByLane.push(bot);
+  let { participantLane: midTemp, newParticipants: newParticipants3 } =
+    highestWeightLane("mid", newParticipants2);
+  mid = midTemp;
 
-  participantsByLane.push(newParticipants[0]);
+  bot = newParticipants3[0];
 
-  return participantsByLane;
+  return [top, jungle, mid, bot, support];
 }
 
 export function highestWeightLane(
