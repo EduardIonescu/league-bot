@@ -810,37 +810,48 @@ export function colorByKDA(winrate: number) {
 
 export function getChampionSrc(id: number) {
   const champion = champions.find((c) => c.id === id);
-  const championImagePath = `src/assets/img/champion/${champion?.name}.png`;
+  const imagePath = `src/assets/img/champion/${champion?.name}.png`;
 
-  const championSrc = htmlImgSrcFromPath(championImagePath);
-  if (!championSrc) {
+  const src = htmlImgSrcFromPath(imagePath);
+  if (!src) {
     return htmlImgSrcFromPath(IMAGE_NOT_FOUND);
   }
 
-  return championSrc;
+  return src;
 }
 
 export function getSummonerSpellSrc(id: number) {
-  const spellName = summonerSpells[id].id;
-  const spellImagePath = `src/assets/img/spell/${spellName}.png`;
-  const spellSrc = htmlImgSrcFromPath(spellImagePath);
+  const name = summonerSpells[id].id;
+  const imagePath = `src/assets/img/spell/${name}.png`;
+  const src = htmlImgSrcFromPath(imagePath);
 
-  if (!spellSrc) {
+  if (!src) {
     return htmlImgSrcFromPath(IMAGE_NOT_FOUND);
   }
 
-  return spellSrc;
+  return src;
 }
 
 export function getPerkSrc(id: number) {
   const perk = perks.find((p) => p.id === id);
-  const perkImagePath = `src/assets/img/${perk?.icon}`;
+  const imagePath = `src/assets/img/${perk?.icon}`;
 
-  const perkSrc = htmlImgSrcFromPath(perkImagePath);
+  const src = htmlImgSrcFromPath(imagePath);
 
-  if (!perkSrc) {
+  if (!src) {
     return htmlImgSrcFromPath(IMAGE_NOT_FOUND);
   }
 
-  return perkSrc;
+  return src;
+}
+
+export function getItemSrc(id: number) {
+  const imagePath = `src/assets/img/item/${id}.png`;
+  const src = htmlImgSrcFromPath(imagePath);
+
+  if (!src) {
+    return htmlImgSrcFromPath(IMAGE_NOT_FOUND);
+  }
+
+  return src;
 }

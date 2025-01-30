@@ -1,11 +1,14 @@
-import champions from "../../assets/champions.js";
-import perks from "../../assets/perks.js";
-import summonerSpells from "../../assets/summonerSpells.js";
 import { BLUE_TEAM_ID } from "../constants.js";
 import { FinishedMatchParticipant } from "../types/common.js";
 import { Style } from "../types/riot.js";
-import { htmlImgSrcFromPath } from "../utils/common.js";
-import { colorByKDA, formatPlayerName } from "../utils/game.js";
+import {
+  colorByKDA,
+  formatPlayerName,
+  getChampionSrc,
+  getItemSrc,
+  getPerkSrc,
+  getSummonerSpellSrc,
+} from "../utils/game.js";
 
 export function FinishedMatchHTML(
   participants: FinishedMatchParticipant[],
@@ -152,14 +155,6 @@ function PlayerCard(
     riotIdTagline,
   } = participant;
   const playerName = formatPlayerName(riotIdGameName, riotIdTagline);
-  const champion = champions.find((c) => c.id === championId);
-  if (!champion) {
-    return `
-      <tr style="display: table-row; vertical-align: middle">
-        Account not found
-      </tr>
-      `;
-  }
 
   const damagePercentage = Math.min(
     Math.round((totalDamageDealtToChampions / highestDamage) * 100),
@@ -181,7 +176,7 @@ function PlayerCard(
             "
           >
             
-            ${ChampionImage(champion.name, champLevel)}
+            ${ChampionImage(champLevel, championId)}
 
           </td>
           <td style="padding: 6px 0px 3px; vertical-align: middle">
@@ -289,10 +284,7 @@ function PlayerCard(
         `;
 }
 
-function ChampionImage(name: string, level: number) {
-  const imagePath = `src/assets/img/champion/${name}.png`;
-  const src = htmlImgSrcFromPath(imagePath);
-
+function ChampionImage(level: number, id: number) {
   return `
   <div style="position: relative">
     <img
@@ -303,9 +295,8 @@ function ChampionImage(name: string, level: number) {
         box-shadow: rgba(0, 0, 0, 0.12) 0px 1px 3px,
           rgba(0, 0, 0, 0.24) 0px 1px 2px;
       "
-      src="${src}"
+      src="${getChampionSrc(id)}"
       width="64"
-      alt="${name}"
     />
     <div
       style="
@@ -330,11 +321,7 @@ function ChampionImage(name: string, level: number) {
   `;
 }
 
-function SummonerSpellIcon(spellId: number) {
-  const summonerSpellName = summonerSpells[spellId].id;
-  const imagePath = `src/assets/img/spell/${summonerSpellName}.png`;
-  const src = htmlImgSrcFromPath(imagePath);
-
+function SummonerSpellIcon(id: number) {
   return `
   <div
     style="
@@ -346,35 +333,27 @@ function SummonerSpellIcon(spellId: number) {
     "
   >
     <img
-      src="${src}"
+      src="${getSummonerSpellSrc(id)}"
       width="28"
-      alt="${summonerSpellName}"
     />
   </div>
   `;
 }
 
 function PerkIcon(perkStyle: Style) {
-  let perk;
+  let id;
   if (perkStyle.description === "primaryStyle") {
     // I want the main rune here e.g. Aftershock
-    perk = perks.find((p) => p.id === perkStyle.selections[0].perk);
+    id = perkStyle.selections[0].perk;
   } else {
     // I want the secondary rune tree here e.g. Sorcery
-    perk = perks.find((p) => p.id === perkStyle.style);
+    id = perkStyle.style;
   }
-
-  if (!perk) {
-    return "";
-  }
-
-  const imagePath = `src/assets/img/${perk.icon}`;
-  const src = htmlImgSrcFromPath(imagePath);
 
   return `
   <div style="position: relative">
     <img
-      src="${src}"
+      src="${getPerkSrc(id)}"
       width="28"
       style="
         background-color: rgba(0, 0, 0, 0.3);
@@ -382,7 +361,6 @@ function PerkIcon(perkStyle: Style) {
         box-shadow: rgba(0, 0, 0, 0.12) 0px 1px 3px,
           rgba(0, 0, 0, 0.24) 0px 1px 2px;
       "
-      alt="${perk.name}"
     />
   </div>
   `;
@@ -401,9 +379,7 @@ function KDA(kills: number, deaths: number, assists: number) {
   `;
 }
 
-function ItemIcon(itemId: number, isTrinket: boolean = false) {
-  const imagePath = `src/assets/img/item/${itemId}.png`;
-  const src = htmlImgSrcFromPath(imagePath);
+function ItemIcon(id: number, isTrinket: boolean = false) {
   return `
   <div
     style="
@@ -415,7 +391,7 @@ function ItemIcon(itemId: number, isTrinket: boolean = false) {
   >
     <div style="position: relative">
       <img
-        src="${src}"
+        src="${getItemSrc(id)}"
         style="border-radius: ${isTrinket ? "50%" : "6px"};
         box-shadow: rgba(0, 0, 0, 0.12) 0px 1px 3px,
           rgba(0, 0, 0, 0.24) 0px 1px 2px;
@@ -424,6 +400,5 @@ function ItemIcon(itemId: number, isTrinket: boolean = false) {
       />
     </div>
   </div>
-  
   `;
 }
