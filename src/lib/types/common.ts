@@ -3,7 +3,7 @@ import { Perks, Region } from "./riot";
 export type BettingUser = {
   discordId: string;
   currency: Currencies;
-  timestamp: Date;
+  timestamp: { lastAction: Date; lastRedeemed: Date | undefined };
   data: {
     timesBet: number;
     wins: number;

@@ -93,7 +93,7 @@ export async function getBettingUser(discordId: string) {
       const user: BettingUser = {
         discordId,
         currency: DEFAULT_USER.currency,
-        timestamp: new Date(),
+        timestamp: { lastAction: new Date(), lastRedeemed: undefined },
         data: DEFAULT_USER.data,
       };
 
@@ -358,8 +358,6 @@ export async function handleRemake(game: Match) {
 }
 
 export async function refundUsers(users: AmountByUser[]) {
-  const timestamp = new Date();
-
   const bettingUsers = users.map(async (user) => {
     const { error, user: bettingUser } = await getBettingUser(user.discordId);
 
@@ -367,6 +365,7 @@ export async function refundUsers(users: AmountByUser[]) {
       return;
     }
 
+    const timestamp = { ...bettingUser.timestamp, lastAction: new Date() };
     const tzapi = user.amount.tzapi + bettingUser.currency.tzapi;
     const nicu = user.amount.nicu + bettingUser.currency.nicu;
 
@@ -383,14 +382,13 @@ export async function refundUsers(users: AmountByUser[]) {
 }
 
 export async function handleWinnerBetResult(users: AmountByUser[]) {
-  const timestamp = new Date();
-
   const winners = users.map(async (user) => {
     const { error, user: bettingUser } = await getBettingUser(user.discordId);
     if (!bettingUser) {
       return;
     }
 
+    const timestamp = { ...bettingUser.timestamp, lastAction: new Date() };
     const tzapi =
       user.amount.tzapi +
       (user.winnings?.tzapi ?? 0) +
@@ -414,14 +412,13 @@ export async function handleWinnerBetResult(users: AmountByUser[]) {
 }
 
 export async function handleLoserBetResult(users: AmountByUser[]) {
-  const timestamp = new Date();
-
   const losers = users.map(async (user) => {
     const { error, user: bettingUser } = await getBettingUser(user.discordId);
     if (!bettingUser) {
       return;
     }
 
+    const timestamp = { ...bettingUser.timestamp, lastAction: new Date() };
     const loses = bettingUser.data.loses + 1;
     const tzapi =
       bettingUser.currency.tzapi +

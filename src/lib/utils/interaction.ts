@@ -284,7 +284,10 @@ export async function createBetCollector(
     }
 
     bettingUser.currency[currencyType] -= betAmount;
-    bettingUser.timestamp = new Date();
+    bettingUser.timestamp = {
+      ...bettingUser.timestamp,
+      lastAction: new Date(),
+    };
     bettingUser.data.timesBet += 1;
 
     const gameBet: Bet = {

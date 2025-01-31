@@ -47,3 +47,8 @@ export const BLUE_TEAM_ID = 100;
 
 /** Default image if src not found so they don't break the UI  */
 export const IMAGE_NOT_FOUND = `src/assets/img/not-found.png`;
+
+/** The user is broke if less than this amount of Tzapi  */
+export const BROKE_THRESHOLD = 20;
+export const TZAPI_TO_GIVE_WHEN_BROKE = 100;
+export const BROKE_COOLDOWN = 3;
