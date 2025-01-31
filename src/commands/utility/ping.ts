@@ -1,11 +1,11 @@
-import { SlashCommandBuilder } from "discord.js";
+import { CommandInteraction, SlashCommandBuilder } from "discord.js";
 
 export default {
   cooldown: 5,
   data: new SlashCommandBuilder()
     .setName("ping")
-    .setDescription("Replies with Pong!"),
-  async execute(interaction: any) {
+    .setDescription("Show roundtrip latency"),
+  async execute(interaction: CommandInteraction) {
     const sent = await interaction.reply({
       content: "Pinging...",
       fetchReply: true,
