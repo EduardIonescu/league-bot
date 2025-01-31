@@ -41,12 +41,24 @@ export async function getSpectatorData(summonerPUUID: string, region: Region) {
 
   try {
     const response = await fetch(url, { headers });
-
     const spectatorData: FailedRequest | SpectatorData = await response.json();
-    return spectatorData;
+
+    if (
+      !spectatorData ||
+      typeof spectatorData === "string" ||
+      "status" in spectatorData ||
+      !spectatorData?.gameStartTime
+    ) {
+      return { error: "Spectator Data not found!", spectatorData: undefined };
+    }
+
+    return { error: undefined, spectatorData };
   } catch (err) {
-    console.error(err);
-    return;
+    console.log("Error in getSpectatorData", err);
+    return {
+      error: "An error has occured getting Spectator Data.",
+      spectatorData: undefined,
+    };
   }
 }
 

@@ -46,16 +46,12 @@ export async function placeBet(
 
   if (error || !game) {
     try {
-      const spectatorData = await getSpectatorData(
+      const { error, spectatorData } = await getSpectatorData(
         summonerPUUID,
         account.region
       );
 
-      if (
-        !spectatorData ||
-        typeof spectatorData === "string" ||
-        "status" in spectatorData
-      ) {
+      if (error || !spectatorData) {
         await interaction.editReply(`${player} is not in game`);
         return;
       }

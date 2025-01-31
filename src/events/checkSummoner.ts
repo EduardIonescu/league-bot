@@ -25,7 +25,6 @@ export default {
     await interaction.deferReply();
     // The buttons are of format `check-${encryptedSummonerPUUIDAndRegion}` so slice at `-` to get it
     const summonerPUUIDAndRegion = interaction.customId.slice(6);
-
     const [summonerPUUID, region] = summonerPUUIDAndRegion.split("@") as [
       string,
       Region
@@ -37,16 +36,14 @@ export default {
       return;
     }
 
-    const spectatorData = await getSpectatorData(summonerPUUID, region);
+    const { error, spectatorData } = await getSpectatorData(
+      summonerPUUID,
+      region
+    );
 
-    if (
-      !spectatorData ||
-      typeof spectatorData === "string" ||
-      "status" in spectatorData ||
-      !spectatorData?.gameStartTime
-    ) {
+    if (error || !spectatorData) {
       console.log("Match not found . spectatorData: ", spectatorData);
-      await interaction.editReply(`Match not found`);
+      await interaction.editReply(error);
       return;
     }
 

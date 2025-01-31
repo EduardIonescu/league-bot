@@ -32,20 +32,12 @@ export async function check(
     gameMode: string;
   })[] = [];
   for (const account of accounts) {
-    const spectatorData = await getSpectatorData(
+    const { error, spectatorData } = await getSpectatorData(
       account.summonerPUUID,
       account.region
     );
 
-    if (
-      !spectatorData ||
-      typeof spectatorData === "string" ||
-      "status" in spectatorData
-    ) {
-      continue;
-    }
-
-    if (!spectatorData.gameStartTime) {
+    if (error || !spectatorData) {
       continue;
     }
 
