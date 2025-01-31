@@ -22,7 +22,7 @@ import {
   updateActiveGame,
   updateUser,
 } from "./game.js";
-import { getSpectatorData } from "./riot.js";
+import { fetchSpectatorData } from "./riot.js";
 
 export async function placeBet(
   interaction: CommandInteraction | ButtonInteraction,
@@ -46,7 +46,7 @@ export async function placeBet(
 
   if (error || !game) {
     try {
-      const { error, spectatorData } = await getSpectatorData(
+      const { error, spectatorData } = await fetchSpectatorData(
         summonerPUUID,
         account.region
       );

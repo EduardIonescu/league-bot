@@ -20,7 +20,7 @@ import {
   splitBets,
 } from "../lib/utils/game.js";
 import { getLeaderboardButton } from "../lib/utils/leaderboard.js";
-import { getFinishedMatch } from "../lib/utils/riot.js";
+import { fetchFinishedMatch } from "../lib/utils/riot.js";
 
 export default {
   name: Events.ClientReady,
@@ -44,7 +44,7 @@ async function handleActiveBets(client: Client) {
   for (const game of games) {
     const summonerPUUID = game.summonerId;
     const gameIdWithRegion = `${game.region.toUpperCase()}_${game.gameId}`;
-    const { active, match: matchResult } = await getFinishedMatch(
+    const { active, match: matchResult } = await fetchFinishedMatch(
       gameIdWithRegion
     );
     if (active || !matchResult?.info?.endOfGameResult) {

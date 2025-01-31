@@ -15,7 +15,7 @@ const headers = {
   "X-Riot-Token": process.env.LEAGUE_API ?? "",
 };
 
-export async function getSummonerData(name: string, tag: string) {
+export async function fetchSummonerData(name: string, tag: string) {
   const endpoint =
     "https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id";
   const url = `${endpoint}/${name}/${tag}`;
@@ -35,7 +35,10 @@ export async function getSummonerData(name: string, tag: string) {
   }
 }
 
-export async function getSpectatorData(summonerPUUID: string, region: Region) {
+export async function fetchSpectatorData(
+  summonerPUUID: string,
+  region: Region
+) {
   const endpoint = `https://${region}.api.riotgames.com/lol/spectator/v5/active-games/by-summoner`;
   const url = `${endpoint}/${summonerPUUID}`;
 
@@ -54,7 +57,7 @@ export async function getSpectatorData(summonerPUUID: string, region: Region) {
 
     return { error: undefined, spectatorData };
   } catch (err) {
-    console.log("Error in getSpectatorData", err);
+    console.log("Error in fetchSpectatorData", err);
     return {
       error: "An error has occured getting Spectator Data.",
       spectatorData: undefined,
@@ -63,7 +66,7 @@ export async function getSpectatorData(summonerPUUID: string, region: Region) {
 }
 
 /** @param matchId is for example `NA1_5201383209`. It needs the region prefix */
-export async function getFinishedMatch(
+export async function fetchFinishedMatch(
   matchId: string,
   region: RegionRiot = "europe"
 ) {
@@ -86,7 +89,7 @@ export async function getFinishedMatch(
 }
 
 /** It needs the `summonerId`, not to be confused with summonerPUUID  */
-export async function getAccountData(summonerId: string, region: Region) {
+export async function fetchAccountData(summonerId: string, region: Region) {
   const url = `https://${region}.api.riotgames.com/lol/league/v4/entries/by-summoner/${summonerId}`;
   try {
     const response = await fetch(url, { headers });

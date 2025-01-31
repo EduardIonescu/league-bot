@@ -9,7 +9,7 @@ import {
 } from "discord.js";
 import { Account, SpectatorParticipant } from "../types/riot.js";
 import { formatPlayerName, getAccounts } from "./game.js";
-import { getSpectatorData } from "./riot.js";
+import { fetchSpectatorData } from "./riot.js";
 
 export async function check(
   interaction: CommandInteraction | ButtonInteraction
@@ -32,7 +32,7 @@ export async function check(
     gameMode: string;
   })[] = [];
   for (const account of accounts) {
-    const { error, spectatorData } = await getSpectatorData(
+    const { error, spectatorData } = await fetchSpectatorData(
       account.summonerPUUID,
       account.region
     );

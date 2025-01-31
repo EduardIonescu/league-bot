@@ -1,7 +1,7 @@
 import { SlashCommandBuilder } from "discord.js";
 import { Account } from "../../lib/types/riot";
 import { formatPlayerName, writeAccountToFile } from "../../lib/utils/game.js";
-import { getSummonerData } from "../../lib/utils/riot";
+import { fetchSummonerData } from "../../lib/utils/riot.js";
 
 type Region = "eun1" | "euw1";
 
@@ -41,7 +41,7 @@ export default {
     const tagLine: string = interaction.options.getString("tag");
     const region: Region = interaction.options.getString("region");
 
-    const { error, summonerData } = await getSummonerData(gameName, tagLine);
+    const { error, summonerData } = await fetchSummonerData(gameName, tagLine);
     if (error || !summonerData) {
       await interaction.editReply(error ?? "No Summoner Found");
       return;

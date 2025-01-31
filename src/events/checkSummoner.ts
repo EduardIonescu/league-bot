@@ -13,7 +13,7 @@ import {
 } from "../lib/components/spectatorMatch.js";
 import { Region } from "../lib/types/riot.js";
 import { calculateLaneWeights } from "../lib/utils/game.js";
-import { getAccountData, getSpectatorData } from "../lib/utils/riot.js";
+import { fetchAccountData, fetchSpectatorData } from "../lib/utils/riot.js";
 
 export default {
   name: Events.InteractionCreate,
@@ -36,7 +36,7 @@ export default {
       return;
     }
 
-    const { error, spectatorData } = await getSpectatorData(
+    const { error, spectatorData } = await fetchSpectatorData(
       summonerPUUID,
       region
     );
@@ -50,7 +50,7 @@ export default {
     const participantsStats: ParticipantStats[] = [];
 
     for (const participant of spectatorData.participants) {
-      const { error, account: participantAccount } = await getAccountData(
+      const { error, account: participantAccount } = await fetchAccountData(
         participant.summonerId,
         region
       );
