@@ -1,6 +1,6 @@
 export type RegionRiot = "americas" | "europe";
 export type Region = "eun1" | "euw1" | "na1";
-export type SummonerId = { puuid: string; gameName: string; tagLine: string };
+export type SummonerData = { puuid: string; gameName: string; tagLine: string };
 export type Account = {
   gameName: string;
   tagLine: string;

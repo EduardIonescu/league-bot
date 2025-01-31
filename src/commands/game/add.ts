@@ -1,8 +1,7 @@
 import { SlashCommandBuilder } from "discord.js";
 import { Account } from "../../lib/types/riot";
-import { toTitleCase } from "../../lib/utils/common.js";
-import { writeAccountToFile } from "../../lib/utils/game.js";
-import { getSummonerId } from "../../lib/utils/riot.js";
+import { formatPlayerName, writeAccountToFile } from "../../lib/utils/game.js";
+import { getSummonerData } from "../../lib/utils/riot";
 
 type Region = "eun1" | "euw1";
 
@@ -42,26 +41,27 @@ export default {
     const tagLine: string = interaction.options.getString("tag");
     const region: Region = interaction.options.getString("region");
 
-    const summonerId = await getSummonerId(gameName, tagLine);
-    if (summonerId && !("status" in summonerId)) {
-      const account: Account = {
-        gameName,
-        tagLine,
-        summonerPUUID: summonerId.puuid,
-        region,
-      };
-      const { error } = await writeAccountToFile(account);
-      if (error.length === 0) {
-        const accountToShow =
-          toTitleCase(gameName) + "#" + tagLine.toUpperCase();
-        await interaction.editReply(`Account saved:  \`${accountToShow}\``);
-        return;
-      }
-
-      await interaction.editReply(error);
+    const { error, summonerData } = await getSummonerData(gameName, tagLine);
+    if (error || !summonerData) {
+      await interaction.editReply(error ?? "No Summoner Found");
       return;
     }
 
-    await interaction.editReply("No user found");
+    const account: Account = {
+      gameName,
+      tagLine,
+      summonerPUUID: summonerData.puuid,
+      region,
+    };
+
+    const { error: errorWriting } = await writeAccountToFile(account);
+    if (errorWriting) {
+      await interaction.editReply(errorWriting);
+      return;
+    }
+
+    const accountToShow = formatPlayerName(gameName, tagLine);
+    await interaction.editReply(`Account saved:  \`${accountToShow}\``);
+    return;
   },
 };

@@ -6,7 +6,7 @@ import {
   Region,
   RegionRiot,
   SpectatorData,
-  SummonerId,
+  SummonerData,
 } from "../types/riot";
 
 dotenv.config();
@@ -15,20 +15,23 @@ const headers = {
   "X-Riot-Token": process.env.LEAGUE_API ?? "",
 };
 
-export async function getSummonerId(name: string, tag: string) {
+export async function getSummonerData(name: string, tag: string) {
   const endpoint =
     "https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id";
   const url = `${endpoint}/${name}/${tag}`;
 
   try {
     const response = await fetch(url, { headers });
+    const summonerData = (await response.json()) as SummonerData;
 
-    const summonerId = (await response.json()) as SummonerId;
+    if (!summonerData || "status" in summonerData || !summonerData?.puuid) {
+      return { error: "Summoner not found", summonerData: undefined };
+    }
 
-    return summonerId;
+    return { error: undefined, summonerData };
   } catch (err) {
-    console.error(err);
-    return;
+    console.log("Error in getSummonerPUUID", err);
+    return { error: "Error getting summonerData" };
   }
 }
 

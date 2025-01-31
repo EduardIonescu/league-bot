@@ -500,6 +500,7 @@ export function formatChoices(
   return choices;
 }
 
+/** Returns player name as `Demon#Ikspe`  */
 export function formatPlayerName(gameName: string, tagLine: string) {
   return `${toTitleCase(gameName)}#${tagLine.toUpperCase()}`;
 }
