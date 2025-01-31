@@ -28,17 +28,6 @@ export async function filePathExists(filePath: URL) {
   }
 }
 
-export function capitalize(sentence: string) {
-  let newSentenceArray = [];
-  const splitSentence = sentence.split(" ");
-  for (const word of splitSentence) {
-    const capitalizedWord = word[0].toUpperCase() + word.slice(1);
-    newSentenceArray.push(capitalizedWord);
-  }
-
-  return newSentenceArray.join(" ");
-}
-
 /** Cursed way to make discord customId less than 100 characters long(limit)  */
 export const encodeBase1114111 = (str: string) => {
   let num = BigInt("0x" + Buffer.from(str).toString("hex"));

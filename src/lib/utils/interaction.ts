@@ -11,7 +11,7 @@ import {
 import { loseButtons, winButtons } from "../constants.js";
 import { Bet, Currency } from "../types/common.js";
 import { Account } from "../types/riot.js";
-import { capitalize } from "./common.js";
+import { toTitleCase } from "./common.js";
 import {
   bettingButtons,
   canBetOnActiveGame,
@@ -253,7 +253,7 @@ export async function createBetCollector(
         components: [winRow, loseRow],
       });
       await buttonInteraction.followUp({
-        content: `You don't have enough currency to bet ${betAmount}. You currently have ${currency} ${capitalize(
+        content: `You don't have enough currency to bet ${betAmount}. You currently have ${currency} ${toTitleCase(
           currencyType
         )}.`,
         flags: MessageFlags.Ephemeral,
@@ -364,7 +364,7 @@ export async function createBetCollector(
       components: [winRow, loseRow],
     });
     await buttonInteraction.followUp({
-      content: `You've bet ${betAmount} ${capitalize(currencyType)} on ${
+      content: `You've bet ${betAmount} ${toTitleCase(currencyType)} on ${
         win ? "win" : "lose"!
       }`,
       flags: MessageFlags.Ephemeral,
