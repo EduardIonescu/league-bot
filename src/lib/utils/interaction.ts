@@ -8,7 +8,7 @@ import {
   MessageFlags,
   TextBasedChannel,
 } from "discord.js";
-import { loseButtons, winButtons } from "../constants.js";
+import { loseButtons, NICU_IN_TZAPI, winButtons } from "../constants.js";
 import { Bet, Currency } from "../types/common.js";
 import { Account } from "../types/riot.js";
 import { toTitleCase } from "./common.js";
@@ -245,22 +245,6 @@ export async function createBetCollector(
       return;
     }
 
-    const currency = bettingUser.currency[currencyType];
-
-    if (betAmount > currency) {
-      await buttonInteraction.update({
-        embeds: [embed],
-        components: [winRow, loseRow],
-      });
-      await buttonInteraction.followUp({
-        content: `You don't have enough currency to bet ${betAmount}. You currently have ${currency} ${toTitleCase(
-          currencyType
-        )}.`,
-        flags: MessageFlags.Ephemeral,
-      });
-      return;
-    }
-
     const bettingUserBets = game.bets.filter(
       (bet) => bet.discordId === bettingUser.discordId
     );
@@ -283,7 +267,37 @@ export async function createBetCollector(
       }
     }
 
-    bettingUser.currency[currencyType] -= betAmount;
+    const currency = bettingUser.currency[currencyType];
+
+    if (betAmount > currency) {
+      const totalTzapiInNicu = Math.floor(
+        bettingUser.currency.tzapi / NICU_IN_TZAPI
+      );
+      const totalCurrencyInNicu = bettingUser.currency.nicu + totalTzapiInNicu;
+
+      if (currencyType !== "nicu" || totalCurrencyInNicu < betAmount) {
+        await buttonInteraction.update({
+          embeds: [embed],
+          components: [winRow, loseRow],
+        });
+        await buttonInteraction.followUp({
+          content: `You don't have enough currency to bet ${betAmount}. You currently have ${currency} ${toTitleCase(
+            currencyType
+          )}.`,
+          flags: MessageFlags.Ephemeral,
+        });
+        return;
+      }
+
+      const nicuInTzapiNeeded =
+        (betAmount - bettingUser.currency.nicu) * NICU_IN_TZAPI;
+      const tzapi = bettingUser.currency.tzapi - nicuInTzapiNeeded;
+
+      bettingUser.currency = { nicu: 0, tzapi };
+    } else {
+      bettingUser.currency[currencyType] -= betAmount;
+    }
+
     bettingUser.timestamp = {
       ...bettingUser.timestamp,
       lastAction: new Date(),
