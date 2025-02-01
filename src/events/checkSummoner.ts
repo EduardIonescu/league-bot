@@ -1,6 +1,5 @@
 import {
   ActionRowBuilder,
-  AttachmentBuilder,
   ButtonBuilder,
   ButtonInteraction,
   ButtonStyle,
@@ -14,6 +13,10 @@ import {
 import { AccountData, Region } from "../lib/types/riot.js";
 import { calculateLaneWeights } from "../lib/utils/game.js";
 import { fetchAccountData, fetchSpectatorData } from "../lib/utils/riot.js";
+import { screenshot } from "../lib/utils/screenshot.js";
+
+// Shell is supposed to be older but I found it's way faster
+const browser = await puppeteer.launch({ headless: "shell" });
 
 export default {
   name: Events.InteractionCreate,
@@ -78,19 +81,8 @@ export default {
       })
     );
 
-    const browser = await puppeteer.launch();
-    const page = await browser.newPage();
-    page.setViewport({ width: 1920, height: 780 });
-
     const html = LiveGameHTML(participantsStats);
-
-    await page.setContent(html, { waitUntil: "domcontentloaded" });
-
-    const screenshot = await page.screenshot({ fullPage: true });
-    await browser.close();
-
-    const screenshotBuffer = Buffer.from(screenshot);
-    const image = new AttachmentBuilder(screenshotBuffer, { name: "live.png" });
+    const image = await screenshot(browser, html, { width: 1920, height: 780 });
 
     const button = new ButtonBuilder()
       .setCustomId(`start-bet-${summonerPUUID}`)
@@ -99,6 +91,6 @@ export default {
 
     const row = new ActionRowBuilder<ButtonBuilder>().setComponents(button);
 
-    await interaction.editReply({ files: [image], components: [row] });
+    interaction.editReply({ files: [image], components: [row] });
   },
 };

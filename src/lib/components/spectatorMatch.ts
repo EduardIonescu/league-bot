@@ -1,4 +1,4 @@
-import { Lane } from "../types/common.js";
+import { HTMLString, Lane } from "../types/common.js";
 import { AccountData, SpectatorPerks } from "../types/riot.js";
 import {
   colorByWinrate,
@@ -28,7 +28,9 @@ export type ParticipantStats = {
   weights: { [key in Lane]?: number };
 };
 
-export function LiveGameHTML(participantsStats: ParticipantStats[]) {
+export function LiveGameHTML(
+  participantsStats: ParticipantStats[]
+): HTMLString {
   const blueSideParticipants = guessTeamLanes(participantsStats.slice(0, 5));
   const redSideParticipants = guessTeamLanes(participantsStats.slice(5, 10));
 

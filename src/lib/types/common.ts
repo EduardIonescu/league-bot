@@ -100,3 +100,5 @@ export type FinishedMatchParticipant = {
   teamId: number;
   win: boolean;
 };
+
+export type HTMLString = `<!DOCTYPE html>${string}`;
