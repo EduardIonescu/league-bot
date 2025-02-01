@@ -11,7 +11,7 @@ import {
   LiveGameHTML,
   ParticipantStats,
 } from "../lib/components/spectatorMatch.js";
-import { Region } from "../lib/types/riot.js";
+import { AccountData, Region } from "../lib/types/riot.js";
 import { calculateLaneWeights } from "../lib/utils/game.js";
 import { fetchAccountData, fetchSpectatorData } from "../lib/utils/riot.js";
 
@@ -47,56 +47,36 @@ export default {
       return;
     }
 
-    const participantsStats: ParticipantStats[] = [];
+    const participantsStats: ParticipantStats[] = await Promise.all(
+      spectatorData.participants.map(async (participant) => {
+        const { account: participantAccount } = await fetchAccountData(
+          participant.summonerId,
+          region
+        );
 
-    for (const participant of spectatorData.participants) {
-      const { error, account: participantAccount } = await fetchAccountData(
-        participant.summonerId,
-        region
-      );
+        const weights = calculateLaneWeights(participant);
 
-      const weights = calculateLaneWeights(participant);
-
-      if (
-        error ||
-        !participantAccount ||
-        (Array.isArray(participantAccount) && participantAccount.length === 0)
-      ) {
-        console.log("Error in checkSummoner.ts");
-        console.log("error", error);
-        console.log("error", participantAccount);
-        console.log("participant", participant);
-        {
-          participantsStats.push({
-            teamId: participant.teamId,
-            riotId: participant.riotId,
-            championId: participant.championId,
-            spell1Id: participant.spell1Id,
-            spell2Id: participant.spell2Id,
-            perks: participant.perks,
-            weights,
-          });
+        let rankedStats: AccountData | undefined;
+        if (Array.isArray(participantAccount)) {
+          rankedStats = participantAccount.find(
+            (acc) => acc.queueType === "RANKED_SOLO_5x5"
+          );
+        } else if (participantAccount?.queueType === "RANKED_SOLO_5x5") {
+          rankedStats = participantAccount;
         }
-        continue;
-      }
 
-      const rankedStats = Array.isArray(participantAccount)
-        ? participantAccount.find((acc) => acc.queueType === "RANKED_SOLO_5x5")
-        : participantAccount.queueType === "RANKED_SOLO_5x5"
-        ? participantAccount
-        : undefined;
-
-      participantsStats.push({
-        rankedStats,
-        teamId: participant.teamId,
-        riotId: participant.riotId,
-        championId: participant.championId,
-        spell1Id: participant.spell1Id,
-        spell2Id: participant.spell2Id,
-        perks: participant.perks,
-        weights,
-      });
-    }
+        return {
+          rankedStats,
+          teamId: participant.teamId,
+          riotId: participant.riotId,
+          championId: participant.championId,
+          spell1Id: participant.spell1Id,
+          spell2Id: participant.spell2Id,
+          perks: participant.perks,
+          weights,
+        };
+      })
+    );
 
     const browser = await puppeteer.launch();
     const page = await browser.newPage();
