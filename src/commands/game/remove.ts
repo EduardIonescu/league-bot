@@ -26,27 +26,25 @@ export default {
         .addChoices(...choices)
     ),
   async execute(interaction: CommandInteraction) {
-    await interaction.deferReply();
-
     const nameAndTag = (
       interaction.options as CommandInteractionOptionResolver
     ).getString("account");
 
     if (!nameAndTag) {
-      await interaction.editReply("No account found for the selected option.");
+      interaction.reply("No account found for the selected option.");
       return;
     }
 
     const { error } = await removeAccountFile(nameAndTag);
     if (error) {
-      await interaction.editReply(error);
+      interaction.reply(error);
       return;
     }
 
     const [gameName, gameTag] = nameAndTag.split("_");
     const playerName = formatPlayerName(gameName, gameTag);
 
-    await interaction.editReply(`Account removed: \`${playerName}\``);
+    interaction.reply(`Account removed: \`${playerName}\``);
     return;
   },
 };
