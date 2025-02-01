@@ -1,5 +1,4 @@
 import { ButtonInteraction, Events } from "discord.js";
-import { performance } from "node:perf_hooks";
 import puppeteer from "puppeteer";
 import { FinishedMatchHTML } from "../lib/components/finishedMatch.js";
 import { decodeBase1114111 } from "../lib/utils/common.js";
@@ -35,7 +34,6 @@ export default {
       await interaction.reply({ content: error });
       return;
     }
-    const b = performance.now();
 
     const html = FinishedMatchHTML(match.participants, match.gameDuration);
     const image = await screenshot(browser, html, { width: 960, height: 780 });
