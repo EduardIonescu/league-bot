@@ -7,19 +7,17 @@ export default {
     .setName("currency")
     .setDescription("Show current currency"),
   async execute(interaction: CommandInteraction) {
-    await interaction.deferReply();
     const discordId = interaction.user.id;
-
     const { error, user: bettingUser } = await getBettingUser(discordId);
 
     if (error || !bettingUser) {
-      await interaction.editReply({
+      interaction.reply({
         content: error,
       });
       return;
     }
 
-    await interaction.editReply({
+    interaction.reply({
       content: `You have ${bettingUser.currency.nicu} Nicu and ${bettingUser.currency.tzapi} Tzapi left!`,
     });
   },
