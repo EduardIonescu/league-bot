@@ -31,23 +31,28 @@ export async function check(
     participants: SpectatorParticipant[];
     gameMode: string;
   })[] = [];
-  for (const account of accounts) {
-    const { error, spectatorData } = await fetchSpectatorData(
-      account.summonerPUUID,
-      account.region
-    );
 
-    if (error || !spectatorData) {
-      continue;
-    }
+  const results = await Promise.all(
+    accounts.map(async (account) => {
+      const { error, spectatorData } = await fetchSpectatorData(
+        account.summonerPUUID,
+        account.region
+      );
 
-    accountsInGame.push({
-      ...account,
-      gameStartTime: spectatorData.gameStartTime,
-      participants: spectatorData.participants,
-      gameMode: spectatorData.gameMode,
-    });
-  }
+      if (error || !spectatorData) {
+        return undefined;
+      }
+
+      return {
+        ...account,
+        gameStartTime: spectatorData.gameStartTime,
+        participants: spectatorData.participants,
+        gameMode: spectatorData.gameMode,
+      };
+    })
+  );
+
+  accountsInGame.push(...results.filter((data) => data !== undefined));
 
   if (!accountsInGame || accountsInGame.length === 0) {
     await interaction.editReply("No players are in game right now.");
