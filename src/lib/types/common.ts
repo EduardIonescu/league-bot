@@ -1,4 +1,4 @@
-import { Perks, Region } from "./riot";
+import { Account, Perks, Region, SpectatorParticipant } from "./riot";
 
 export type BettingUser = {
   discordId: string;
@@ -102,3 +102,9 @@ export type FinishedMatchParticipant = {
 };
 
 export type HTMLString = `<!DOCTYPE html>${string}`;
+
+export type AccountInGame = Account & {
+  gameStartTime: number;
+  participants: SpectatorParticipant[];
+  gameMode: string;
+};

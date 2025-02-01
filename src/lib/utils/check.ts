@@ -7,55 +7,53 @@ import {
   time,
   TimestampStyles,
 } from "discord.js";
-import { Account, SpectatorParticipant } from "../types/riot.js";
+import { AccountInGame } from "../types/common.js";
+import { handleDefer } from "./customReply.js";
 import { formatPlayerName, getAccounts } from "./game.js";
 import { fetchSpectatorData } from "./riot.js";
 
 export async function check(
   interaction: CommandInteraction | ButtonInteraction
 ) {
-  await interaction.deferReply();
+  const deferHandler = handleDefer(interaction);
+  deferHandler.start();
 
   const { error, accounts } = await getAccounts();
 
   if (error || !accounts || accounts.length === 0) {
-    await interaction.editReply(
+    await interaction.customReply(
       "No accounts are saved. Try saving some accounts first with `/add`"
     );
+    deferHandler.cancel();
 
     return;
   }
 
-  const accountsInGame: (Account & {
-    gameStartTime: number;
-    participants: SpectatorParticipant[];
-    gameMode: string;
-  })[] = [];
+  const accountsInGame: AccountInGame[] = (
+    await Promise.all(
+      accounts.map(async (account) => {
+        const { error, spectatorData } = await fetchSpectatorData(
+          account.summonerPUUID,
+          account.region
+        );
 
-  const results = await Promise.all(
-    accounts.map(async (account) => {
-      const { error, spectatorData } = await fetchSpectatorData(
-        account.summonerPUUID,
-        account.region
-      );
+        if (error || !spectatorData) {
+          return undefined;
+        }
 
-      if (error || !spectatorData) {
-        return undefined;
-      }
-
-      return {
-        ...account,
-        gameStartTime: spectatorData.gameStartTime,
-        participants: spectatorData.participants,
-        gameMode: spectatorData.gameMode,
-      };
-    })
-  );
-
-  accountsInGame.push(...results.filter((data) => data !== undefined));
+        return {
+          ...account,
+          gameStartTime: spectatorData.gameStartTime,
+          participants: spectatorData.participants,
+          gameMode: spectatorData.gameMode,
+        };
+      })
+    )
+  ).filter((data) => data !== undefined);
 
   if (!accountsInGame || accountsInGame.length === 0) {
-    await interaction.editReply("No players are in game right now.");
+    await interaction.customReply("No players are in game right now.");
+    deferHandler.cancel();
 
     return;
   }
@@ -104,17 +102,20 @@ export async function check(
   playerButtonsColumns.push(playerButtonsRow);
 
   if (playerButtonsColumns.length) {
-    await interaction.editReply({
+    await interaction.customReply({
       content: msg.join("\n"),
       components: playerButtonsColumns,
     });
+    deferHandler.cancel();
 
     return;
   }
 
-  await interaction.editReply({
+  await interaction.customReply({
     content: msg.join("\n"),
   });
+  deferHandler.cancel();
+
   return;
 }
 
