@@ -33,6 +33,6 @@ export default {
       }
     }
 
-    await interaction.reply({ content, flags: MessageFlags.Ephemeral });
+    interaction.reply({ content, flags: MessageFlags.Ephemeral });
   },
 };
