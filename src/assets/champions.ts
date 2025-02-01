@@ -106,7 +106,7 @@ export default [
   { id: 133, name: "Quinn", lanes: ["top", "mid", "support"] },
   { id: 497, name: "Rakan", lanes: ["support"] },
   { id: 33, name: "Rammus", lanes: ["jungle", "support"] },
-  { id: 421, name: "Rek'sai", lanes: ["jungle"] },
+  { id: 421, name: "RekSai", lanes: ["jungle"] },
   { id: 526, name: "Rell", lanes: ["support"] },
   { id: 888, name: "Renata", lanes: ["support"] },
   { id: 58, name: "Renekton", lanes: ["top", "mid"] },
