@@ -11,6 +11,7 @@ import {
   ParticipantStats,
 } from "../lib/components/spectatorMatch.js";
 import { AccountData, Region } from "../lib/types/riot.js";
+import { handleDefer } from "../lib/utils/customReply.js";
 import { calculateLaneWeights } from "../lib/utils/game.js";
 import { fetchAccountData, fetchSpectatorData } from "../lib/utils/riot.js";
 import { screenshot } from "../lib/utils/screenshot.js";
@@ -25,7 +26,9 @@ export default {
       return;
     }
 
-    await interaction.deferReply();
+    const deferHandler = handleDefer(interaction);
+    deferHandler.start();
+
     // The buttons are of format `check-${encryptedSummonerPUUIDAndRegion}` so slice at `-` to get it
     const summonerPUUIDAndRegion = interaction.customId.slice(6);
     const [summonerPUUID, region] = summonerPUUIDAndRegion.split("@") as [
@@ -35,7 +38,9 @@ export default {
 
     if (!summonerPUUID || !region) {
       console.log("summonerPUUID not found: ", summonerPUUID);
-      await interaction.editReply(`Player not found`);
+      interaction.customReply(`Player not found`);
+      deferHandler.cancel();
+
       return;
     }
 
@@ -46,7 +51,9 @@ export default {
 
     if (error || !spectatorData) {
       console.log("Match not found . spectatorData: ", spectatorData);
-      await interaction.editReply(error);
+      interaction.customReply(error);
+      deferHandler.cancel();
+
       return;
     }
 
@@ -91,6 +98,7 @@ export default {
 
     const row = new ActionRowBuilder<ButtonBuilder>().setComponents(button);
 
-    interaction.editReply({ files: [image], components: [row] });
+    interaction.reply({ files: [image], components: [row] });
+    deferHandler.cancel();
   },
 };

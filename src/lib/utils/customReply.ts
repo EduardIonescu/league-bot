@@ -14,6 +14,15 @@ CommandInteraction.prototype.customReply = async function (
 
   return await this.reply(options);
 };
+ButtonInteraction.prototype.customReply = async function (
+  options: string | MessagePayload | InteractionReplyOptions
+) {
+  if (this.deferred || this.replied) {
+    return await this.editReply(options);
+  }
+
+  return await this.reply(options);
+};
 
 const TIMEOUT_DEFER_REPLY = 2200;
 
