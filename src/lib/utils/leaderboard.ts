@@ -6,19 +6,20 @@ import {
   CommandInteraction,
 } from "discord.js";
 import * as fs from "node:fs/promises";
+import { NICU_IN_TZAPI } from "../constants.js";
 import { BettingUser } from "../types/common.js";
 import { getCheckButton } from "./check.js";
 
 export async function showLeaderboard(
   interaction: CommandInteraction | ButtonInteraction
 ) {
-  await interaction.deferReply();
-
   const { error, users } = await getLeaderboard();
 
-  if (error || !users || users.length === 0) {
-    await interaction.editReply(error ?? "Error loading users.");
+  if (error || !users) {
+    interaction.reply(error ?? "Error loading users.");
+    return;
   }
+
   const usersByCurrency = users!.map(
     (user, index) =>
       `${index + 1}. <@${user.discordId}>\n${user.currency.nicu} Nicu and ${
@@ -30,11 +31,11 @@ export async function showLeaderboard(
       }% Winrate`
   );
   const content = `Leaderboard\n${usersByCurrency.join("\n\n")}\n`;
-
   const components = [
     new ActionRowBuilder<ButtonBuilder>().addComponents(getCheckButton()),
   ];
-  await interaction.editReply({ content, components });
+
+  interaction.reply({ content, components });
 }
 
 async function getLeaderboard() {
@@ -43,19 +44,29 @@ async function getLeaderboard() {
     const userFolderPath = new URL("src/data/users/", rootPath);
     const userFolder = await fs.readdir(userFolderPath);
 
-    const users: BettingUser[] = [];
-    for (const userFile of userFolder) {
-      const filePath = new URL(userFile, userFolderPath);
-      const user: BettingUser = JSON.parse(await fs.readFile(filePath, "utf8"));
-      users.push(user);
+    const users: BettingUser[] = await Promise.all(
+      userFolder.map(async (userFile) => {
+        const filePath = new URL(userFile, userFolderPath);
+        const user: BettingUser = JSON.parse(
+          await fs.readFile(filePath, "utf8")
+        );
+        return user;
+      })
+    );
+
+    if (users.length === 0) {
+      return {
+        error:
+          "No users found. Try using /currency or betting on a match first.",
+        users: undefined,
+      };
     }
 
     users.sort((a, b) => {
-      if (b.currency.nicu === a.currency.nicu) {
-        return b.currency.tzapi - a.currency.tzapi;
-      } else {
-        return b.currency.nicu - a.currency.nicu;
-      }
+      const aTotalTzapi = a.currency.tzapi + a.currency.nicu * NICU_IN_TZAPI;
+      const bTotalTzapi = b.currency.tzapi + b.currency.nicu * NICU_IN_TZAPI;
+
+      return bTotalTzapi - aTotalTzapi;
     });
 
     return {

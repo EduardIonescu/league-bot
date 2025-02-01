@@ -7,6 +7,10 @@ export default {
     .setName("leaderboard")
     .setDescription("Top betters by results."),
   async execute(interaction: CommandInteraction) {
-    await showLeaderboard(interaction);
+    try {
+      await showLeaderboard(interaction);
+    } catch (err) {
+      console.log(err);
+    }
   },
 };
