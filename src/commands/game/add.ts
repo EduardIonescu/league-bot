@@ -1,4 +1,8 @@
-import { SlashCommandBuilder } from "discord.js";
+import {
+  CommandInteraction,
+  CommandInteractionOptionResolver,
+  SlashCommandBuilder,
+} from "discord.js";
 import { Account } from "../../lib/types/riot";
 import { formatPlayerName, writeAccountToFile } from "../../lib/utils/game.js";
 import { fetchSummonerData } from "../../lib/utils/riot.js";
@@ -34,16 +38,18 @@ export default {
         .setMaxLength(8)
         .setRequired(true)
     ),
-  async execute(interaction: any) {
-    await interaction.deferReply();
-
-    const gameName: string = interaction.options.getString("name");
-    const tagLine: string = interaction.options.getString("tag");
-    const region: Region = interaction.options.getString("region");
+  async execute(
+    interaction: CommandInteraction & {
+      options: CommandInteractionOptionResolver;
+    }
+  ) {
+    const gameName = interaction.options.getString("name") as string;
+    const tagLine = interaction.options.getString("tag") as string;
+    const region = interaction.options.getString("region") as Region;
 
     const { error, summonerData } = await fetchSummonerData(gameName, tagLine);
     if (error || !summonerData) {
-      await interaction.editReply(error ?? "No Summoner Found");
+      interaction.reply(error ?? "No Summoner Found");
       return;
     }
 
@@ -56,12 +62,12 @@ export default {
 
     const { error: errorWriting } = await writeAccountToFile(account);
     if (errorWriting) {
-      await interaction.editReply(errorWriting);
+      interaction.reply(errorWriting);
       return;
     }
 
     const accountToShow = formatPlayerName(gameName, tagLine);
-    await interaction.editReply(`Account saved:  \`${accountToShow}\``);
+    interaction.reply(`Account saved:  \`${accountToShow}\``);
     return;
   },
 };
