@@ -1,5 +1,5 @@
 import { BLUE_TEAM_ID } from "../constants.js";
-import { FinishedMatchParticipant } from "../types/common.js";
+import { FinishedMatchParticipant, HTMLString } from "../types/common.js";
 import { Style } from "../types/riot.js";
 import {
   colorByKDA,
@@ -13,7 +13,7 @@ import {
 export function FinishedMatchHTML(
   participants: FinishedMatchParticipant[],
   gameDuration: number
-) {
+): HTMLString {
   const { win, teamId } = participants[0];
   const firstTeam = {
     name: teamId === BLUE_TEAM_ID ? "Blue team" : "Red team",
@@ -40,8 +40,7 @@ export function FinishedMatchHTML(
     0
   );
 
-  return `
-  <!DOCTYPE html>
+  return `<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
