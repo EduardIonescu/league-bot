@@ -28,6 +28,8 @@ export async function placeBet(
   interaction: CommandInteraction | ButtonInteraction,
   account?: Account
 ) {
+  await interaction.deferReply();
+
   if (!account) {
     interaction.editReply("Account not found. Try saving it first with `/add`");
     return;
