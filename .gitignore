@@ -7,3 +7,4 @@ accounts/
 bets/
 users/
 accounts_testing/
+database.db

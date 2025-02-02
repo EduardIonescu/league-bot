@@ -64,3 +64,10 @@ export function htmlImgSrcFromPath(imagePath: string) {
     return "";
   }
 }
+
+export function dateToTIMESTAMP(date: Date | null | undefined | string) {
+  if (!date) {
+    return null;
+  }
+  return new Date(date).toISOString().slice(0, 19).replace("T", " ");
+}
