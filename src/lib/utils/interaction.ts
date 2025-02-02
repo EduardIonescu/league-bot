@@ -12,7 +12,6 @@ import { loseButtons, NICU_IN_TZAPI, winButtons } from "../constants.js";
 import { Bet, Currency } from "../types/common.js";
 import { Account } from "../types/riot.js";
 import { toTitleCase } from "./common.js";
-import { handleDefer } from "./customReply.js";
 import {
   bettingButtons,
   canBetOnActiveGame,
@@ -29,15 +28,8 @@ export async function placeBet(
   interaction: CommandInteraction | ButtonInteraction,
   account?: Account
 ) {
-  const deferHandler = handleDefer(interaction);
-  deferHandler.start();
-
   if (!account) {
-    interaction.customReply(
-      "Account not found. Try saving it first with `/add`"
-    );
-    deferHandler.cancel();
-
+    interaction.editReply("Account not found. Try saving it first with `/add`");
     return;
   }
 
@@ -56,9 +48,7 @@ export async function placeBet(
       );
 
       if (error || !spectatorData) {
-        await interaction.customReply(`${player} is not in game`);
-        deferHandler.cancel();
-
+        interaction.editReply(`${player} is not in game`);
         return;
       }
 
@@ -66,11 +56,9 @@ export async function placeBet(
         !(spectatorData.gameQueueConfigId === 420) &&
         !(spectatorData.gameQueueConfigId === 440)
       ) {
-        await interaction.customReply(
+        interaction.editReply(
           `You can't bet on ${spectatorData.gameMode} games. You can only bet on Ranked Solo/Duo and Ranked Flex games.`
         );
-        deferHandler.cancel();
-
         return;
       }
 
@@ -91,20 +79,16 @@ export async function placeBet(
       console.log("game", game);
       const canBetOnGame = canBetOnActiveGame(game.gameStartTime);
       if (!canBetOnGame) {
-        interaction.customReply({
+        interaction.editReply({
           content: "Betting window has closed. Better luck on the next one!",
           // flags: MessageFlags.Ephemeral,
         });
-        deferHandler.cancel();
-
         return;
       }
 
       await updateActiveGame(game);
     } catch (err) {
-      interaction.customReply(`${player} is not in game`);
-      deferHandler.cancel();
-
+      interaction.editReply(`${player} is not in game`);
       return;
     }
   }
@@ -139,7 +123,7 @@ export async function placeBet(
 
   const canBetOnGame = canBetOnActiveGame(game.gameStartTime);
   if (!canBetOnGame) {
-    await interaction.customReply({
+    await interaction.editReply({
       embeds: [embed],
       components: [],
     });
@@ -147,8 +131,6 @@ export async function placeBet(
       content: "Betting window has closed. Better luck on the next one!",
       flags: MessageFlags.Ephemeral,
     });
-    deferHandler.cancel();
-
     return;
   }
 
@@ -158,7 +140,6 @@ export async function placeBet(
     embeds: [embed],
     components: [winRow, loseRow],
   });
-  deferHandler.cancel();
 
   const channelInGame = game.sentIn.find((s) => s.channelId === channel.id);
   if (!channelInGame) {
