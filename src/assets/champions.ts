@@ -149,6 +149,7 @@ export default [
   { id: 67, name: "Vayne", lanes: ["bot", "top"] },
   { id: 45, name: "Veigar", lanes: ["mid", "bot"] },
   { id: 161, name: "Velkoz", lanes: ["mid", "support"] },
+  { id: 711, name: "Vex", lanes: ["mid", "top"] },
   { id: 254, name: "Vi", lanes: ["jungle"] },
   { id: 234, name: "Viego", lanes: ["jungle"] },
   { id: 112, name: "Viktor", lanes: ["mid", "bot"] },
