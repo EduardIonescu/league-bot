@@ -1,4 +1,5 @@
 import { CommandInteraction, SlashCommandBuilder } from "discord.js";
+import { handleDefer } from "../../lib/utils/customReply.js";
 import { getBettingUser, updateUser } from "../../lib/utils/game.js";
 
 export default {
@@ -17,29 +18,36 @@ export default {
     ),
 
   async execute(interaction: CommandInteraction) {
-    await interaction.deferReply();
+    const deferHandler = handleDefer(interaction);
+    deferHandler.start();
 
     const giverDiscordId = interaction.user.id;
     const { error: giverError, user: giverUser } = await getBettingUser(
       giverDiscordId
     );
     if (giverError || !giverUser) {
-      await interaction.editReply(
+      interaction.customReply(
         "User not found. Try again or try /currency first."
       );
+      deferHandler.cancel();
+
       return;
     }
 
     const receiverDiscordId = interaction.options.get("user", true).user?.id;
     if (!receiverDiscordId) {
-      await interaction.editReply("Receiver user not found.");
+      interaction.customReply("Receiver user not found.");
+      deferHandler.cancel();
+
       return;
     }
 
     if (giverDiscordId === receiverDiscordId) {
-      await interaction.editReply({
+      interaction.customReply({
         content: "You fool. You tried to give tzapi to yourself!",
       });
+      deferHandler.cancel();
+
       return;
     }
 
@@ -47,9 +55,11 @@ export default {
       receiverDiscordId
     );
     if (receiverError || !receiverUser) {
-      await interaction.editReply(
+      interaction.customReply(
         "User not found. Try again or try /currency first."
       );
+      deferHandler.cancel();
+
       return;
     }
 
@@ -57,7 +67,9 @@ export default {
 
     if (!amount || typeof amount === "boolean") {
       console.log("Amount is undefiend or boolean. ", amount);
-      await interaction.editReply("Amount can't be empty.");
+      interaction.customReply("Amount can't be empty.");
+      deferHandler.cancel();
+
       return;
     }
 
@@ -71,18 +83,22 @@ export default {
         interaction.options.get("amount")?.value
       );
 
-      await interaction.editReply(
+      interaction.customReply(
         `\`${
           interaction.options.get("amount")?.value
         }\` must be a number and bigger than 0.`
       );
+      deferHandler.cancel();
+
       return;
     }
 
     if (giverUser.currency.tzapi < amount) {
-      await interaction.editReply(
+      interaction.customReply(
         `You need ${amount} Tzapi. You only have ${giverUser.currency.tzapi} Tzapi`
       );
+      deferHandler.cancel();
+
       return;
     }
 
@@ -102,18 +118,20 @@ export default {
 
     if (updateGiverError || updateReceiverError) {
       console.log("Error updating users");
-      await interaction.editReply(
+      interaction.customReply(
         `An error has occured updating <@${
           updateGiverError ? giverDiscordId : receiverDiscordId
         }>.`
       );
+      deferHandler.cancel();
 
       return;
     }
 
-    await interaction.editReply(
+    interaction.customReply(
       `<@${giverDiscordId}> gave <@${receiverDiscordId}> \`${amount}\` Tzapi.\n<@${receiverDiscordId}> thanks him dearly!`
     );
+    deferHandler.cancel();
 
     return;
   },
