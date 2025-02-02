@@ -1,0 +1,6 @@
+CREATE TABLE IF NOT EXISTS accounts (
+    summonerPUUID TEXT PRIMARY KEY UNIQUE,
+    gameName TEXT NOT NULL,
+    tagLine TEXT NOT NULL,
+    region TEXT NOT NULL
+);
