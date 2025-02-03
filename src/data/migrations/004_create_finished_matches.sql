@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS finishedMatches(
   createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE finishedMatchParticipants (
+CREATE TABLE IF NOT EXISTS finishedMatchParticipants (
   gameId VARCHAR(255) NOT NULL,
   puuid VARCHAR(255) NOT NULL,
   kills INTEGER NOT NULL,
