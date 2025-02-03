@@ -102,7 +102,7 @@ export async function check(
   }
   playerButtonsColumns.push(playerButtonsRow);
 
-  if (playerButtonsColumns.length) {
+  if (playerButtonsColumns[0].components.length) {
     await interaction.customReply({
       content: msg.join("\n"),
       components: playerButtonsColumns,
