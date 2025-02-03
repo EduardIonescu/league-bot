@@ -3,10 +3,11 @@ import {
   CommandInteractionOptionResolver,
   SlashCommandBuilder,
 } from "discord.js";
-import { formatChoices, getAccountsSync } from "../../lib/utils/game.js";
+import { getAccounts } from "../../lib/db/account.js";
+import { formatChoices } from "../../lib/utils/game.js";
 import { placeBet } from "../../lib/utils/interaction.js";
 
-const accounts = getAccountsSync();
+const { accounts } = getAccounts();
 const choices = formatChoices(accounts);
 
 export default {
@@ -27,7 +28,9 @@ export default {
     ).getString("account");
     console.log("summonerPUUID", summonerPUUID);
 
-    const account = accounts.find((acc) => acc.summonerPUUID === summonerPUUID);
+    const account = accounts?.find(
+      (acc) => acc.summonerPUUID === summonerPUUID
+    );
 
     await placeBet(interaction, account);
   },

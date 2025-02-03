@@ -443,28 +443,6 @@ export async function handleLoserBetResult(users: AmountByUser[]) {
   return (await Promise.all(losers)).filter((loser) => loser != undefined);
 }
 
-export async function getAccounts() {
-  try {
-    const rootPath = import.meta.url.split("dist/")[0];
-    const accountsFolderPath = new URL("src/data/accounts/", rootPath);
-    const accountsFolder = await fs.readdir(accountsFolderPath);
-
-    const accounts: Account[] = [];
-    for (const accountFile of accountsFolder) {
-      const filePath = new URL(accountFile, accountsFolderPath);
-      const account: Account = JSON.parse(await fs.readFile(filePath, "utf8"));
-      accounts.push(account);
-    }
-
-    return { accounts, error: undefined };
-  } catch (err) {
-    return {
-      accounts: undefined,
-      error: "Accounts not found.",
-    };
-  }
-}
-
 export function getAccountsSync() {
   const accounts: Account[] = [];
 
@@ -481,10 +459,10 @@ export function getAccountsSync() {
 }
 
 export function formatChoices(
-  accounts: Account[],
+  accounts: Account[] | undefined,
   valueIsSummonerPUUID: boolean = true
 ) {
-  const choices: Choice[] = accounts.map((account) => {
+  const choices: Choice[] | undefined = accounts?.map((account) => {
     const nameAndTag = (account.gameName + "_" + account.tagLine).toLowerCase();
     const value = valueIsSummonerPUUID ? account.summonerPUUID : nameAndTag;
 
@@ -494,7 +472,7 @@ export function formatChoices(
     };
   });
 
-  return choices;
+  return choices ?? [];
 }
 
 /** Returns player name as `Demon#Ikspe`  */

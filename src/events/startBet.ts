@@ -1,5 +1,5 @@
 import { ButtonInteraction, Events } from "discord.js";
-import { getAccounts } from "../lib/utils/game.js";
+import { getAccounts } from "../lib/db/account.js";
 import { placeBet } from "../lib/utils/interaction.js";
 
 export default {
@@ -9,7 +9,7 @@ export default {
       return;
     }
     const summonerPUUID = interaction.customId.slice(10);
-    const { accounts } = await getAccounts();
+    const { accounts } = getAccounts();
     const account = accounts?.find(
       (acc) => acc.summonerPUUID === summonerPUUID
     );

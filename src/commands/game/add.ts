@@ -3,11 +3,10 @@ import {
   CommandInteractionOptionResolver,
   SlashCommandBuilder,
 } from "discord.js";
-import { Account } from "../../lib/types/riot";
-import { formatPlayerName, writeAccountToFile } from "../../lib/utils/game.js";
+import { addAccount } from "../../lib/db/account.js";
+import { Account, Region } from "../../lib/types/riot";
+import { formatPlayerName } from "../../lib/utils/game.js";
 import { fetchSummonerData } from "../../lib/utils/riot.js";
-
-type Region = "eun1" | "euw1";
 
 export default {
   cooldown: 10,
@@ -60,7 +59,7 @@ export default {
       region,
     };
 
-    const { error: errorWriting } = await writeAccountToFile(account);
+    const { error: errorWriting } = addAccount(account);
     if (errorWriting) {
       interaction.reply(errorWriting);
       return;

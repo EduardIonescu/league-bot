@@ -7,9 +7,10 @@ import {
   time,
   TimestampStyles,
 } from "discord.js";
+import { getAccounts } from "../db/account.js";
 import { AccountInGame } from "../types/common.js";
 import { handleDefer } from "./customReply.js";
-import { formatPlayerName, getAccounts } from "./game.js";
+import { formatPlayerName } from "./game.js";
 import { fetchSpectatorData } from "./riot.js";
 
 export async function check(
@@ -18,7 +19,7 @@ export async function check(
   const deferHandler = handleDefer(interaction);
   deferHandler.start();
 
-  const { error, accounts } = await getAccounts();
+  const { error, accounts } = getAccounts();
 
   if (error || !accounts || accounts.length === 0) {
     await interaction.customReply(

@@ -3,14 +3,10 @@ import {
   CommandInteractionOptionResolver,
   SlashCommandBuilder,
 } from "discord.js";
-import {
-  formatChoices,
-  formatPlayerName,
-  getAccountsSync,
-  removeAccountFile,
-} from "../../lib/utils/game.js";
+import { getAccounts, removeAccount } from "../../lib/db/account.js";
+import { formatChoices, formatPlayerName } from "../../lib/utils/game.js";
 
-const accounts = getAccountsSync();
+const { accounts } = getAccounts();
 const choices = formatChoices(accounts, false);
 
 export default {
@@ -35,7 +31,7 @@ export default {
       return;
     }
 
-    const { error } = await removeAccountFile(nameAndTag);
+    const { error } = removeAccount(nameAndTag);
     if (error) {
       interaction.reply(error);
       return;
