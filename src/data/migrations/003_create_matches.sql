@@ -1,0 +1,29 @@
+CREATE TABLE IF NOT EXISTS activeMatches(
+  gameId INTEGER PRIMARY KEY NOT NULL,
+  player VARCHAR(255) NOT NULL,
+  gameType VARCHAR(255) NOT NULL,
+  gameMode VARCHAR(255) NOT NULL,
+  gameQueueConfigId INTEGER NOT NULL,
+  summonerPUUID VARCHAR(255) NOT NULL UNIQUE,
+  inGameTime INTEGER NOT NULL,
+  gameStartTime INTEGER NOT NULL,
+  region VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS bets(
+  discordId VARCHAR(255) NOT NULL,
+  gameId INTEGER NOT NULL,
+  tzapi INTEGER,
+  nicu INTEGER,
+  win BOOLEAN NOT NULL CHECK (win IN (0, 1)),
+  timestamp TIMESTAMP NOT NULL,
+  PRIMARY KEY (discordId, timestamp),
+  FOREIGN KEY (gameId) REFERENCES activeMatches(gameId) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS messages(
+  messageId TEXT PRIMARY KEY,
+  channelId TEXT NOT NULL,
+  gameId INTEGER NOT NULL,
+  FOREIGN KEY (gameId) REFERENCES activeMatches(gameId) ON DELETE CASCADE
+);
