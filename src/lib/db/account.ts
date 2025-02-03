@@ -11,8 +11,8 @@ export function addAccount(account: Account) {
 
     stmt.run(
       account.summonerPUUID,
-      account.gameName,
-      account.tagLine,
+      account.gameName.toLowerCase(),
+      account.tagLine.toLowerCase(),
       account.region
     );
 
@@ -37,10 +37,16 @@ export function getAccounts() {
   };
 }
 
-export function removeAccount(summonerPUUID: string) {
+export function removeAccount(nameAndTag: string) {
+  const [gameName, tagLine] = nameAndTag.split("_");
   try {
-    const stmt = db.prepare(`DELETE FROM accounts WHERE summonerPUUID = ?;`);
-    stmt.run(summonerPUUID);
+    const stmt = db.prepare(
+      `DELETE FROM accounts WHERE gameName = ? AND tagLine = ?;`
+    );
+    const { changes } = stmt.run(gameName.toLowerCase(), tagLine.toLowerCase());
+    if (changes === 0) {
+      return { error: "Account not found" };
+    }
 
     return { error: undefined };
   } catch (error) {
