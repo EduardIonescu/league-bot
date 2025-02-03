@@ -1,5 +1,5 @@
 import db from "../../data/db.js";
-import { Bet, Match, SentInMessage } from "../../data/schema.js";
+import { Bet, FinishedMatch, Match, SentInMessage } from "../../data/schema.js";
 import { FinishedMatchParticipant } from "../types/common.js";
 import { MatchResult } from "../types/riot.js";
 import { dateToTIMESTAMP } from "../utils/common.js";
@@ -281,7 +281,7 @@ export function getFinishedMatch(gameId: number) {
       SELECT * FROM finishedMatches WHERE gameId = ?;
       `);
 
-    const finishedMatch = stmt.get(gameId);
+    const finishedMatch = stmt.get(gameId) as FinishedMatch | undefined;
     const { finishedMatchParticipants } = getFinishedMatchParticipants(gameId);
 
     return { error: undefined, finishedMatch, finishedMatchParticipants };
@@ -300,7 +300,9 @@ function getFinishedMatchParticipants(gameId: number) {
       SELECT puuid, perks FROM finishedMatchParticipants WHERE gameId = ?;
       `);
 
-    const finishedMatchParticipants = stmt.all(gameId);
+    const finishedMatchParticipants = stmt.all(gameId) as
+      | FinishedMatchParticipant[]
+      | undefined;
 
     return { error: undefined, finishedMatchParticipants };
   } catch (error) {

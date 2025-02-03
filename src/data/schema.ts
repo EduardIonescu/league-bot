@@ -56,3 +56,47 @@ export type SentInMessage = {
   channelId: string;
   gameId: number;
 };
+
+export type FinishedMatch = {
+  gameId: number;
+  player: string;
+  gameType: string;
+  gameMode: string;
+  gameQueueConfigId: number;
+  summonerPUUID: string;
+  inGameTime: number;
+  gameStartTime: number;
+  region: string;
+  gameDuration: number;
+  win: boolean;
+  remake: boolean | null;
+  createdAt?: string;
+};
+
+export type FinishedMatchParticipant = {
+  gameId: string;
+  puuid: string;
+  kills: number;
+  assists: number;
+  deaths: number;
+  totalDamageDealtToChampions: number;
+  teamPosition: string;
+  championId: number;
+  champLevel: number;
+  summoner1Id: number;
+  summoner2Id: number;
+  totalMinionsKilled: number;
+  neutralMinionsKilled: number;
+  item0: number;
+  item1: number;
+  item2: number;
+  item3: number;
+  item4: number;
+  item5: number;
+  item6: number;
+  perks: string;
+  riotIdGameName: string;
+  riotIdTagline: string;
+  teamId: number;
+  win: boolean;
+};
