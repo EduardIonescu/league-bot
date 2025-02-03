@@ -69,5 +69,9 @@ export function dateToTIMESTAMP(date: Date | null | undefined | string) {
   if (!date) {
     return null;
   }
-  return new Date(date).toISOString().slice(0, 19).replace("T", " ");
+  try {
+    return new Date(date).toISOString().slice(0, 19).replace("T", " ");
+  } catch (err) {
+    return new Date().toISOString().slice(0, 19).replace("T", " ");
+  }
 }

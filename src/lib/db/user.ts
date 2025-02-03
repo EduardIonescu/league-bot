@@ -96,7 +96,7 @@ export function updateUser(user: UserAdvanced) {
     `);
 
     stmt.run(
-      dateToTIMESTAMP(user.lastAction),
+      dateToTIMESTAMP(user.lastAction ?? new Date()),
       dateToTIMESTAMP(user.lastRedeemed),
       user.timesBet,
       user.wins,
