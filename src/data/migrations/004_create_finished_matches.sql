@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS finishedMatches(
   gameDuration INTEGER NOT NULL,
   win BOOLEAN NOT NULL CHECK (win IN (0, 1)),
   remake BOOLEAN CHECK (remake IN (0, 1)),
-  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE finishedMatchParticipants (
