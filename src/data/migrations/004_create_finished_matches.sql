@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS finishedMatches(
   gameType VARCHAR(255) NOT NULL,
   gameMode VARCHAR(255) NOT NULL,
   gameQueueConfigId INTEGER NOT NULL,
-  summonerPUUID VARCHAR(255) NOT NULL UNIQUE,
+  summonerPUUID VARCHAR(255) NOT NULL,
   inGameTime INTEGER NOT NULL,
   gameStartTime INTEGER NOT NULL,
   region VARCHAR(255) NOT NULL,
@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS finishedMatchParticipants (
   riotIdGameName VARCHAR(255) NOT NULL,
   riotIdTagline VARCHAR(255) NOT NULL,
   teamId INTEGER NOT NULL,
-  win BOOLEAN NOT NULL,
+  win BOOLEAN NOT NULL CHECK (win IN (0, 1)),
   PRIMARY KEY (puuid, gameId),
   FOREIGN KEY (gameId) REFERENCES finishedMatches(gameId) ON DELETE CASCADE
 );

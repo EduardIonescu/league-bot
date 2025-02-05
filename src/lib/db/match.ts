@@ -1,7 +1,13 @@
 import db from "../../data/db.js";
-import { Bet, FinishedMatch, Match, SentInMessage } from "../../data/schema.js";
-import { FinishedMatchParticipant } from "../types/common.js";
-import { MatchResult } from "../types/riot.js";
+import {
+  Bet,
+  FinishedMatch,
+  FinishedMatchParticipant,
+  Match,
+  SentInMessage,
+} from "../../data/schema.js";
+import { MatchResult, Participant } from "../types/riot.js";
+
 import { dateToTIMESTAMP } from "../utils/common.js";
 
 export function addActiveMatch(match: Match) {
@@ -231,7 +237,7 @@ export function addFinishedMatch(
 }
 
 function addFinishedMatchParticipants(
-  participant: FinishedMatchParticipant,
+  participant: Participant,
   gameId: number
 ) {
   try {

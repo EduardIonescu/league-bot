@@ -83,7 +83,7 @@ export type FinishedMatch = {
   gameStartTime: number;
   region: string;
   gameDuration: number;
-  win: boolean;
+  win: 0 | 1;
   remake: boolean | null;
   createdAt?: string;
 };
@@ -113,5 +113,5 @@ export type FinishedMatchParticipant = {
   riotIdGameName: string;
   riotIdTagline: string;
   teamId: number;
-  win: boolean;
+  win: 0 | 1;
 };

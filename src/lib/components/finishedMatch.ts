@@ -1,6 +1,7 @@
+import { FinishedMatchParticipant } from "../../data/schema.js";
 import { BLUE_TEAM_ID } from "../constants.js";
-import { FinishedMatchParticipant, HTMLString } from "../types/common.js";
-import { Style } from "../types/riot.js";
+import { HTMLString } from "../types/common.js";
+import { Perks, Style } from "../types/riot.js";
 import {
   colorByKDA,
   formatPlayerName,
@@ -165,6 +166,7 @@ function PlayerCard(
 
   const cpm = Math.round((totalMinions / gameDurationMinutes) * 10) / 10;
 
+  const perksObject = JSON.parse(perks) as Perks;
   return `
    <tr style="display: table-row; vertical-align: middle">
           <td
@@ -187,9 +189,9 @@ function PlayerCard(
           </td>
           <td style="vertical-align: middle; padding-left: 4px">
             
-            ${PerkIcon(perks.styles[0])}
+            ${PerkIcon(perksObject.styles[0])}
             
-            ${PerkIcon(perks.styles[1])}
+            ${PerkIcon(perksObject.styles[1])}
             
           </td>
           <td style="padding-left: 4px; vertical-align: middle">

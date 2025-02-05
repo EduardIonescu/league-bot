@@ -36,7 +36,12 @@ export default {
     }
 
     const { match, error } = getFinishedMatch(Number(gameId));
-    if (error || !match || !match.participants) {
+    if (
+      error ||
+      !match ||
+      !match.participants ||
+      match.participants.length === 0
+    ) {
       await interaction.reply({
         content: error ?? "Match participants not found.",
       });
