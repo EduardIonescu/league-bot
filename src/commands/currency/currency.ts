@@ -1,5 +1,5 @@
 import { CommandInteraction, SlashCommandBuilder } from "discord.js";
-import { getBettingUser } from "../../lib/utils/game.js";
+import { getUser } from "../../lib/db/user.js";
 
 export default {
   cooldown: 10,
@@ -8,17 +8,15 @@ export default {
     .setDescription("Show current currency"),
   async execute(interaction: CommandInteraction) {
     const discordId = interaction.user.id;
-    const { error, user: bettingUser } = await getBettingUser(discordId);
+    const { error, user } = getUser(discordId);
 
-    if (error || !bettingUser) {
-      interaction.reply({
-        content: error,
-      });
+    if (error || !user) {
+      interaction.reply(error);
       return;
     }
 
-    interaction.reply({
-      content: `You have ${bettingUser.currency.nicu} Nicu and ${bettingUser.currency.tzapi} Tzapi left!`,
-    });
+    interaction.reply(
+      `You have ${user.balance.nicu} Nicu and ${user.balance.tzapi} Tzapi left!`
+    );
   },
 };
