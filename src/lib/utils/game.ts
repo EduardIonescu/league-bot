@@ -7,7 +7,6 @@ import {
   EmbedBuilder,
   RestOrArray,
 } from "discord.js";
-import * as fsSync from "node:fs";
 import * as fs from "node:fs/promises";
 import champions from "../../assets/champions.js";
 import perks from "../../assets/perks.js";
@@ -15,16 +14,15 @@ import summonerSpells from "../../assets/summonerSpells.js";
 import { ParticipantStats } from "../components/spectatorMatch.js";
 import {
   BETS_CLOSE_AT_GAME_LENGTH,
-  DEFAULT_USER,
   IMAGE_NOT_FOUND,
   loseButtons,
   winButtons,
   ZERO_CURRENCIES,
 } from "../constants.js";
+import { getUser, updateUser } from "../db/user.js";
 import {
   AmountByUser,
   Bet,
-  BettingUser,
   Choice,
   FinishedMatch,
   FinishedMatchParticipant,
@@ -42,68 +40,6 @@ import {
   htmlImgSrcFromPath,
   toTitleCase,
 } from "./common.js";
-
-export async function writeAccountToFile(account: Account) {
-  const nameAndTag = (account.gameName + "_" + account.tagLine).toLowerCase();
-  try {
-    const rootPath = import.meta.url.split("dist/")[0];
-    const accountsFolder = new URL("src/data/accounts/", rootPath);
-    const accountFile = new URL(`${nameAndTag}.json`, accountsFolder);
-    if (await filePathExists(accountFile)) {
-      return { error: "The account is already saved." };
-    }
-    await fs.writeFile(accountFile, JSON.stringify(account));
-    return { error: "" };
-  } catch (err) {
-    return { error: "An error has occured." };
-  }
-}
-
-export async function removeAccountFile(nameAndTag: string) {
-  try {
-    const rootPath = import.meta.url.split("dist/")[0];
-    const accountsFolder = new URL("src/data/accounts/", rootPath);
-    const accountFile = new URL(`${nameAndTag}.json`, accountsFolder);
-
-    if (!(await filePathExists(accountFile))) {
-      return { error: "The account doesn't exist." };
-    }
-    await fs.rm(accountFile);
-    return { error: undefined };
-  } catch (error) {
-    console.log(error);
-    return {
-      error:
-        "An error has occured. The account might not exist. Try again if it does.",
-    };
-  }
-}
-
-export async function getBettingUser(discordId: string) {
-  try {
-    const rootPath = import.meta.url.split("dist/")[0];
-    const usersFolder = new URL("src/data/users/", rootPath);
-    const userFile = new URL(`${discordId}.json`, usersFolder);
-
-    if (await filePathExists(userFile)) {
-      const user: BettingUser = JSON.parse(await fs.readFile(userFile, "utf8"));
-      return { error: undefined, user };
-    } else {
-      // Create default user and write it to file.
-      const user: BettingUser = {
-        discordId,
-        currency: DEFAULT_USER.currency,
-        timestamp: { lastAction: new Date(), lastRedeemed: undefined },
-        data: DEFAULT_USER.data,
-      };
-
-      await fs.writeFile(userFile, JSON.stringify(user));
-      return { error: undefined, user };
-    }
-  } catch (err) {
-    return { error: "An error has occured.", user: undefined };
-  }
-}
 
 export async function getActiveGame(summonerId: string) {
   try {
@@ -293,21 +229,6 @@ export async function updateActiveGame(game: Match) {
   }
 }
 
-export async function updateUser(user: BettingUser) {
-  const { discordId } = user;
-  try {
-    const rootPath = import.meta.url.split("dist/")[0];
-    const usersFolder = new URL("src/data/users/", rootPath);
-    const userFile = new URL(`${discordId}.json`, usersFolder);
-
-    user.currency.tzapi = Math.floor(user.currency.tzapi * 10) / 10;
-    await fs.writeFile(userFile, JSON.stringify(user));
-    return { error: undefined };
-  } catch (err) {
-    return { error: "An error has occured." };
-  }
-}
-
 export function canBetOnActiveGame(gameStartTime: number) {
   const differenceInSeconds = Math.ceil((Date.now() - gameStartTime) / 1_000);
 
@@ -359,21 +280,19 @@ export async function handleRemake(game: Match) {
 
 export async function refundUsers(users: AmountByUser[]) {
   const bettingUsers = users.map(async (user) => {
-    const { error, user: bettingUser } = await getBettingUser(user.discordId);
+    const { error: error, user: userDb } = getUser(user.discordId);
 
-    if (!bettingUser) {
+    if (error || !userDb) {
       return;
     }
 
-    const timestamp = { ...bettingUser.timestamp, lastAction: new Date() };
-    const tzapi = user.amount.tzapi + bettingUser.currency.tzapi;
-    const nicu = user.amount.nicu + bettingUser.currency.nicu;
+    const tzapi = user.amount.tzapi + userDb.balance.tzapi;
+    const nicu = user.amount.nicu + userDb.balance.nicu;
 
-    const currency = { ...bettingUser.currency, tzapi, nicu };
+    const balance = { ...userDb.balance, tzapi, nicu };
+    const updatedUser = { ...userDb, balance };
 
-    const updatedUser = { ...bettingUser, timestamp, currency };
-
-    await updateUser(updatedUser);
+    updateUser(updatedUser);
 
     return { updatedUser, refund: user.amount ?? ZERO_CURRENCIES };
   });
@@ -383,28 +302,33 @@ export async function refundUsers(users: AmountByUser[]) {
 
 export async function handleWinnerBetResult(users: AmountByUser[]) {
   const winners = users.map(async (user) => {
-    const { error, user: bettingUser } = await getBettingUser(user.discordId);
-    if (!bettingUser) {
+    const { error, user: userDb } = getUser(user.discordId);
+
+    if (error || !userDb) {
+      console.log("error", error);
       return;
     }
 
-    const timestamp = { ...bettingUser.timestamp, lastAction: new Date() };
     const tzapi =
-      user.amount.tzapi +
-      (user.winnings?.tzapi ?? 0) +
-      bettingUser.currency.tzapi;
+      user.amount.tzapi + (user.winnings?.tzapi ?? 0) + userDb.balance.tzapi;
     const nicu =
-      user.amount.nicu + (user.winnings?.nicu ?? 0) + bettingUser.currency.nicu;
-    const currency = { ...bettingUser.currency, tzapi, nicu };
-    const wins = bettingUser.data.wins + 1;
-    const currencyWon = {
-      tzapi: bettingUser.data.currencyWon.tzapi + (user.winnings?.tzapi ?? 0),
-      nicu: bettingUser.data.currencyWon.nicu + (user.winnings?.nicu ?? 0),
-    };
-    const data = { ...bettingUser.data, wins, currencyWon };
-    const updatedUser = { ...bettingUser, timestamp, currency, data };
+      user.amount.nicu + (user.winnings?.nicu ?? 0) + userDb.balance.nicu;
 
-    await updateUser(updatedUser);
+    const balance = { ...userDb.balance, tzapi, nicu };
+
+    const wins = userDb.wins + 1;
+    const won = {
+      tzapi: userDb.won.tzapi + (user.winnings?.tzapi ?? 0),
+      nicu: userDb.won.nicu + (user.winnings?.nicu ?? 0),
+    };
+
+    const updatedUser = { ...userDb, wins, balance, won };
+
+    const { error: errorUpdateDb } = updateUser(updatedUser);
+    if (errorUpdateDb) {
+      console.log("errorUpdateDb", errorUpdateDb);
+    }
+
     return { updatedUser, winnings: user.winnings ?? ZERO_CURRENCIES };
   });
 
@@ -413,49 +337,38 @@ export async function handleWinnerBetResult(users: AmountByUser[]) {
 
 export async function handleLoserBetResult(users: AmountByUser[]) {
   const losers = users.map(async (user) => {
-    const { error, user: bettingUser } = await getBettingUser(user.discordId);
-    if (!bettingUser) {
+    const { error, user: userDb } = getUser(user.discordId);
+
+    if (error || !userDb) {
       return;
     }
 
-    const timestamp = { ...bettingUser.timestamp, lastAction: new Date() };
-    const loses = bettingUser.data.loses + 1;
     const tzapi =
-      bettingUser.currency.tzapi +
+      userDb.balance.tzapi +
       Math.abs(user.amount.tzapi) -
       (user.loss?.tzapi ?? 0);
     const nicu =
-      bettingUser.currency.nicu +
-      Math.abs(user.amount.nicu) -
-      (user.loss?.nicu ?? 0);
-    const currency = { ...bettingUser.currency, tzapi, nicu };
-    const currencyLost = {
-      tzapi: bettingUser.data.currencyLost.tzapi + (user.loss?.tzapi ?? 0),
-      nicu: bettingUser.data.currencyLost.nicu + (user.loss?.nicu ?? 0),
-    };
-    const data = { ...bettingUser.data, loses, currencyLost };
-    const updatedUser = { ...bettingUser, timestamp, currency, data };
+      userDb.balance.nicu + Math.abs(user.amount.nicu) - (user.loss?.nicu ?? 0);
 
-    await updateUser(updatedUser);
+    const balance = { ...userDb.balance, tzapi, nicu };
+
+    const losses = userDb.losses + 1;
+    const lost = {
+      tzapi: userDb.lost.tzapi + (user.loss?.tzapi ?? 0),
+      nicu: userDb.lost.nicu + (user.loss?.nicu ?? 0),
+    };
+
+    const updatedUser = { ...userDb, losses, balance, lost };
+
+    const { error: errorUpdate } = updateUser(updatedUser);
+    if (errorUpdate) {
+      console.log("errorUpdateDb", errorUpdate);
+    }
+
     return { updatedUser, loss: user.loss ?? ZERO_CURRENCIES };
   });
 
   return (await Promise.all(losers)).filter((loser) => loser != undefined);
-}
-
-export function getAccountsSync() {
-  const accounts: Account[] = [];
-
-  const rootPath = import.meta.url.split("dist/")[0];
-  const accountsFolder = new URL("src/data/accounts/", rootPath);
-  const accountFiles = fsSync.readdirSync(accountsFolder);
-  for (const file of accountFiles) {
-    const filePath = new URL(file, accountsFolder);
-    const account = JSON.parse(fsSync.readFileSync(filePath, "utf8"));
-    accounts.push(account);
-  }
-
-  return accounts;
 }
 
 export function formatChoices(
