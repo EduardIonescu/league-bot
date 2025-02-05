@@ -59,9 +59,9 @@ export default {
       region,
     };
 
-    const { error: errorWriting } = addAccount(account);
-    if (errorWriting) {
-      interaction.reply(errorWriting);
+    const { error: errorAdding } = addAccount(account);
+    if (errorAdding) {
+      interaction.reply(errorAdding);
       return;
     }
 
