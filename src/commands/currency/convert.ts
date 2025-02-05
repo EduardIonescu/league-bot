@@ -1,6 +1,6 @@
 import { CommandInteraction, SlashCommandBuilder } from "discord.js";
 import { NICU_IN_TZAPI } from "../../lib/constants.js";
-import { getUser, updateUser as updateDbUser } from "../../lib/db/user.js";
+import { getUser, updateUser } from "../../lib/db/user.js";
 import { Currencies, Currency } from "../../lib/types/common.js";
 
 const convertChoices = [
@@ -86,7 +86,7 @@ export default {
       const tzapi = user.balance.tzapi - requiredTzapi;
       const balance = { ...user.balance, nicu: nicu, tzapi: tzapi };
       const updatedUser = { ...user, balance };
-      const { error: updateError } = updateDbUser(updatedUser);
+      const { error: updateError } = updateUser(updatedUser);
 
       if (updateError) {
         await interaction.editReply(
@@ -117,7 +117,7 @@ export default {
       tzapi: tzapi,
     };
     const updatedUser = { ...user, balance };
-    const { error: updateError } = updateDbUser(updatedUser);
+    const { error: updateError } = updateUser(updatedUser);
 
     if (updateError) {
       console.log("updateError", updateError);

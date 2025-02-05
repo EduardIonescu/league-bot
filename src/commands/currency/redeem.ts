@@ -4,7 +4,7 @@ import {
   BROKE_THRESHOLD,
   TZAPI_TO_GIVE_WHEN_BROKE,
 } from "../../lib/constants.js";
-import { getUser, updateUser as updateUserDb } from "../../lib/db/user.js";
+import { getUser, updateUser } from "../../lib/db/user.js";
 import { handleDefer } from "../../lib/utils/customReply.js";
 import { getActiveGames } from "../../lib/utils/game.js";
 
@@ -79,7 +79,7 @@ export default {
       },
     };
 
-    const { error: errorUpdate } = updateUserDb(updatedUserDb);
+    const { error: errorUpdate } = updateUser(updatedUserDb);
     if (errorUpdate) {
       interaction.customReply(
         `An error has occured trying to update user <@${discordId}>`
