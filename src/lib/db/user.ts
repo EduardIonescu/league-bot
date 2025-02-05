@@ -4,6 +4,7 @@ import {
   CurrencyType,
   User,
   UserAdvanced,
+  UserQuerried,
 } from "../../data/schema.js";
 import { ZERO_CURRENCIES } from "../constants.js";
 import { dateToTIMESTAMP } from "../utils/common.js";
@@ -81,6 +82,55 @@ function getCurrencies(discordId: string) {
   );
 
   return formattedCurrencies;
+}
+
+export function getAllUsers() {
+  const stmtUser = db.prepare(`
+    SELECT
+      u.discordId,
+      u.lastAction,
+      u.lastRedeemed,
+      u.timesBet,
+      u.wins,
+      u.losses,
+      b.nicu AS balance_nicu,
+      b.tzapi AS balance_tzapi,
+      w.nicu AS won_nicu,
+      w.tzapi AS won_tzapi,
+      l.nicu AS lost_nicu,
+      l.tzapi AS lost_tzapi
+    FROM
+      users AS u
+    LEFT JOIN
+      user_currencies AS b ON u.discordId = b.discordId AND b.type = 'balance'
+    LEFT JOIN
+      user_currencies AS w ON u.discordId = w.discordId AND w.type = 'won'
+    LEFT JOIN
+      user_currencies AS l ON u.discordId = l.discordId AND l.type = 'lost';
+`);
+
+  const rows = stmtUser.all() as UserQuerried[] | undefined;
+
+  if (!rows) {
+    return { error: "No user was found", user: undefined };
+  }
+
+  const users = rows.map((row) => ({
+    discordId: row.discordId,
+    lastAction: row.lastAction,
+    lastRedeemed: row.lastRedeemed,
+    timesBet: row.timesBet,
+    wins: row.wins,
+    losses: row.losses,
+    balance: { nicu: row.balance_nicu || 0, tzapi: row.balance_tzapi || 0 },
+    won: { nicu: row.won_nicu || 0, tzapi: row.won_tzapi || 0 },
+    lost: { nicu: row.lost_nicu || 0, tzapi: row.lost_tzapi || 0 },
+  })) as UserAdvanced[];
+
+  return {
+    error: undefined,
+    users,
+  };
 }
 
 export function updateUser(user: UserAdvanced) {

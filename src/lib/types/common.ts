@@ -1,24 +1,13 @@
-import { Account, Perks, Region, SpectatorParticipant } from "./riot";
+import { UserAdvanced } from "../../data/schema.js";
+import { Account, Perks, Region, SpectatorParticipant } from "./riot.js";
 
-export type BettingUser = {
-  discordId: string;
-  currency: Currencies;
-  timestamp: { lastAction: Date; lastRedeemed: Date | undefined };
-  data: {
-    timesBet: number;
-    wins: number;
-    loses: number;
-    currencyWon: Currencies;
-    currencyLost: Currencies;
-  };
-};
 export type RefundedBettingUser = {
-  updatedUser: BettingUser;
+  updatedUser: UserAdvanced;
   refund: Currencies;
 };
-export type LoserBetingUser = { updatedUser: BettingUser; loss: Currencies };
+export type LoserBetingUser = { updatedUser: UserAdvanced; loss: Currencies };
 export type WinnerBetingUser = {
-  updatedUser: BettingUser;
+  updatedUser: UserAdvanced;
   winnings: Currencies;
 };
 export type Currencies = { tzapi: number; nicu: number };

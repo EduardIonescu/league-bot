@@ -23,6 +23,21 @@ export type CurrenciesBasic = {
 
 export type UserAdvanced = User & CurrenciesAdvanced;
 
+export type UserQuerried = {
+  discordId: string;
+  lastAction: Date;
+  lastRedeemed: Date | undefined;
+  timesBet: number;
+  wins: number;
+  losses: number;
+  balance_nicu: number;
+  balance_tzapi: number;
+  won_nicu: number;
+  won_tzapi: number;
+  lost_nicu: number;
+  lost_tzapi: number;
+};
+
 export type CurrenciesAdvanced = {
   balance: CurrenciesBasic;
   won: CurrenciesBasic;

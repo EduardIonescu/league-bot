@@ -7,7 +7,7 @@ import {
 } from "discord.js";
 import * as fs from "node:fs/promises";
 import { NICU_IN_TZAPI } from "../constants.js";
-import { BettingUser } from "../types/common.js";
+import { getAllUsers } from "../db/user.js";
 import { getCheckButton } from "./check.js";
 
 export async function showLeaderboard(
@@ -22,12 +22,10 @@ export async function showLeaderboard(
 
   const usersByCurrency = users!.map(
     (user, index) =>
-      `${index + 1}. <@${user.discordId}>\n${user.currency.nicu} Nicu and ${
-        user.currency.tzapi
+      `${index + 1}. <@${user.discordId}>\n${user.balance.nicu} Nicu and ${
+        user.balance.tzapi
       } Tzapi\n${
-        Math.round(
-          (user.data.wins / (user.data.wins + user.data.loses)) * 100 * 10
-        ) / 10
+        Math.round((user.wins / (user.wins + user.losses)) * 100 * 10) / 10
       }% Winrate`
   );
   const content = `Leaderboard\n${usersByCurrency.join("\n\n")}\n`;
@@ -44,17 +42,9 @@ async function getLeaderboard() {
     const userFolderPath = new URL("src/data/users/", rootPath);
     const userFolder = await fs.readdir(userFolderPath);
 
-    const users: BettingUser[] = await Promise.all(
-      userFolder.map(async (userFile) => {
-        const filePath = new URL(userFile, userFolderPath);
-        const user: BettingUser = JSON.parse(
-          await fs.readFile(filePath, "utf8")
-        );
-        return user;
-      })
-    );
+    const { error, users } = getAllUsers();
 
-    if (users.length === 0) {
+    if (error || !users || users.length === 0) {
       return {
         error:
           "No users found. Try using /currency or betting on a match first.",
@@ -63,8 +53,8 @@ async function getLeaderboard() {
     }
 
     users.sort((a, b) => {
-      const aTotalTzapi = a.currency.tzapi + a.currency.nicu * NICU_IN_TZAPI;
-      const bTotalTzapi = b.currency.tzapi + b.currency.nicu * NICU_IN_TZAPI;
+      const aTotalTzapi = a.balance.tzapi + a.balance.nicu * NICU_IN_TZAPI;
+      const bTotalTzapi = b.balance.tzapi + b.balance.nicu * NICU_IN_TZAPI;
 
       return bTotalTzapi - aTotalTzapi;
     });
