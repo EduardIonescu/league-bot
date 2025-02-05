@@ -1,6 +1,6 @@
 import { CommandInteraction, SlashCommandBuilder } from "discord.js";
+import { getUser, updateUser } from "../../lib/db/user.js";
 import { handleDefer } from "../../lib/utils/customReply.js";
-import { getBettingUser, updateUser } from "../../lib/utils/game.js";
 
 export default {
   cooldown: 10,
@@ -22,10 +22,10 @@ export default {
     deferHandler.start();
 
     const giverDiscordId = interaction.user.id;
-    const { error: giverError, user: giverUser } = await getBettingUser(
-      giverDiscordId
-    );
-    if (giverError || !giverUser) {
+
+    const { error: errorGiver, user: giverUser } = getUser(giverDiscordId);
+
+    if (errorGiver || !giverUser) {
       interaction.customReply(
         "User not found. Try again or try /currency first."
       );
@@ -51,10 +51,10 @@ export default {
       return;
     }
 
-    const { error: receiverError, user: receiverUser } = await getBettingUser(
-      receiverDiscordId
-    );
-    if (receiverError || !receiverUser) {
+    const { error: errorReceiver, user: receiverUser } =
+      getUser(receiverDiscordId);
+
+    if (errorReceiver || !receiverUser) {
       interaction.customReply(
         "User not found. Try again or try /currency first."
       );
@@ -93,28 +93,32 @@ export default {
       return;
     }
 
-    if (giverUser.currency.tzapi < amount) {
+    if (giverUser.balance.tzapi < amount) {
       interaction.customReply(
-        `You need ${amount} Tzapi. You only have ${giverUser.currency.tzapi} Tzapi`
+        `You need ${amount} Tzapi. You only have ${giverUser.balance.tzapi} Tzapi`
       );
       deferHandler.cancel();
 
       return;
     }
 
-    const giverTzapi = giverUser.currency.tzapi - amount;
-    const giverCurrency = { ...giverUser.currency, tzapi: giverTzapi };
+    const giverTzapi = giverUser.balance.tzapi - amount;
+    const giverCurrency = { ...giverUser.balance, tzapi: giverTzapi };
 
-    const receiverTzapi = receiverUser.currency.tzapi + amount;
-    const receiverCurrency = { ...receiverUser.currency, tzapi: receiverTzapi };
+    const receiverTzapi = receiverUser.balance.tzapi + amount;
+    const receiverCurrency = {
+      ...receiverUser.balance,
+      tzapi: receiverTzapi,
+    };
 
-    const updatedGiverUser = { ...giverUser, currency: giverCurrency };
-    const updatedReceiverUser = { ...receiverUser, currency: receiverCurrency };
+    const updatedGiverUser = { ...giverUser, balance: giverCurrency };
+    const updatedReceiverUser = {
+      ...receiverUser,
+      balance: receiverCurrency,
+    };
 
-    const { error: updateGiverError } = await updateUser(updatedGiverUser);
-    const { error: updateReceiverError } = await updateUser(
-      updatedReceiverUser
-    );
+    const { error: updateGiverError } = updateUser(updatedGiverUser);
+    const { error: updateReceiverError } = updateUser(updatedReceiverUser);
 
     if (updateGiverError || updateReceiverError) {
       console.log("Error updating users");
