@@ -4,9 +4,9 @@ import {
   BROKE_THRESHOLD,
   TZAPI_TO_GIVE_WHEN_BROKE,
 } from "../../lib/constants.js";
+import { getActiveMatches, getBets } from "../../lib/db/match.js";
 import { getUser, updateUser } from "../../lib/db/user.js";
 import { handleDefer } from "../../lib/utils/customReply.js";
-import { getActiveGames } from "../../lib/utils/game.js";
 
 export default {
   cooldown: 10,
@@ -52,15 +52,20 @@ export default {
       }
     }
 
-    const { games } = await getActiveGames();
+    const { matches } = getActiveMatches();
 
     // Don't allow if they've bet on an active match until the match is over.
-    if (games && games.length > 0) {
-      for (const game of games) {
-        for (const bet of game.bets) {
+    if (matches && matches.length > 0) {
+      for (const match of matches) {
+        const { bets } = getBets(match.gameId);
+        if (!bets) {
+          continue;
+        }
+
+        for (const bet of bets) {
           if (bet.discordId === discordId) {
             interaction.customReply(
-              `You fool! You have currency in an unfinished match! You've bet on ${game.player}'s match`
+              `You fool! You have currency in an unfinished match! You've bet on ${match.player}'s match`
             );
             deferHandler.cancel();
 

@@ -8,18 +8,23 @@ import {
   MessageFlags,
   TextBasedChannel,
 } from "discord.js";
+import { Bet } from "../../data/schema.js";
 import { loseButtons, NICU_IN_TZAPI, winButtons } from "../constants.js";
+import {
+  addActiveMatch,
+  addBet,
+  addMessage,
+  getActiveMatch,
+} from "../db/match.js";
 import { getUser, updateUser } from "../db/user.js";
-import { Bet, Currency } from "../types/common.js";
+import { Currency } from "../types/common.js";
 import { Account } from "../types/riot.js";
 import { toTitleCase } from "./common.js";
 import {
   bettingButtons,
   canBetOnActiveGame,
   formatPlayerName,
-  getActiveGame,
   getTotalBets,
-  updateActiveGame,
 } from "./game.js";
 import { fetchSpectatorData } from "./riot.js";
 
@@ -37,11 +42,12 @@ export async function placeBet(
   const { summonerPUUID } = account;
   console.log("account", account);
   const player = formatPlayerName(account.gameName, account.tagLine);
-  let { game, error } = await getActiveGame(summonerPUUID);
 
   const channel = interaction.channel as TextBasedChannel;
 
-  if (error || !game) {
+  let { error: errorDb, match, bets, messages } = getActiveMatch(summonerPUUID);
+
+  if (errorDb || !match) {
     try {
       const { error, spectatorData } = await fetchSpectatorData(
         summonerPUUID,
@@ -63,7 +69,7 @@ export async function placeBet(
         return;
       }
 
-      game = {
+      match = {
         gameId: spectatorData.gameId,
         region: account.region,
         gameQueueConfigId: spectatorData.gameQueueConfigId,
@@ -71,14 +77,12 @@ export async function placeBet(
         gameType: spectatorData.gameType,
         player,
         inGameTime: spectatorData.gameLength,
-        summonerId: summonerPUUID,
+        summonerPUUID,
         gameStartTime: spectatorData.gameStartTime,
-        sentIn: [{ channelId: channel.id, messageIds: [] }],
-        againstBot: true,
-        bets: [],
       };
-      console.log("game", game);
-      const canBetOnGame = canBetOnActiveGame(game.gameStartTime);
+
+      const canBetOnGame = canBetOnActiveGame(match.gameStartTime);
+
       if (!canBetOnGame) {
         interaction.editReply({
           content: "Betting window has closed. Better luck on the next one!",
@@ -87,14 +91,14 @@ export async function placeBet(
         return;
       }
 
-      await updateActiveGame(game);
+      addActiveMatch(match);
     } catch (err) {
       interaction.editReply(`${player} is not in game`);
       return;
     }
   }
 
-  const { totalBetWin, totalBetLose } = getTotalBets(game.bets);
+  const { totalBetWin, totalBetLose } = getTotalBets(bets ?? []);
 
   const totalNicuWinMsg = totalBetWin.nicu ? `${totalBetWin.nicu} Nicu ` : "";
   const totalNicuLoseMsg = totalBetLose.nicu
@@ -117,12 +121,12 @@ export async function placeBet(
         value: `${totalNicuLoseMsg}${totalBetLose.tzapi} Tzapi`,
         inline: true,
       },
-      { name: "Total Bets Placed", value: `${game.bets.length}` },
+      { name: "Total Bets Placed", value: `${(bets ?? []).length}` },
       { name: "\u200b", value: "\u200b" }
     )
     .setTimestamp();
 
-  const canBetOnGame = canBetOnActiveGame(game.gameStartTime);
+  const canBetOnGame = canBetOnActiveGame(match.gameStartTime);
   if (!canBetOnGame) {
     await interaction.editReply({
       embeds: [embed],
@@ -142,18 +146,16 @@ export async function placeBet(
     components: [winRow, loseRow],
   });
 
-  const channelInGame = game.sentIn.find((s) => s.channelId === channel.id);
-  if (!channelInGame) {
-    game.sentIn.push({ channelId: channel.id, messageIds: [response.id] });
-    await updateActiveGame(game);
-  } else {
-    const isMessageIdSaved = channelInGame.messageIds.find(
-      (messageId) => messageId === response.id
-    );
-    if (!isMessageIdSaved) {
-      channelInGame.messageIds.push(response.id);
-      await updateActiveGame(game);
-    }
+  const isMessageIdSaved = messages?.find(
+    (s) => s.channelId === channel.id && s.messageId === response.id
+  );
+  if (!isMessageIdSaved) {
+    const message = {
+      channelId: channel.id,
+      messageId: response.id,
+      gameId: match.gameId,
+    };
+    addMessage(message);
   }
 
   await createBetCollector(response, summonerPUUID, embed, winRow, loseRow);
@@ -184,11 +186,9 @@ export async function createBetCollector(
       return;
     }
 
-    const { error: getActiveGameError, game } = await getActiveGame(
-      summonerPUUID
-    );
+    const { error, match, bets, messages } = getActiveMatch(summonerPUUID);
 
-    if (getActiveGameError || !game) {
+    if (error || !match || !messages) {
       await buttonInteraction.update({
         embeds: [embed],
         components: [],
@@ -200,7 +200,7 @@ export async function createBetCollector(
       return;
     }
 
-    const win = winCustomIds.includes(buttonInteraction.customId);
+    const win = winCustomIds.includes(buttonInteraction.customId) ? 1 : 0;
     const discordId = buttonInteraction.user.id;
     const currencyType: Currency = buttonInteraction.customId.includes("nicu")
       ? "nicu"
@@ -211,7 +211,7 @@ export async function createBetCollector(
       ? "tzapi"
       : "nicu";
 
-    const canBetOnGame = canBetOnActiveGame(game.gameStartTime);
+    const canBetOnGame = canBetOnActiveGame(match.gameStartTime);
     if (!canBetOnGame) {
       await buttonInteraction.update({
         embeds: [embed],
@@ -229,23 +229,21 @@ export async function createBetCollector(
     );
     const betAmount = button!.amount;
 
-    const { error, user } = getUser(discordId);
+    const { error: errorUser, user } = getUser(discordId);
 
-    if (error || !user) {
+    if (errorUser || !user) {
       await buttonInteraction.update({
         embeds: [embed],
         components: [],
       });
       await buttonInteraction.followUp({
-        content: error,
+        content: errorUser,
         flags: MessageFlags.Ephemeral,
       });
       return;
     }
 
-    const userBets = game.bets.filter(
-      (bet) => bet.discordId === user.discordId
-    );
+    const userBets = bets?.filter((bet) => bet.discordId === user.discordId);
 
     if (userBets) {
       const userBetOnOppositeOutcome = userBets.find((bet) => bet.win !== win);
@@ -295,29 +293,27 @@ export async function createBetCollector(
 
     user.timesBet += 1;
 
-    const gameBet: Bet = {
+    const betDb: Bet = {
       discordId,
-      //@ts-ignore
-      amount: { [currencyType]: betAmount, [oppositeCurrencyType]: 0 },
       win,
-      timestamp: new Date(),
-      inGameTime: game.inGameTime,
+      gameId: match.gameId,
+      [currencyType]: betAmount,
+      [oppositeCurrencyType]: 0,
     };
-    game.bets.push(gameBet);
-
-    const { error: activeGameError } = await updateActiveGame(game);
+    addBet(betDb);
 
     const { error: updateError } = updateUser(user);
 
-    if (activeGameError || updateError) {
+    if (updateError) {
       await buttonInteraction.update({
-        content: `${activeGameError || updateError}`,
+        content: `${updateError}`,
         components: [],
       });
       return;
     }
 
-    const { totalBetWin, totalBetLose } = getTotalBets(game.bets);
+    const totalBets = [...(bets ?? []), betDb];
+    const { totalBetWin, totalBetLose } = getTotalBets(totalBets);
 
     const totalNicuWinMsg = totalBetWin.nicu ? `${totalBetWin.nicu} Nicu ` : "";
     const totalNicuLoseMsg = totalBetLose.nicu
@@ -335,38 +331,39 @@ export async function createBetCollector(
         value: `${totalNicuLoseMsg}${totalBetLose.tzapi} Tzapi`,
         inline: true,
       },
-      { name: "Total Bets Placed", value: `${game.bets.length}` },
+      { name: "Total Bets Placed", value: `${totalBets.length}` },
       { name: "\u200b", value: "\u200b" }
     );
-    console.log("bet made!", buttonInteraction.createdAt);
+    console.log(
+      "bet made!",
+      buttonInteraction.createdAt,
+      ". By: ",
+      buttonInteraction.user.username
+    );
 
-    // Update all bet messages
-    for (const sentIn of game.sentIn) {
-      const channel = await buttonInteraction.client.channels.fetch(
-        sentIn.channelId
-      );
-      if (!channel || !channel.isSendable()) {
-        await buttonInteraction.update({
-          content: `Error`,
-          components: [],
-        });
-        return;
-      }
-      for (const messageId of sentIn.messageIds) {
+    await Promise.all(
+      messages.map(async (msg) => {
         try {
-          const message = await channel.messages.fetch(messageId);
+          const channel = await buttonInteraction.client.channels.fetch(
+            msg.channelId
+          );
+          if (!channel || !channel.isSendable()) {
+            return;
+          }
 
-          if (message) {
-            await message.edit({
+          const fetchedMessage = await channel.messages.fetch(msg.messageId);
+          if (fetchedMessage) {
+            await fetchedMessage.edit({
               embeds: [embed],
               components: [winRow, loseRow],
             });
           }
         } catch (err) {
           console.log(err);
+          return;
         }
-      }
-    }
+      })
+    );
 
     await buttonInteraction.update({
       embeds: [embed],

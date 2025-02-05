@@ -7,10 +7,10 @@ import {
   EmbedBuilder,
   RestOrArray,
 } from "discord.js";
-import * as fs from "node:fs/promises";
 import champions from "../../assets/champions.js";
 import perks from "../../assets/perks.js";
 import summonerSpells from "../../assets/summonerSpells.js";
+import { Bet, Match, SentInMessage } from "../../data/schema.js";
 import { ParticipantStats } from "../components/spectatorMatch.js";
 import {
   BETS_CLOSE_AT_GAME_LENGTH,
@@ -22,212 +22,18 @@ import {
 import { getUser, updateUser } from "../db/user.js";
 import {
   AmountByUser,
-  Bet,
   Choice,
-  FinishedMatch,
-  FinishedMatchParticipant,
   Lane,
   LoserBetingUser,
-  Match,
   RefundedBettingUser,
-  SentIn,
   WinnerBetingUser,
 } from "../types/common.js";
-import { Account, MatchResult, SpectatorParticipant } from "../types/riot.js";
+import { Account, SpectatorParticipant } from "../types/riot.js";
 import {
   encodeBase1114111,
-  filePathExists,
   htmlImgSrcFromPath,
   toTitleCase,
 } from "./common.js";
-
-export async function getActiveGame(summonerId: string) {
-  try {
-    const rootPath = import.meta.url.split("dist/")[0];
-    const activeBetsFolder = new URL("src/data/bets/active/", rootPath);
-    const gameFile = new URL(`${summonerId}.json`, activeBetsFolder);
-    if (await filePathExists(gameFile)) {
-      const game: Match = JSON.parse(await fs.readFile(gameFile, "utf8"));
-      return { error: undefined, game };
-    } else {
-      return {
-        error: "Game not found.",
-        game: undefined,
-      };
-    }
-  } catch (err) {
-    return {
-      error: "Game not found.",
-      game: undefined,
-    };
-  }
-}
-
-export async function getActiveGames() {
-  try {
-    const rootPath = import.meta.url.split("dist/")[0];
-    const activeBetsFolder = new URL("src/data/bets/active/", rootPath);
-    const gameFiles = await fs.readdir(activeBetsFolder);
-
-    if (gameFiles.length === 0) {
-      return {
-        games: undefined,
-        error: undefined,
-      };
-    }
-
-    const games: Match[] = [];
-    for (const gameFile of gameFiles) {
-      const filePath = new URL(gameFile, activeBetsFolder);
-      const game: Match = JSON.parse(await fs.readFile(filePath, "utf8"));
-      games.push(game);
-    }
-
-    return { games, error: undefined };
-  } catch (err) {
-    return { games: undefined, error: "Error occured getting active games" };
-  }
-}
-
-export async function getFinishedGame(summonerPUUID: string, gameId: string) {
-  try {
-    const rootPath = import.meta.url.split("dist/")[0];
-    const activeBetsFolder = new URL(
-      `src/data/bets/archive/${summonerPUUID}/`,
-      rootPath
-    );
-    const gameFile = new URL(`${gameId}.json`, activeBetsFolder);
-    if (!(await filePathExists(gameFile))) {
-      return { match: undefined, error: "Game not found." };
-    }
-
-    const match: FinishedMatch = JSON.parse(
-      await fs.readFile(gameFile, "utf8")
-    );
-
-    if (!match) {
-      return { match: undefined, error: "Game found, but no data found." };
-    }
-
-    return { match, error: undefined };
-  } catch (err) {
-    console.log(err);
-    return { match: undefined, error: "Failed to get the finished match." };
-  }
-}
-
-export async function moveFinishedGame(
-  game: Match,
-  matchResult: MatchResult,
-  win: boolean | "remake"
-) {
-  try {
-    const rootPath = import.meta.url.split("dist/")[0];
-    const activeBetsFolder = new URL("src/data/bets/active/", rootPath);
-    const gameFile = new URL(`${game.summonerId}.json`, activeBetsFolder);
-    if (!(await filePathExists(gameFile))) {
-      return {
-        error: "Game not found.",
-      };
-    }
-
-    const archiveBetsFolder = new URL(
-      `src/data/bets/archive/${game.summonerId}/`,
-      rootPath
-    );
-    if (!(await filePathExists(archiveBetsFolder))) {
-      await fs.mkdir(archiveBetsFolder);
-    }
-
-    const newGameFile = new URL(
-      `${matchResult.metadata.matchId}.json`,
-      archiveBetsFolder
-    );
-    await fs.rename(gameFile, newGameFile);
-
-    const participants: FinishedMatchParticipant[] =
-      matchResult.info.participants.map((participant) => {
-        const {
-          kills,
-          assists,
-          deaths,
-          totalDamageDealtToChampions,
-          teamPosition,
-          championId,
-          champLevel,
-          summoner1Id,
-          summoner2Id,
-          totalMinionsKilled,
-          item0,
-          item1,
-          item2,
-          item3,
-          item4,
-          item5,
-          item6,
-          perks,
-          puuid,
-          riotIdGameName,
-          riotIdTagline,
-          teamId,
-          neutralMinionsKilled,
-          win,
-        } = participant;
-        return {
-          kills,
-          assists,
-          deaths,
-          totalDamageDealtToChampions,
-          teamPosition,
-          championId,
-          champLevel,
-          summoner1Id,
-          summoner2Id,
-          totalMinionsKilled,
-          item0,
-          item1,
-          item2,
-          item3,
-          item4,
-          item5,
-          item6,
-          perks,
-          puuid,
-          riotIdGameName,
-          riotIdTagline,
-          teamId,
-          neutralMinionsKilled,
-          win,
-        };
-      });
-
-    const gameDuration = matchResult.info.gameDuration;
-
-    await fs.writeFile(
-      newGameFile,
-      JSON.stringify({ ...game, win, participants, gameDuration })
-    );
-    return { error: undefined };
-  } catch (err) {
-    return {
-      error: err,
-    };
-  }
-}
-
-export async function updateActiveGame(game: Match) {
-  const summonerId = game.summonerId;
-  try {
-    const rootPath = import.meta.url.split("dist/")[0];
-    const activeBetsFolder = new URL("src/data/bets/active/", rootPath);
-    const gameFile = new URL(`${summonerId}.json`, activeBetsFolder);
-    await fs.writeFile(gameFile, JSON.stringify(game));
-
-    return { error: undefined };
-  } catch (err) {
-    return { error: "An error has occured updating active game." };
-  }
-}
 
 export function canBetOnActiveGame(gameStartTime: number) {
   const differenceInSeconds = Math.ceil((Date.now() - gameStartTime) / 1_000);
@@ -235,17 +41,19 @@ export function canBetOnActiveGame(gameStartTime: number) {
   return differenceInSeconds <= BETS_CLOSE_AT_GAME_LENGTH * 60;
 }
 
-export async function handleMatchOutcome(game: Match, win: boolean) {
-  const { error, game: activeGame } = await getActiveGame(game.summonerId);
+export async function handleMatchOutcome(bets: Bet[] | undefined, win: 1 | 0) {
+  if (!bets) {
+    return [];
+  }
 
-  const amountByUser = activeGame!.bets.reduce((acc, cur) => {
+  const amountByUser = bets.reduce((acc, cur) => {
     const accumulatedUser = acc.find(
       (user) => user.discordId === cur.discordId
     );
     const outcome = win === cur.win ? 1 : -1;
     const amount = {
-      tzapi: cur.amount.tzapi * outcome,
-      nicu: cur.amount.nicu * outcome,
+      tzapi: (cur.tzapi ?? 0) * outcome,
+      nicu: (cur.nicu ?? 0) * outcome,
     };
     if (accumulatedUser) {
       accumulatedUser.amount = {
@@ -259,26 +67,38 @@ export async function handleMatchOutcome(game: Match, win: boolean) {
   return amountByUser;
 }
 
-export async function handleRemake(game: Match) {
-  const { error, game: activeGame } = await getActiveGame(game.summonerId);
+export async function handleRemake(bets: Bet[] | undefined) {
+  if (!bets) {
+    return [];
+  }
 
-  const amountByUser = activeGame!.bets.reduce((acc, cur) => {
+  const amountByUser = bets.reduce((acc, cur) => {
     const accumulatedUser = acc.find(
       (user) => user.discordId === cur.discordId
     );
     if (accumulatedUser) {
       accumulatedUser.amount = {
-        tzapi: cur.amount.tzapi + accumulatedUser.amount.tzapi,
-        nicu: cur.amount.nicu + accumulatedUser.amount.nicu,
+        tzapi: (cur.tzapi ?? 0) + accumulatedUser.amount.tzapi,
+        nicu: (cur.nicu ?? 0) + accumulatedUser.amount.nicu,
       };
       return acc;
     }
-    return [...acc, { discordId: cur.discordId, amount: cur.amount }];
+    return [
+      ...acc,
+      {
+        discordId: cur.discordId,
+        amount: { tzapi: cur.tzapi ?? 0, nicu: cur.nicu ?? 0 },
+      },
+    ];
   }, [] as AmountByUser[]);
   return amountByUser;
 }
 
 export async function refundUsers(users: AmountByUser[]) {
+  if (!users) {
+    return [];
+  }
+
   const bettingUsers = users.map(async (user) => {
     const { error: error, user: userDb } = getUser(user.discordId);
 
@@ -419,15 +239,15 @@ export function bettingButtons() {
 export function getTotalBets(bets: Bet[]) {
   const totalBetWin = bets.reduce(
     (acc, cur) => ({
-      tzapi: acc.tzapi + (cur.win ? cur.amount.tzapi : 0),
-      nicu: acc.nicu + (cur.win ? cur.amount.nicu : 0),
+      tzapi: acc.tzapi + (cur.win ? cur.tzapi ?? 0 : 0),
+      nicu: acc.nicu + (cur.win ? cur.nicu ?? 0 : 0),
     }),
     ZERO_CURRENCIES
   );
   const totalBetLose = bets.reduce(
     (acc, cur) => ({
-      tzapi: acc.tzapi + (cur.win ? 0 : cur.amount.tzapi),
-      nicu: acc.nicu + (cur.win ? 0 : cur.amount.nicu),
+      tzapi: acc.tzapi + (cur.win ? 0 : cur.tzapi ?? 0),
+      nicu: acc.nicu + (cur.win ? 0 : cur.nicu ?? 0),
     }),
 
     ZERO_CURRENCIES
@@ -520,7 +340,8 @@ export function highestWeightLane(
   return { participantLane, newParticipants };
 }
 export function createRemakeEmbed(
-  game: Match,
+  match: Match,
+  bets: Bet[] | undefined,
   updatedUsers: RefundedBettingUser[]
 ) {
   const usersFields: RestOrArray<APIEmbedField> = [
@@ -540,10 +361,10 @@ export function createRemakeEmbed(
     .setColor(0x0099ff)
     .setTitle("League Bets :coin:")
     .setDescription(
-      `The bet on \`${game.player}\`'s match has resolved. It was a remake`
+      `The bet on \`${match.player}\`'s match has resolved. It was a remake`
     )
     .addFields(
-      { name: "Total Bets Placed", value: `${game.bets.length}` },
+      { name: "Total Bets Placed", value: `${(bets ?? []).length}` },
       { name: "\u200b", value: "\u200b" },
       ...usersFields,
       { name: "\u200b", value: "\u200b" }
@@ -553,11 +374,12 @@ export function createRemakeEmbed(
 
 export async function sendEmbedToChannels(
   client: Client,
-  sentIn: SentIn,
+  messages: SentInMessage[],
   embed: EmbedBuilder,
   components: ActionRowBuilder<ButtonBuilder>[] = []
 ) {
-  for (const { channelId } of sentIn) {
+  const uniqueChannelIds = new Set(messages.map((msg) => msg.channelId));
+  for (const channelId of uniqueChannelIds) {
     try {
       const channel = await client.channels.fetch(channelId);
       if (channel?.isSendable()) {
@@ -595,6 +417,7 @@ export function splitBets(betByUser: AmountByUser[]) {
 
 export function createResultEmbed(
   game: Match,
+  bets: Bet[] | undefined,
   updatedWinners: WinnerBetingUser[],
   updatedLosers: LoserBetingUser[]
 ) {
@@ -627,7 +450,7 @@ export function createResultEmbed(
     .setTitle("League Bets :coin:")
     .setDescription(`The bet on \`${game.player}\`'s match has resolved.`)
     .addFields(
-      { name: "Total Bets Placed", value: `${game.bets.length}` },
+      { name: "Total Bets Placed", value: `${(bets ?? []).length}` },
       { name: "\u200b", value: "\u200b" },
       ...fieldsWinners,
       { name: "\u200b", value: "\u200b" },

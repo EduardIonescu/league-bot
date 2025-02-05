@@ -61,7 +61,7 @@ export type Match = {
 export type Bet = {
   discordId: string;
   gameId: number;
-  win: boolean;
+  win: 0 | 1;
   tzapi?: number;
   nicu?: number;
 };

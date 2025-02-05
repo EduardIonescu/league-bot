@@ -43,3 +43,14 @@ CREATE TABLE IF NOT EXISTS finishedMatchParticipants (
   PRIMARY KEY (puuid, gameId),
   FOREIGN KEY (gameId) REFERENCES finishedMatches(gameId) ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS finishedBets(
+  discordId VARCHAR(255) NOT NULL,
+  gameId INTEGER NOT NULL,
+  tzapi INTEGER,
+  nicu INTEGER,
+  win BOOLEAN NOT NULL CHECK (win IN (0, 1)),
+  timestamp TIMESTAMP NOT NULL,
+  PRIMARY KEY (discordId, timestamp),
+  FOREIGN KEY (gameId) REFERENCES finishedMatches(gameId) ON DELETE CASCADE
+);

@@ -106,7 +106,7 @@ export function getActiveMatch(summonerPUUID: string) {
   }
 }
 
-function getBets(gameId: number) {
+export function getBets(gameId: number) {
   try {
     const stmt = db.prepare(`
       SELECT * FROM bets WHERE gameId = ?;
@@ -121,7 +121,7 @@ function getBets(gameId: number) {
   }
 }
 
-function getMessages(gameId: number) {
+export function getMessages(gameId: number) {
   try {
     const stmt = db.prepare(`
       SELECT * FROM messages WHERE gameId = ?;
@@ -133,6 +133,31 @@ function getMessages(gameId: number) {
   } catch (error) {
     console.log(error);
     return { error: true, messages: undefined };
+  }
+}
+
+export function getActiveMatches() {
+  try {
+    const stmt = db.prepare(`
+      SELECT * FROM activeMatches;
+  `);
+
+    const matches = stmt.all() as Match[] | undefined;
+
+    if (!matches) {
+      return {
+        error: "No live matches found.",
+        matches: undefined,
+      };
+    }
+
+    return { error: undefined, matches };
+  } catch (error) {
+    console.log(error);
+    return {
+      error: "No live matches found.",
+      matches: undefined,
+    };
   }
 }
 
@@ -275,6 +300,31 @@ function addFinishedMatchParticipants(
   }
 }
 
+export function addFinishedBets(bets: Bet[] | undefined) {
+  try {
+    const stmt = db.prepare(`
+    INSERT INTO finishedBets
+    (discordId, gameId, win, tzapi, nicu, timestamp)
+    VALUES (?, ?, ?, ?, ?, ?);
+  `);
+    bets?.forEach((bet) => {
+      stmt.run(
+        bet.discordId,
+        bet.gameId,
+        bet.win ? 1 : 0,
+        bet.tzapi ?? null,
+        bet.nicu ?? null,
+        dateToTIMESTAMP(new Date())
+      );
+    });
+
+    return { error: undefined };
+  } catch (error) {
+    console.log("error", error);
+    return { error };
+  }
+}
+
 export function getFinishedMatch(gameId: number) {
   try {
     const stmt = db.prepare(`
@@ -282,15 +332,14 @@ export function getFinishedMatch(gameId: number) {
       `);
 
     const finishedMatch = stmt.get(gameId) as FinishedMatch | undefined;
-    const { finishedMatchParticipants } = getFinishedMatchParticipants(gameId);
+    const { participants } = getFinishedMatchParticipants(gameId);
 
-    return { error: undefined, finishedMatch, finishedMatchParticipants };
+    return { error: undefined, match: { ...finishedMatch, participants } };
   } catch (error) {
     console.log(error);
     return {
-      error: true,
-      finishedMatch: undefined,
-      finishedMatchParticipants: undefined,
+      error: "Finished Match not found.",
+      match: undefined,
     };
   }
 }
@@ -300,13 +349,13 @@ function getFinishedMatchParticipants(gameId: number) {
       SELECT puuid, perks FROM finishedMatchParticipants WHERE gameId = ?;
       `);
 
-    const finishedMatchParticipants = stmt.all(gameId) as
+    const participants = stmt.all(gameId) as
       | FinishedMatchParticipant[]
       | undefined;
 
-    return { error: undefined, finishedMatchParticipants };
+    return { error: undefined, participants };
   } catch (error) {
     console.log(error);
-    return { error: true, finishedMatchParticipants: undefined };
+    return { error: true, participants: undefined };
   }
 }

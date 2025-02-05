@@ -1,8 +1,8 @@
 import { ButtonInteraction, Events } from "discord.js";
 import puppeteer from "puppeteer";
 import { FinishedMatchHTML } from "../lib/components/finishedMatch.js";
+import { getFinishedMatch } from "../lib/db/match.js";
 import { decodeBase1114111 } from "../lib/utils/common.js";
-import { getFinishedGame } from "../lib/utils/game.js";
 import { screenshot } from "../lib/utils/screenshot.js";
 
 // Shell is supposed to be older but I found it's way faster
@@ -29,13 +29,21 @@ export default {
       await interaction.reply({ content: "Match not found" });
       return;
     }
-    const { match, error } = await getFinishedGame(summonerPUUID, matchId);
-    if (error || !match) {
-      await interaction.reply({ content: error });
+    const gameId = matchId.split("_")[1];
+    if (!gameId) {
+      await interaction.reply({ content: "Match not found" });
       return;
     }
 
-    const html = FinishedMatchHTML(match.participants, match.gameDuration);
+    const { match, error } = getFinishedMatch(Number(gameId));
+    if (error || !match || !match.participants) {
+      await interaction.reply({
+        content: error ?? "Match participants not found.",
+      });
+      return;
+    }
+
+    const html = FinishedMatchHTML(match.participants, match.gameDuration ?? 0);
     const image = await screenshot(browser, html, { width: 960, height: 780 });
 
     interaction.reply({ files: [image] });
