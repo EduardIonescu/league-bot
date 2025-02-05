@@ -4,12 +4,9 @@ import {
   BROKE_THRESHOLD,
   TZAPI_TO_GIVE_WHEN_BROKE,
 } from "../../lib/constants.js";
+import { getUser, updateUser as updateUserDb } from "../../lib/db/user.js";
 import { handleDefer } from "../../lib/utils/customReply.js";
-import {
-  getActiveGames,
-  getBettingUser,
-  updateUser,
-} from "../../lib/utils/game.js";
+import { getActiveGames } from "../../lib/utils/game.js";
 
 export default {
   cooldown: 10,
@@ -22,19 +19,15 @@ export default {
 
     const discordId = interaction.user.id;
 
-    const { error, user: bettingUser } = await getBettingUser(discordId);
-
-    if (error || !bettingUser) {
+    const { error, user } = getUser(discordId);
+    if (error || !user) {
       interaction.customReply(error);
       deferHandler.cancel();
 
       return;
     }
 
-    if (
-      bettingUser.currency.nicu ||
-      bettingUser.currency.tzapi >= BROKE_THRESHOLD
-    ) {
+    if (user.balance.nicu || user.balance.tzapi >= BROKE_THRESHOLD) {
       interaction.customReply(
         `You fool! You are not broke enough to redeem yet.`
       );
@@ -43,10 +36,9 @@ export default {
       return;
     }
 
-    if (bettingUser.timestamp.lastRedeemed) {
+    if (user.lastRedeemed) {
       const now = new Date();
-      const difference =
-        now.getTime() - new Date(bettingUser.timestamp.lastRedeemed).getTime();
+      const difference = now.getTime() - new Date(user.lastRedeemed).getTime();
       const differenceInHours = Math.floor(difference / 1000 / 60 / 60);
       if (differenceInHours < BROKE_COOLDOWN) {
         interaction.customReply(
@@ -78,16 +70,17 @@ export default {
       }
     }
 
-    const updatedUser = {
-      ...bettingUser,
-      timestamp: { ...bettingUser.timestamp, lastRedeemed: new Date() },
-      currency: {
-        ...bettingUser.currency,
-        tzapi: bettingUser.currency.tzapi + TZAPI_TO_GIVE_WHEN_BROKE,
+    const updatedUserDb = {
+      ...user,
+      lastRedeemed: new Date(),
+      balance: {
+        ...user.balance,
+        tzapi: user.balance.tzapi + TZAPI_TO_GIVE_WHEN_BROKE,
       },
     };
-    const { error: errorUser } = await updateUser(updatedUser);
-    if (errorUser) {
+
+    const { error: errorUpdate } = updateUserDb(updatedUserDb);
+    if (errorUpdate) {
       interaction.customReply(
         `An error has occured trying to update user <@${discordId}>`
       );
