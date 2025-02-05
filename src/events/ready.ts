@@ -78,9 +78,9 @@ async function handleActiveBets(client: Client) {
 
     // Handle Remake
     if (matchResult.info.gameDuration < REMAKE_GAME_LENGTH_CAP * 60) {
-      const betByUser = await handleRemake(bets);
+      const betByUser = handleRemake(bets);
 
-      const updatedUsers = await refundUsers(betByUser);
+      const updatedUsers = refundUsers(betByUser);
 
       const embedOutcome = createRemakeEmbed(match, bets, updatedUsers);
       await sendEmbedToChannels(client, messages ?? [], embedOutcome, [
@@ -106,11 +106,11 @@ async function handleActiveBets(client: Client) {
     }
 
     // Handle win and lose
-    const betByUser = await handleMatchOutcome(bets, participant.win ? 1 : 0);
+    const betByUser = handleMatchOutcome(bets, participant.win ? 1 : 0);
     const { winners, losers } = splitBets(betByUser);
 
-    const updatedWinners = await handleWinnerBetResult(winners);
-    const updatedLosers = await handleLoserBetResult(losers);
+    const updatedWinners = handleWinnerBetResult(winners);
+    const updatedLosers = handleLoserBetResult(losers);
 
     const embedOutcome = createResultEmbed(
       match,

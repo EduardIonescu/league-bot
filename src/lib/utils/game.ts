@@ -41,7 +41,7 @@ export function canBetOnActiveGame(gameStartTime: number) {
   return differenceInSeconds <= BETS_CLOSE_AT_GAME_LENGTH * 60;
 }
 
-export async function handleMatchOutcome(bets: Bet[] | undefined, win: 1 | 0) {
+export function handleMatchOutcome(bets: Bet[] | undefined, win: 1 | 0) {
   if (!bets) {
     return [];
   }
@@ -67,7 +67,7 @@ export async function handleMatchOutcome(bets: Bet[] | undefined, win: 1 | 0) {
   return amountByUser;
 }
 
-export async function handleRemake(bets: Bet[] | undefined) {
+export function handleRemake(bets: Bet[] | undefined) {
   if (!bets) {
     return [];
   }
@@ -94,12 +94,12 @@ export async function handleRemake(bets: Bet[] | undefined) {
   return amountByUser;
 }
 
-export async function refundUsers(users: AmountByUser[]) {
+export function refundUsers(users: AmountByUser[]) {
   if (!users) {
     return [];
   }
 
-  const bettingUsers = users.map(async (user) => {
+  const bettingUsers = users.map((user) => {
     const { error: error, user: userDb } = getUser(user.discordId);
 
     if (error || !userDb) {
@@ -117,11 +117,11 @@ export async function refundUsers(users: AmountByUser[]) {
     return { updatedUser, refund: user.amount ?? ZERO_CURRENCIES };
   });
 
-  return (await Promise.all(bettingUsers)).filter((user) => user != undefined);
+  return bettingUsers.filter((user) => user != undefined);
 }
 
-export async function handleWinnerBetResult(users: AmountByUser[]) {
-  const winners = users.map(async (user) => {
+export function handleWinnerBetResult(users: AmountByUser[]) {
+  const winners = users.map((user) => {
     const { error, user: userDb } = getUser(user.discordId);
 
     if (error || !userDb) {
@@ -152,11 +152,11 @@ export async function handleWinnerBetResult(users: AmountByUser[]) {
     return { updatedUser, winnings: user.winnings ?? ZERO_CURRENCIES };
   });
 
-  return (await Promise.all(winners)).filter((winner) => winner != undefined);
+  return winners.filter((winner) => winner != undefined);
 }
 
-export async function handleLoserBetResult(users: AmountByUser[]) {
-  const losers = users.map(async (user) => {
+export function handleLoserBetResult(users: AmountByUser[]) {
+  const losers = users.map((user) => {
     const { error, user: userDb } = getUser(user.discordId);
 
     if (error || !userDb) {
@@ -188,7 +188,7 @@ export async function handleLoserBetResult(users: AmountByUser[]) {
     return { updatedUser, loss: user.loss ?? ZERO_CURRENCIES };
   });
 
-  return (await Promise.all(losers)).filter((loser) => loser != undefined);
+  return losers.filter((loser) => loser != undefined);
 }
 
 export function formatChoices(
