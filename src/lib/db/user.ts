@@ -53,7 +53,7 @@ export function getUser(discordId: string) {
   const currencies = getCurrencies(discordId);
 
   if (!user || !currencies) {
-    return { error: "User not found", user: undefined, currencies: undefined };
+    return { error: "User not found", user: undefined };
   }
 
   return {
@@ -96,7 +96,7 @@ export function updateUser(user: UserAdvanced) {
     `);
 
     stmt.run(
-      dateToTIMESTAMP(user.lastAction ?? new Date()),
+      dateToTIMESTAMP(new Date()),
       dateToTIMESTAMP(user.lastRedeemed),
       user.timesBet,
       user.wins,
