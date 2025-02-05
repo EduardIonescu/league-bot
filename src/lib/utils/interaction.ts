@@ -9,6 +9,7 @@ import {
   TextBasedChannel,
 } from "discord.js";
 import { loseButtons, NICU_IN_TZAPI, winButtons } from "../constants.js";
+import { getUser, updateUser } from "../db/user.js";
 import { Bet, Currency } from "../types/common.js";
 import { Account } from "../types/riot.js";
 import { toTitleCase } from "./common.js";
@@ -17,10 +18,8 @@ import {
   canBetOnActiveGame,
   formatPlayerName,
   getActiveGame,
-  getBettingUser,
   getTotalBets,
   updateActiveGame,
-  updateUser,
 } from "./game.js";
 import { fetchSpectatorData } from "./riot.js";
 
@@ -229,9 +228,10 @@ export async function createBetCollector(
       (b) => b.customId === buttonInteraction.customId
     );
     const betAmount = button!.amount;
-    const { error, user: bettingUser } = await getBettingUser(discordId);
 
-    if (error || !bettingUser) {
+    const { error, user } = getUser(discordId);
+
+    if (error || !user) {
       await buttonInteraction.update({
         embeds: [embed],
         components: [],
@@ -243,13 +243,13 @@ export async function createBetCollector(
       return;
     }
 
-    const bettingUserBets = game.bets.filter(
-      (bet) => bet.discordId === bettingUser.discordId
+    const userBets = game.bets.filter(
+      (bet) => bet.discordId === user.discordId
     );
-    if (bettingUserBets) {
-      const userBetOnOppositeOutcome = bettingUserBets.find(
-        (bet) => bet.win !== win
-      );
+
+    if (userBets) {
+      const userBetOnOppositeOutcome = userBets.find((bet) => bet.win !== win);
+
       if (userBetOnOppositeOutcome) {
         await buttonInteraction.update({
           embeds: [embed],
@@ -265,13 +265,11 @@ export async function createBetCollector(
       }
     }
 
-    const currency = bettingUser.currency[currencyType];
+    const balance = user.balance[currencyType];
 
-    if (betAmount > currency) {
-      const totalTzapiInNicu = Math.floor(
-        bettingUser.currency.tzapi / NICU_IN_TZAPI
-      );
-      const totalCurrencyInNicu = bettingUser.currency.nicu + totalTzapiInNicu;
+    if (betAmount > balance) {
+      const totalTzapiInNicu = Math.floor(user.balance.tzapi / NICU_IN_TZAPI);
+      const totalCurrencyInNicu = user.balance.nicu + totalTzapiInNicu;
 
       if (currencyType !== "nicu" || totalCurrencyInNicu < betAmount) {
         await buttonInteraction.update({
@@ -279,7 +277,7 @@ export async function createBetCollector(
           components: [winRow, loseRow],
         });
         await buttonInteraction.followUp({
-          content: `You don't have enough currency to bet ${betAmount}. You currently have ${currency} ${toTitleCase(
+          content: `You don't have enough currency to bet ${betAmount}. You currently have ${balance} ${toTitleCase(
             currencyType
           )}.`,
           flags: MessageFlags.Ephemeral,
@@ -287,20 +285,15 @@ export async function createBetCollector(
         return;
       }
 
-      const nicuInTzapiNeeded =
-        (betAmount - bettingUser.currency.nicu) * NICU_IN_TZAPI;
-      const tzapi = bettingUser.currency.tzapi - nicuInTzapiNeeded;
+      const nicuInTzapiNeeded = (betAmount - user.balance.nicu) * NICU_IN_TZAPI;
+      const tzapi = user.balance.tzapi - nicuInTzapiNeeded;
 
-      bettingUser.currency = { nicu: 0, tzapi };
+      user.balance = { nicu: 0, tzapi };
     } else {
-      bettingUser.currency[currencyType] -= betAmount;
+      user.balance[currencyType] -= betAmount;
     }
 
-    bettingUser.timestamp = {
-      ...bettingUser.timestamp,
-      lastAction: new Date(),
-    };
-    bettingUser.data.timesBet += 1;
+    user.timesBet += 1;
 
     const gameBet: Bet = {
       discordId,
@@ -313,11 +306,12 @@ export async function createBetCollector(
     game.bets.push(gameBet);
 
     const { error: activeGameError } = await updateActiveGame(game);
-    const { error: userError } = await updateUser(bettingUser!);
 
-    if (activeGameError || userError) {
+    const { error: updateError } = updateUser(user);
+
+    if (activeGameError || updateError) {
       await buttonInteraction.update({
-        content: `${activeGameError || userError}`,
+        content: `${activeGameError || updateError}`,
         components: [],
       });
       return;
