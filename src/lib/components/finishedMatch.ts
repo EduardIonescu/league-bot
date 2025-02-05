@@ -151,10 +151,10 @@ function PlayerCard(
     item5,
     item6,
     perks,
-    riotIdGameName,
-    riotIdTagline,
+    gameName,
+    tagLine,
   } = participant;
-  const playerName = formatPlayerName(riotIdGameName, riotIdTagline);
+  const playerName = formatPlayerName(gameName, tagLine);
 
   const damagePercentage = Math.min(
     Math.round((totalDamageDealtToChampions / highestDamage) * 100),

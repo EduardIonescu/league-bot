@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS finishedMatches(
 );
 
 CREATE TABLE IF NOT EXISTS finishedMatchParticipants (
-  gameId VARCHAR(255) NOT NULL,
+  gameId INTEGER NOT NULL,
   puuid VARCHAR(255) NOT NULL,
   kills INTEGER NOT NULL,
   assists INTEGER NOT NULL,
@@ -36,8 +36,8 @@ CREATE TABLE IF NOT EXISTS finishedMatchParticipants (
   item5 INTEGER NOT NULL,
   item6 INTEGER NOT NULL,
   perks JSONB NOT NULL,
-  riotIdGameName VARCHAR(255) NOT NULL,
-  riotIdTagline VARCHAR(255) NOT NULL,
+  gameName VARCHAR(255) NOT NULL,
+  tagLine VARCHAR(255) NOT NULL,
   teamId INTEGER NOT NULL,
   win BOOLEAN NOT NULL CHECK (win IN (0, 1)),
   PRIMARY KEY (puuid, gameId),

@@ -264,8 +264,8 @@ function addFinishedMatchParticipants(
         item5, 
         item6, 
         perks, 
-        riotIdGameName,
-        riotIdTagline, 
+        gameName,
+        tagLine, 
         teamId, 
         win
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
@@ -352,7 +352,7 @@ export function getFinishedMatch(gameId: number) {
 function getFinishedMatchParticipants(gameId: number) {
   try {
     const stmt = db.prepare(`
-      SELECT puuid, perks FROM finishedMatchParticipants WHERE gameId = ?;
+      SELECT * FROM finishedMatchParticipants WHERE gameId = ?;
       `);
 
     const participants = stmt.all(gameId) as

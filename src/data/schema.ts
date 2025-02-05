@@ -89,7 +89,7 @@ export type FinishedMatch = {
 };
 
 export type FinishedMatchParticipant = {
-  gameId: string;
+  gameId: number;
   puuid: string;
   kills: number;
   assists: number;
@@ -110,8 +110,8 @@ export type FinishedMatchParticipant = {
   item5: number;
   item6: number;
   perks: string;
-  riotIdGameName: string;
-  riotIdTagline: string;
+  gameName: string;
+  tagLine: string;
   teamId: number;
   win: 0 | 1;
 };
