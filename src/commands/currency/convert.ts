@@ -1,7 +1,7 @@
 import { CommandInteraction, SlashCommandBuilder } from "discord.js";
 import { NICU_IN_TZAPI } from "../../lib/constants.js";
+import { getUser, updateUser as updateDbUser } from "../../lib/db/user.js";
 import { Currencies, Currency } from "../../lib/types/common.js";
-import { getBettingUser, updateUser } from "../../lib/utils/game.js";
 
 const convertChoices = [
   { name: "Tzapi", value: "tzapi" },
@@ -31,8 +31,10 @@ export default {
     await interaction.deferReply();
 
     const discordId = interaction.user.id;
-    const { error, user: bettingUser } = await getBettingUser(discordId);
-    if (error || !bettingUser) {
+    const { error, user } = getUser(discordId);
+
+    if (error || !user) {
+      console.log("error", error);
       await interaction.editReply(
         "User not found. Try again or try /currency first."
       );
@@ -72,18 +74,20 @@ export default {
       amount = Math.round(amount);
 
       const requiredTzapi = amount * NICU_IN_TZAPI;
-      if (bettingUser.currency.tzapi < requiredTzapi) {
+
+      if (user.balance.tzapi < requiredTzapi) {
         await interaction.editReply(
-          `You need ${requiredTzapi} Tzapi. You only have ${bettingUser.currency.tzapi} Tzapi`
+          `You need ${requiredTzapi} Tzapi. You only have ${user.balance.tzapi} Tzapi`
         );
         return;
       }
 
-      const nicu = bettingUser.currency.nicu + amount;
-      const tzapi = bettingUser.currency.tzapi - requiredTzapi;
-      const currency: Currencies = { ...bettingUser.currency, nicu, tzapi };
-      const updatedUser = { ...bettingUser, currency };
-      const { error: updateError } = await updateUser(updatedUser);
+      const nicu = user.balance.nicu + amount;
+      const tzapi = user.balance.tzapi - requiredTzapi;
+      const balance = { ...user.balance, nicu: nicu, tzapi: tzapi };
+      const updatedUser = { ...user, balance };
+      const { error: updateError } = updateDbUser(updatedUser);
+
       if (updateError) {
         await interaction.editReply(
           `An error has occured saving your updated currencies. Try again.`
@@ -98,19 +102,25 @@ export default {
       return;
     }
 
-    if (bettingUser.currency.nicu < amount) {
+    if (user.balance.nicu < amount) {
       await interaction.editReply(
-        `You need ${amount} Nicu. You only have ${bettingUser.currency.nicu} Nicu`
+        `You need ${amount} Nicu. You only have ${user.balance.nicu} Nicu`
       );
       return;
     }
 
-    const nicu = bettingUser.currency.nicu - amount;
-    const tzapi = bettingUser.currency.tzapi + amount * NICU_IN_TZAPI;
-    const currency: Currencies = { ...bettingUser.currency, nicu, tzapi };
-    const updatedUser = { ...bettingUser, currency };
-    const { error: updateError } = await updateUser(updatedUser);
+    const nicu = user.balance.nicu - amount;
+    const tzapi = user.balance.tzapi + amount * NICU_IN_TZAPI;
+    const balance: Currencies = {
+      ...user.balance,
+      nicu: nicu,
+      tzapi: tzapi,
+    };
+    const updatedUser = { ...user, balance };
+    const { error: updateError } = updateDbUser(updatedUser);
+
     if (updateError) {
+      console.log("updateError", updateError);
       await interaction.editReply(
         `An error has occured saving your updated currencies. Try again.`
       );
