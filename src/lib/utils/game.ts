@@ -213,17 +213,17 @@ export function formatPlayerName(gameName: string, tagLine: string) {
   return `${toTitleCase(gameName)}#${tagLine.toUpperCase()}`;
 }
 
-export function bettingButtons() {
+export function bettingButtons(summonerPUUID: string) {
   const winButtonsBuilders = winButtons.map((button) =>
     new ButtonBuilder()
       .setLabel(button.label)
-      .setCustomId(button.customId)
+      .setCustomId(button.customId + "-" + summonerPUUID)
       .setStyle(ButtonStyle.Primary)
   );
   const loseButtonsBuilders = loseButtons.map((button) =>
     new ButtonBuilder()
       .setLabel(button.label)
-      .setCustomId(button.customId)
+      .setCustomId(button.customId + "-" + summonerPUUID)
       .setStyle(ButtonStyle.Danger)
   );
   const winRow = new ActionRowBuilder<ButtonBuilder>().addComponents(

@@ -64,6 +64,7 @@ export type Bet = {
   win: 0 | 1;
   tzapi?: number;
   nicu?: number;
+  timestamp: Date;
 };
 
 export type SentInMessage = {

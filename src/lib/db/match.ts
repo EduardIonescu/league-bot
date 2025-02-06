@@ -69,7 +69,7 @@ export function addBet(bet: Bet) {
       bet.win ? 1 : 0,
       bet.tzapi ?? null,
       bet.nicu ?? null,
-      dateToTIMESTAMP(new Date())
+      dateToTIMESTAMP(bet.timestamp ?? new Date())
     );
 
     return { error: undefined };
@@ -320,7 +320,7 @@ export function addFinishedBets(bets: Bet[] | undefined) {
         bet.win ? 1 : 0,
         bet.tzapi ?? null,
         bet.nicu ?? null,
-        dateToTIMESTAMP(new Date())
+        dateToTIMESTAMP(bet.timestamp ?? new Date())
       );
     });
 
