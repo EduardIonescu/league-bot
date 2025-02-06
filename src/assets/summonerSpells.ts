@@ -35,7 +35,7 @@ export default {
     key: 6,
     name: "Ghost",
     id: "SummonerHaste",
-    weights: { top: 0.3, mid: 0.3 },
+    weights: { top: 0.4, mid: 0.3 },
   },
   7: {
     key: 7,
