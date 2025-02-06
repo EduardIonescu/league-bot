@@ -8,7 +8,7 @@ interface ClientWithCommands extends Client<boolean> {
   cooldowns?: Collection<any, any>;
 }
 const client: ClientWithCommands = new Client({
-  intents: [GatewayIntentBits.Guilds],
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages],
 });
 (async () => {
   client.commands = new Collection();

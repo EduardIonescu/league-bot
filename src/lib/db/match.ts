@@ -142,6 +142,39 @@ export function getMessages(gameId: number) {
   }
 }
 
+export function getMessageById(id: string, channelId: string) {
+  try {
+    const stmt = db.prepare(`
+        SELECT * FROM messages WHERE messageId = ? AND channelId = ?;
+      `);
+
+    const message = stmt.get(id, channelId) as SentInMessage | undefined;
+
+    return message;
+  } catch (error) {
+    console.log("error", error);
+    return undefined;
+  }
+}
+/** @returns true if successfully removed, false otherwise  */
+export function removeMessage(id: string, channelId: string) {
+  try {
+    const stmt = db.prepare(`
+        DELETE FROM messages WHERE messageId = ? AND channelId = ?;
+      `);
+    const message = stmt.run(id, channelId);
+
+    if (!message.changes) {
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.log("error", error);
+    return false;
+  }
+}
+
 export function getActiveMatches() {
   try {
     const stmt = db.prepare(`
