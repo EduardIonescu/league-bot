@@ -3,6 +3,7 @@ import { NICU_IN_TZAPI } from "../../lib/constants.js";
 import { logInteractionUsage } from "../../lib/db/logging.js";
 import { getUser, updateUser } from "../../lib/db/user.js";
 import { Currencies, Currency } from "../../lib/types/common.js";
+import { handleDefer } from "../../lib/utils/customReply.js";
 
 const convertChoices = [
   { name: "Tzapi", value: "tzapi" },
@@ -29,16 +30,18 @@ export default {
         .setRequired(false)
     ),
   async execute(interaction: CommandInteraction) {
-    await interaction.deferReply();
+    const deferHandler = handleDefer(interaction);
+    deferHandler.start();
 
     const discordId = interaction.user.id;
     const { error, user } = getUser(discordId);
 
     if (error || !user) {
       console.log("error", error);
-      await interaction.editReply(
+      interaction.customReply(
         "User not found. Try again or try /currency first."
       );
+      deferHandler.cancel();
       logInteractionUsage(interaction);
 
       return;
@@ -51,7 +54,8 @@ export default {
         "Tried to convert a boolean. ",
         interaction.options.get("amount")?.value
       );
-      await interaction.editReply(`\`${amount}\` is not a number.`);
+      interaction.customReply(`\`${amount}\` is not a number.`);
+      deferHandler.cancel();
       logInteractionUsage(interaction);
 
       return;
@@ -67,9 +71,10 @@ export default {
         "Tried to convert a string? ",
         interaction.options.get("amount")?.value
       );
-      await interaction.editReply(
+      interaction.customReply(
         `\`${interaction.options.get("amount")?.value}\` is not a number.`
       );
+      deferHandler.cancel();
       logInteractionUsage(interaction);
 
       return;
@@ -83,9 +88,10 @@ export default {
       const requiredTzapi = amount * NICU_IN_TZAPI;
 
       if (user.balance.tzapi < requiredTzapi) {
-        await interaction.editReply(
+        interaction.customReply(
           `You need ${requiredTzapi} Tzapi. You only have ${user.balance.tzapi} Tzapi`
         );
+        deferHandler.cancel();
         logInteractionUsage(interaction);
 
         return;
@@ -98,27 +104,30 @@ export default {
       const { error: updateError } = updateUser(updatedUser);
 
       if (updateError) {
-        await interaction.editReply(
+        interaction.customReply(
           `An error has occured saving your updated currencies. Try again.`
         );
+        deferHandler.cancel();
         logInteractionUsage(interaction);
 
         return;
       }
 
       console.log("Conversion completed for: ", discordId);
-      await interaction.editReply(
+      interaction.customReply(
         `Conversion completed!\n<@${discordId}> now has ${tzapi} Tzapi and ${nicu} Nicu.`
       );
+      deferHandler.cancel();
       logInteractionUsage(interaction, true);
 
       return;
     }
 
     if (user.balance.nicu < amount) {
-      await interaction.editReply(
+      interaction.customReply(
         `You need ${amount} Nicu. You only have ${user.balance.nicu} Nicu`
       );
+      deferHandler.cancel();
       logInteractionUsage(interaction);
 
       return;
@@ -136,10 +145,11 @@ export default {
 
     if (updateError) {
       console.log("updateError", updateError);
-      await interaction.editReply(
+      interaction.customReply(
         `An error has occured saving your updated currencies. Try again.`
       );
       logInteractionUsage(interaction);
+      deferHandler.cancel();
 
       return;
     }
@@ -150,9 +160,10 @@ export default {
       " - ",
       interaction.user.username
     );
-    await interaction.editReply(
+    interaction.customReply(
       `Conversion completed!\n<@${discordId}> now has ${tzapi} Tzapi and ${nicu} Nicu.`
     );
+    deferHandler.cancel();
     logInteractionUsage(interaction, true);
 
     return;
