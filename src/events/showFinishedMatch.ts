@@ -1,6 +1,7 @@
 import { ButtonInteraction, Events } from "discord.js";
 import puppeteer from "puppeteer";
 import { FinishedMatchHTML } from "../lib/components/finishedMatch.js";
+import { logInteractionUsage } from "../lib/db/logging.js";
 import { getFinishedMatch } from "../lib/db/match.js";
 import { decodeBase1114111 } from "../lib/utils/common.js";
 import { screenshot } from "../lib/utils/screenshot.js";
@@ -27,11 +28,15 @@ export default {
       console.log("encodedSummonerPUUID", summonerPUUID);
       console.log("encodedMatchId", matchId);
       await interaction.reply({ content: "Match not found" });
+      logInteractionUsage(interaction);
+
       return;
     }
     const gameId = matchId.split("_")[1];
     if (!gameId) {
       await interaction.reply({ content: "Match not found" });
+      logInteractionUsage(interaction);
+
       return;
     }
 
@@ -45,6 +50,8 @@ export default {
       await interaction.reply({
         content: error ?? "Match participants not found.",
       });
+      logInteractionUsage(interaction);
+
       return;
     }
 
@@ -52,5 +59,6 @@ export default {
     const image = await screenshot(browser, html, { width: 960, height: 780 });
 
     interaction.reply({ files: [image] });
+    logInteractionUsage(interaction, true);
   },
 };

@@ -4,6 +4,7 @@ import {
   SlashCommandBuilder,
 } from "discord.js";
 import * as fs from "fs/promises";
+import { logInteractionUsage } from "../../lib/db/logging.js";
 
 export default {
   cooldown: 5,
@@ -34,5 +35,6 @@ export default {
     }
 
     interaction.reply({ content, flags: MessageFlags.Ephemeral });
+    logInteractionUsage(interaction, true);
   },
 };

@@ -4,6 +4,7 @@ import {
   BROKE_THRESHOLD,
   TZAPI_TO_GIVE_WHEN_BROKE,
 } from "../../lib/constants.js";
+import { logInteractionUsage } from "../../lib/db/logging.js";
 import { getActiveMatches, getBets } from "../../lib/db/match.js";
 import { getUser, updateUser } from "../../lib/db/user.js";
 import { handleDefer } from "../../lib/utils/customReply.js";
@@ -23,6 +24,7 @@ export default {
     if (error || !user) {
       interaction.customReply(error);
       deferHandler.cancel();
+      logInteractionUsage(interaction);
 
       return;
     }
@@ -32,6 +34,7 @@ export default {
         `You fool! You are not broke enough to redeem yet.`
       );
       deferHandler.cancel();
+      logInteractionUsage(interaction);
 
       return;
     }
@@ -47,6 +50,7 @@ export default {
           } hours left before you can use it again.`
         );
         deferHandler.cancel();
+        logInteractionUsage(interaction);
 
         return;
       }
@@ -68,6 +72,7 @@ export default {
               `You fool! You have currency in an unfinished match! You've bet on ${match.player}'s match`
             );
             deferHandler.cancel();
+            logInteractionUsage(interaction);
 
             return;
           }
@@ -90,6 +95,7 @@ export default {
         `An error has occured trying to update user <@${discordId}>`
       );
       deferHandler.cancel();
+      logInteractionUsage(interaction);
 
       return;
     }
@@ -98,5 +104,6 @@ export default {
       `<@${discordId}> is a broke fool! I pity you so I'll give you 100 Tzapi. Make sure not to lose all of them on a single match!`
     );
     deferHandler.cancel();
+    logInteractionUsage(interaction, true);
   },
 };

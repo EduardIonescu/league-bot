@@ -1,4 +1,5 @@
 import { CommandInteraction, SlashCommandBuilder } from "discord.js";
+import { logInteractionUsage } from "../../lib/db/logging.js";
 import { getUser } from "../../lib/db/user.js";
 
 export default {
@@ -12,11 +13,14 @@ export default {
 
     if (error || !user) {
       interaction.reply(error);
+      logInteractionUsage(interaction);
+
       return;
     }
 
     interaction.reply(
       `You have ${user.balance.nicu} Nicu and ${user.balance.tzapi} Tzapi left!`
     );
+    logInteractionUsage(interaction, true);
   },
 };

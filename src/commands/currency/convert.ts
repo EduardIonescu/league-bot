@@ -1,5 +1,6 @@
 import { CommandInteraction, SlashCommandBuilder } from "discord.js";
 import { NICU_IN_TZAPI } from "../../lib/constants.js";
+import { logInteractionUsage } from "../../lib/db/logging.js";
 import { getUser, updateUser } from "../../lib/db/user.js";
 import { Currencies, Currency } from "../../lib/types/common.js";
 
@@ -38,6 +39,8 @@ export default {
       await interaction.editReply(
         "User not found. Try again or try /currency first."
       );
+      logInteractionUsage(interaction);
+
       return;
     }
 
@@ -49,6 +52,8 @@ export default {
         interaction.options.get("amount")?.value
       );
       await interaction.editReply(`\`${amount}\` is not a number.`);
+      logInteractionUsage(interaction);
+
       return;
     }
 
@@ -65,6 +70,8 @@ export default {
       await interaction.editReply(
         `\`${interaction.options.get("amount")?.value}\` is not a number.`
       );
+      logInteractionUsage(interaction);
+
       return;
     }
 
@@ -79,6 +86,8 @@ export default {
         await interaction.editReply(
           `You need ${requiredTzapi} Tzapi. You only have ${user.balance.tzapi} Tzapi`
         );
+        logInteractionUsage(interaction);
+
         return;
       }
 
@@ -92,6 +101,8 @@ export default {
         await interaction.editReply(
           `An error has occured saving your updated currencies. Try again.`
         );
+        logInteractionUsage(interaction);
+
         return;
       }
 
@@ -99,6 +110,8 @@ export default {
       await interaction.editReply(
         `Conversion completed!\n<@${discordId}> now has ${tzapi} Tzapi and ${nicu} Nicu.`
       );
+      logInteractionUsage(interaction, true);
+
       return;
     }
 
@@ -106,6 +119,8 @@ export default {
       await interaction.editReply(
         `You need ${amount} Nicu. You only have ${user.balance.nicu} Nicu`
       );
+      logInteractionUsage(interaction);
+
       return;
     }
 
@@ -124,6 +139,8 @@ export default {
       await interaction.editReply(
         `An error has occured saving your updated currencies. Try again.`
       );
+      logInteractionUsage(interaction);
+
       return;
     }
 
@@ -136,6 +153,8 @@ export default {
     await interaction.editReply(
       `Conversion completed!\n<@${discordId}> now has ${tzapi} Tzapi and ${nicu} Nicu.`
     );
+    logInteractionUsage(interaction, true);
+
     return;
   },
 };

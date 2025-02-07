@@ -6,6 +6,7 @@ import {
   MessageFlags,
   TextBasedChannel,
 } from "discord.js";
+import { logInteractionUsage } from "../db/logging.js";
 import { addActiveMatch, addMessage, getActiveMatch } from "../db/match.js";
 import { Account } from "../types/riot.js";
 import {
@@ -24,6 +25,8 @@ export async function placeBet(
 
   if (!account) {
     interaction.editReply("Account not found. Try saving it first with `/add`");
+    logInteractionUsage(interaction);
+
     return;
   }
 
@@ -44,6 +47,8 @@ export async function placeBet(
 
       if (error || !spectatorData) {
         interaction.editReply(`${player} is not in game`);
+        logInteractionUsage(interaction);
+
         return;
       }
 
@@ -54,6 +59,8 @@ export async function placeBet(
         interaction.editReply(
           `You can't bet on ${spectatorData.gameMode} games. You can only bet on Ranked Solo/Duo and Ranked Flex games.`
         );
+        logInteractionUsage(interaction);
+
         return;
       }
 
@@ -76,12 +83,16 @@ export async function placeBet(
           content: "Betting window has closed. Better luck on the next one!",
           // flags: MessageFlags.Ephemeral,
         });
+        logInteractionUsage(interaction);
+
         return;
       }
 
       addActiveMatch(match);
     } catch (err) {
       interaction.editReply(`${player} is not in game`);
+      logInteractionUsage(interaction);
+
       return;
     }
   }
@@ -124,6 +135,8 @@ export async function placeBet(
       content: "Betting window has closed. Better luck on the next one!",
       flags: MessageFlags.Ephemeral,
     });
+    logInteractionUsage(interaction);
+
     return;
   }
 
@@ -145,4 +158,5 @@ export async function placeBet(
     };
     addMessage(message);
   }
+  logInteractionUsage(interaction, true);
 }

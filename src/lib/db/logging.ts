@@ -1,6 +1,6 @@
 import { ButtonInteraction, CommandInteraction } from "discord.js";
-import db from "../../data/db";
-import { InteractionUsage } from "../types/logging";
+import db from "../../data/db.js";
+import { InteractionUsage } from "../types/logging.js";
 
 export function saveInteractionUsage(interactionUsage: InteractionUsage) {
   try {

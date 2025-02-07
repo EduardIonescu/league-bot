@@ -1,4 +1,5 @@
 import { CommandInteraction, SlashCommandBuilder } from "discord.js";
+import { logInteractionUsage } from "../../lib/db/logging.js";
 
 export default {
   cooldown: 5,
@@ -15,5 +16,6 @@ export default {
         sent.createdTimestamp - interaction.createdTimestamp
       }ms`
     );
+    logInteractionUsage(interaction, true);
   },
 };

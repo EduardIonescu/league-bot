@@ -7,6 +7,7 @@ import {
 } from "discord.js";
 import * as fs from "node:fs/promises";
 import { NICU_IN_TZAPI } from "../constants.js";
+import { logInteractionUsage } from "../db/logging.js";
 import { getAllUsers } from "../db/user.js";
 import { getCheckButton } from "./check.js";
 
@@ -17,6 +18,8 @@ export async function showLeaderboard(
 
   if (error || !users) {
     interaction.reply(error ?? "Error loading users.");
+    logInteractionUsage(interaction);
+
     return;
   }
 
@@ -34,6 +37,7 @@ export async function showLeaderboard(
   ];
 
   interaction.reply({ content, components });
+  logInteractionUsage(interaction, true);
 }
 
 async function getLeaderboard() {

@@ -1,4 +1,5 @@
 import { CommandInteraction, SlashCommandBuilder } from "discord.js";
+import { logInteractionUsage } from "../../lib/db/logging.js";
 import { getUser, updateUser } from "../../lib/db/user.js";
 import { handleDefer } from "../../lib/utils/customReply.js";
 
@@ -30,6 +31,7 @@ export default {
         "User not found. Try again or try /currency first."
       );
       deferHandler.cancel();
+      logInteractionUsage(interaction);
 
       return;
     }
@@ -38,6 +40,7 @@ export default {
     if (!receiverDiscordId) {
       interaction.customReply("Receiver user not found.");
       deferHandler.cancel();
+      logInteractionUsage(interaction);
 
       return;
     }
@@ -47,6 +50,7 @@ export default {
         content: "You fool. You tried to give tzapi to yourself!",
       });
       deferHandler.cancel();
+      logInteractionUsage(interaction);
 
       return;
     }
@@ -59,6 +63,7 @@ export default {
         "User not found. Try again or try /currency first."
       );
       deferHandler.cancel();
+      logInteractionUsage(interaction);
 
       return;
     }
@@ -69,6 +74,7 @@ export default {
       console.log("Amount is undefiend or boolean. ", amount);
       interaction.customReply("Amount can't be empty.");
       deferHandler.cancel();
+      logInteractionUsage(interaction);
 
       return;
     }
@@ -89,6 +95,7 @@ export default {
         }\` must be a number and bigger than 0.`
       );
       deferHandler.cancel();
+      logInteractionUsage(interaction);
 
       return;
     }
@@ -98,6 +105,7 @@ export default {
         `You need ${amount} Tzapi. You only have ${giverUser.balance.tzapi} Tzapi`
       );
       deferHandler.cancel();
+      logInteractionUsage(interaction);
 
       return;
     }
@@ -128,6 +136,7 @@ export default {
         }>.`
       );
       deferHandler.cancel();
+      logInteractionUsage(interaction);
 
       return;
     }
@@ -136,6 +145,7 @@ export default {
       `<@${giverDiscordId}> gave <@${receiverDiscordId}> \`${amount}\` Tzapi.\n<@${receiverDiscordId}> thanks him dearly!`
     );
     deferHandler.cancel();
+    logInteractionUsage(interaction, true);
 
     return;
   },

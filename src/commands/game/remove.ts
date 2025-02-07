@@ -4,6 +4,7 @@ import {
   SlashCommandBuilder,
 } from "discord.js";
 import { getAccounts, removeAccount } from "../../lib/db/account.js";
+import { logInteractionUsage } from "../../lib/db/logging.js";
 import { formatChoices, formatPlayerName } from "../../lib/utils/game.js";
 
 const { accounts } = getAccounts();
@@ -28,12 +29,16 @@ export default {
 
     if (!nameAndTag) {
       interaction.reply("No account found for the selected option.");
+      logInteractionUsage(interaction);
+
       return;
     }
 
     const { error } = removeAccount(nameAndTag);
     if (error) {
       interaction.reply(error);
+      logInteractionUsage(interaction);
+
       return;
     }
 
@@ -41,6 +46,8 @@ export default {
     const playerName = formatPlayerName(gameName, gameTag);
 
     interaction.reply(`Account removed: \`${playerName}\``);
+    logInteractionUsage(interaction, true);
+
     return;
   },
 };

@@ -10,6 +10,7 @@ import {
   LiveGameHTML,
   ParticipantStats,
 } from "../lib/components/spectatorMatch.js";
+import { logInteractionUsage } from "../lib/db/logging.js";
 import { AccountData, Region } from "../lib/types/riot.js";
 import { handleDefer } from "../lib/utils/customReply.js";
 import { calculateLaneWeights } from "../lib/utils/game.js";
@@ -40,6 +41,7 @@ export default {
       console.log("summonerPUUID not found: ", summonerPUUID);
       interaction.customReply(`Player not found`);
       deferHandler.cancel();
+      logInteractionUsage(interaction);
 
       return;
     }
@@ -53,6 +55,7 @@ export default {
       console.log("Match not found . spectatorData: ", spectatorData);
       interaction.customReply(error);
       deferHandler.cancel();
+      logInteractionUsage(interaction);
 
       return;
     }
@@ -100,5 +103,6 @@ export default {
 
     interaction.reply({ files: [image], components: [row] });
     deferHandler.cancel();
+    logInteractionUsage(interaction, true);
   },
 };

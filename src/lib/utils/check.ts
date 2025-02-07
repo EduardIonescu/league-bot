@@ -8,6 +8,7 @@ import {
   TimestampStyles,
 } from "discord.js";
 import { getAccounts } from "../db/account.js";
+import { logInteractionUsage } from "../db/logging.js";
 import { AccountInGame } from "../types/common.js";
 import { handleDefer } from "./customReply.js";
 import { formatPlayerName } from "./game.js";
@@ -26,6 +27,7 @@ export async function check(
       "No accounts are saved. Try saving some accounts first with `/add`"
     );
     deferHandler.cancel();
+    logInteractionUsage(interaction);
 
     return;
   }
@@ -55,6 +57,7 @@ export async function check(
   if (!accountsInGame || accountsInGame.length === 0) {
     await interaction.customReply("No players are in game right now.");
     deferHandler.cancel();
+    logInteractionUsage(interaction, true);
 
     return;
   }
@@ -108,6 +111,7 @@ export async function check(
       components: playerButtonsColumns,
     });
     deferHandler.cancel();
+    logInteractionUsage(interaction, true);
 
     return;
   }
@@ -116,6 +120,7 @@ export async function check(
     content: msg.join("\n"),
   });
   deferHandler.cancel();
+  logInteractionUsage(interaction, true);
 
   return;
 }

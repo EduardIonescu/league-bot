@@ -6,6 +6,7 @@ import {
 } from "discord.js";
 import { Bet } from "../data/schema.js";
 import { loseButtons, NICU_IN_TZAPI, winButtons } from "../lib/constants.js";
+import { logInteractionUsage } from "../lib/db/logging.js";
 import { addBet, getActiveMatch } from "../lib/db/match.js";
 import { getUser, updateUser } from "../lib/db/user.js";
 import { Currency } from "../lib/types/common.js";
@@ -41,6 +42,7 @@ export default {
     if (!summonerPUUID) {
       interaction.customReply(`Player not found`);
       deferHandler.cancel();
+      logInteractionUsage(interaction);
 
       return;
     }
@@ -52,6 +54,7 @@ export default {
         content: "Game is not active",
       });
       deferHandler.cancel();
+      logInteractionUsage(interaction);
 
       return;
     }
@@ -75,6 +78,8 @@ export default {
         content: "Betting window has closed. Better luck on the next one!",
         flags: MessageFlags.Ephemeral,
       });
+      logInteractionUsage(interaction);
+
       return;
     }
 
@@ -94,6 +99,8 @@ export default {
         content: errorUser,
         flags: MessageFlags.Ephemeral,
       });
+      logInteractionUsage(interaction);
+
       return;
     }
 
@@ -114,6 +121,8 @@ export default {
           } when you've already bet on the opposite!`,
           flags: MessageFlags.Ephemeral,
         });
+        logInteractionUsage(interaction);
+
         return;
       }
     }
@@ -135,6 +144,8 @@ export default {
           )}.`,
           flags: MessageFlags.Ephemeral,
         });
+        logInteractionUsage(interaction);
+
         return;
       }
 
@@ -165,6 +176,8 @@ export default {
         content: `${updateError}`,
         components: [],
       });
+      logInteractionUsage(interaction);
+
       return;
     }
 
@@ -233,5 +246,6 @@ export default {
       }`,
       flags: MessageFlags.Ephemeral,
     });
+    logInteractionUsage(interaction, true);
   },
 };

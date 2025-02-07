@@ -4,6 +4,7 @@ import {
   SlashCommandBuilder,
 } from "discord.js";
 import { addAccount } from "../../lib/db/account.js";
+import { logInteractionUsage } from "../../lib/db/logging.js";
 import { Account, Region } from "../../lib/types/riot";
 import { formatPlayerName } from "../../lib/utils/game.js";
 import { fetchSummonerData } from "../../lib/utils/riot.js";
@@ -49,6 +50,8 @@ export default {
     const { error, summonerData } = await fetchSummonerData(gameName, tagLine);
     if (error || !summonerData) {
       interaction.reply(error ?? "No Summoner Found");
+      logInteractionUsage(interaction);
+
       return;
     }
 
@@ -62,11 +65,15 @@ export default {
     const { error: errorAdding } = addAccount(account);
     if (errorAdding) {
       interaction.reply(errorAdding);
+      logInteractionUsage(interaction);
+
       return;
     }
 
     const accountToShow = formatPlayerName(gameName, tagLine);
     interaction.reply(`Account saved:  \`${accountToShow}\``);
+    logInteractionUsage(interaction, true);
+
     return;
   },
 };
