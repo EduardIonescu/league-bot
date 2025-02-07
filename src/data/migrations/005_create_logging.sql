@@ -1,0 +1,8 @@
+CREATE TABLE IF NOT EXISTS interactionUsage (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    interactionName TEXT NOT NULL,
+    discordId TEXT NOT NULL,
+    guildId TEXT,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    success BOOLEAN NOT NULL
+);
