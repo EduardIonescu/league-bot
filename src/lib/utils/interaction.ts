@@ -17,7 +17,7 @@ import {
 } from "./game.js";
 import { fetchSpectatorData } from "./riot.js";
 
-export async function placeBet(
+export async function startBet(
   interaction: CommandInteraction | ButtonInteraction,
   account?: Account
 ) {

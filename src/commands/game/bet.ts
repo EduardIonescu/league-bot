@@ -5,7 +5,7 @@ import {
 } from "discord.js";
 import { getAccounts } from "../../lib/db/account.js";
 import { formatChoices } from "../../lib/utils/game.js";
-import { placeBet } from "../../lib/utils/interaction.js";
+import { startBet } from "../../lib/utils/interaction.js";
 
 const { accounts } = getAccounts();
 const choices = formatChoices(accounts);
@@ -32,6 +32,6 @@ export default {
       (acc) => acc.summonerPUUID === summonerPUUID
     );
 
-    await placeBet(interaction, account);
+    await startBet(interaction, account);
   },
 };
