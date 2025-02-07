@@ -1,6 +1,6 @@
 import { ButtonInteraction, Events } from "discord.js";
 import { getAccounts } from "../lib/db/account.js";
-import { placeBet } from "../lib/utils/interaction.js";
+import { startBet } from "../lib/utils/interaction.js";
 
 export default {
   name: Events.InteractionCreate,
@@ -15,7 +15,7 @@ export default {
     );
 
     try {
-      await placeBet(interaction, account);
+      await startBet(interaction, account);
       return;
     } catch {
       return;
