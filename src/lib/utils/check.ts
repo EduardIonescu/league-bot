@@ -110,8 +110,28 @@ export async function check(
       content: msg.join("\n"),
       components: playerButtonsColumns,
     });
+
     deferHandler.cancel();
     logInteractionUsage(interaction, true);
+    setTimeout(async () => {
+      playerButtonsColumns.forEach((col) =>
+        col.components.forEach((button) => {
+          button.setDisabled(true);
+        })
+      );
+      try {
+        const msg = await interaction.fetchReply();
+        if (!msg || !msg.editable) {
+          return;
+        }
+
+        msg.edit({ content: msg.content, components: playerButtonsColumns });
+      } catch (error) {
+        console.log(
+          "Message has already been deleted. Can't change buttons in check.ts"
+        );
+      }
+    }, 15 * 60 * 1000);
 
     return;
   }
