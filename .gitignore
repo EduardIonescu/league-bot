@@ -8,3 +8,4 @@ bets/
 users/
 accounts_testing/
 database.db
+pm2.log
