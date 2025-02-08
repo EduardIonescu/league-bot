@@ -165,15 +165,16 @@ export async function startBet(
     winRow.components.forEach((button) => button.setDisabled(true));
     loseRow.components.forEach((button) => button.setDisabled(true));
     try {
-      // Check if it was not deleted
-      const msg = await response.channel.messages.fetch(response.id);
+      const msg = await interaction.fetchReply();
       if (!msg || !msg.editable) {
         return;
       }
 
       msg.edit({ embeds: [embed], components: [winRow, loseRow] });
     } catch (error) {
-      console.log("error", error);
+      console.log(
+        "Message has already been deleted. Can't change buttons in startBet.ts"
+      );
     }
   }, timeLeftInSeconds * 1000);
 }
