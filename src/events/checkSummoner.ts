@@ -5,20 +5,17 @@ import {
   ButtonStyle,
   Events,
 } from "discord.js";
-import puppeteer from "puppeteer";
 import {
   LiveGameHTML,
   ParticipantStats,
 } from "../lib/components/spectatorMatch.js";
 import { logInteractionUsage } from "../lib/db/logging.js";
 import { AccountData, Region } from "../lib/types/riot.js";
+import { browser } from "../lib/utils/browser.js";
 import { handleDefer } from "../lib/utils/customReply.js";
 import { calculateLaneWeights } from "../lib/utils/game.js";
 import { fetchAccountData, fetchSpectatorData } from "../lib/utils/riot.js";
 import { screenshot } from "../lib/utils/screenshot.js";
-
-// Shell is supposed to be older but I found it's way faster
-const browser = await puppeteer.launch({ headless: "shell" });
 
 export default {
   name: Events.InteractionCreate,

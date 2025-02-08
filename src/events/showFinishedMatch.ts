@@ -1,13 +1,10 @@
 import { ButtonInteraction, Events } from "discord.js";
-import puppeteer from "puppeteer";
 import { FinishedMatchHTML } from "../lib/components/finishedMatch.js";
 import { logInteractionUsage } from "../lib/db/logging.js";
 import { getFinishedMatch } from "../lib/db/match.js";
+import { browser } from "../lib/utils/browser.js";
 import { decodeBase1114111 } from "../lib/utils/common.js";
 import { screenshot } from "../lib/utils/screenshot.js";
-
-// Shell is supposed to be older but I found it's way faster
-const browser = await puppeteer.launch({ headless: "shell" });
 
 export default {
   name: Events.InteractionCreate,
