@@ -66,10 +66,10 @@ export default {
       ? "tzapi"
       : "nicu";
 
-    const canBetOnGame = canBetOnActiveGame(match.gameStartTime);
+    const { canBet } = canBetOnActiveGame(match.gameStartTime);
     const embedObject = interaction.message.embeds[0];
 
-    if (!canBetOnGame) {
+    if (!canBet) {
       await interaction.update({
         embeds: [embedObject],
         components: [],

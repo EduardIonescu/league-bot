@@ -37,8 +37,10 @@ import {
 
 export function canBetOnActiveGame(gameStartTime: number) {
   const differenceInSeconds = Math.ceil((Date.now() - gameStartTime) / 1_000);
-
-  return differenceInSeconds <= BETS_CLOSE_AT_GAME_LENGTH * 60;
+  return {
+    canBet: differenceInSeconds <= BETS_CLOSE_AT_GAME_LENGTH * 60,
+    timeLeftInSeconds: BETS_CLOSE_AT_GAME_LENGTH * 60 - differenceInSeconds,
+  };
 }
 
 export function handleMatchOutcome(bets: Bet[] | undefined, win: 1 | 0) {

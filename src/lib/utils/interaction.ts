@@ -6,6 +6,7 @@ import {
   MessageFlags,
   TextBasedChannel,
 } from "discord.js";
+import { setTimeout } from "node:timers";
 import { logInteractionUsage } from "../db/logging.js";
 import { addActiveMatch, addMessage, getActiveMatch } from "../db/match.js";
 import { Account } from "../types/riot.js";
@@ -76,9 +77,9 @@ export async function startBet(
         gameStartTime: spectatorData.gameStartTime,
       };
 
-      const canBetOnGame = canBetOnActiveGame(match.gameStartTime);
+      const { canBet } = canBetOnActiveGame(match.gameStartTime);
 
-      if (!canBetOnGame) {
+      if (!canBet) {
         interaction.editReply({
           content: "Betting window has closed. Better luck on the next one!",
           // flags: MessageFlags.Ephemeral,
@@ -125,8 +126,8 @@ export async function startBet(
     )
     .setTimestamp();
 
-  const canBetOnGame = canBetOnActiveGame(match.gameStartTime);
-  if (!canBetOnGame) {
+  const { canBet, timeLeftInSeconds } = canBetOnActiveGame(match.gameStartTime);
+  if (!canBet) {
     await interaction.editReply({
       embeds: [embed],
       components: [],
@@ -159,4 +160,20 @@ export async function startBet(
     addMessage(message);
   }
   logInteractionUsage(interaction, true);
+
+  setTimeout(async () => {
+    winRow.components.forEach((button) => button.setDisabled(true));
+    loseRow.components.forEach((button) => button.setDisabled(true));
+    try {
+      // Check if it was not deleted
+      const msg = await response.channel.messages.fetch(response.id);
+      if (!msg || !msg.editable) {
+        return;
+      }
+
+      msg.edit({ embeds: [embed], components: [winRow, loseRow] });
+    } catch (error) {
+      console.log("error", error);
+    }
+  }, timeLeftInSeconds * 1000);
 }
