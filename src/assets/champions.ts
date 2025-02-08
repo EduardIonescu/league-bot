@@ -139,7 +139,7 @@ export default [
   { id: 17, name: "Teemo", lanes: ["top"] },
   { id: 412, name: "Thresh", lanes: ["support"] },
   { id: 18, name: "Tristana", lanes: ["bot", "mid"] },
-  { id: 48, name: "Trundle", lanes: ["jungle", "top"] },
+  { id: 48, name: "Trundle", lanes: ["top", "jungle"] },
   { id: 23, name: "Tryndamere", lanes: ["top"] },
   { id: 4, name: "TwistedFate", lanes: ["mid"] },
   { id: 29, name: "Twitch", lanes: ["bot", "jungle"] },
