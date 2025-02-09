@@ -52,3 +52,24 @@ console.log(
   Math.round((end - start) * 1000) / 1000,
   " ms"
 );
+
+// Close the browser on exit
+[
+  `exit`,
+  `SIGINT`,
+  `SIGUSR1`,
+  `SIGUSR2`,
+  `uncaughtException`,
+  `SIGTERM`,
+].forEach((eventType) => {
+  process.on(eventType, async (err) => {
+    if (eventType === "uncaughtException") {
+      console.error("Uncaught Exception:", err);
+    }
+
+    if (browser) {
+      await browser.close();
+    }
+    process.exit(0);
+  });
+});
