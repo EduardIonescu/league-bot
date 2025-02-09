@@ -54,7 +54,7 @@ export default {
 
     const html = FinishedMatchHTML(match.participants, match.gameDuration ?? 0);
     const beforeImage = performance.now();
-    const image = await screenshot(html, false);
+    const image = await screenshot(html, { width: 920, height: 830 }, false);
     const beforeReply = performance.now();
     await interaction.reply({ files: [image] });
     const end = performance.now();

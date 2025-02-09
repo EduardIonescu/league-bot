@@ -42,10 +42,8 @@ const browser = await puppeteer.launch({
   ],
 });
 
-export const pageLiveMatch = await browser.newPage();
-await pageLiveMatch.setViewport({ width: 1920, height: 780 });
-export const pageFinishedMatch = await browser.newPage();
-await pageFinishedMatch.setViewport({ width: 920, height: 830 });
+export const page = await browser.newPage();
+await page.setViewport({ width: 1920, height: 780 });
 const end = performance.now();
 console.log(
   "Browser + Page + setViewport: ",

@@ -88,7 +88,7 @@ export default {
     );
 
     const html = LiveGameHTML(participantsStats);
-    const image = await screenshot(html);
+    const image = await screenshot(html, { width: 1920, height: 780 });
 
     const button = new ButtonBuilder()
       .setCustomId(`start-bet-${summonerPUUID}`)

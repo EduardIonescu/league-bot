@@ -1,11 +1,18 @@
 import { AttachmentBuilder } from "discord.js";
 import { performance } from "node:perf_hooks";
 import { HTMLString } from "../types/common";
-import { pageFinishedMatch, pageLiveMatch } from "./browser.js";
+import { page } from "./browser.js";
 
-export async function screenshot(html: HTMLString, live: boolean = true) {
+type Viewport = { width: number; height: number };
+export async function screenshot(
+  html: HTMLString,
+  viewport: Viewport,
+  live: boolean = true
+) {
   const beforePage = performance.now();
-  const page = live ? pageLiveMatch : pageFinishedMatch;
+  if (viewport && viewport.width !== page.viewport()?.width) {
+    page.setViewport(viewport);
+  }
   await page.setContent(html, { waitUntil: "domcontentloaded" });
   const afterSetcontent = performance.now();
 
