@@ -1,25 +1,51 @@
 import { AttachmentBuilder } from "discord.js";
-import { Browser } from "puppeteer";
+import { performance } from "node:perf_hooks";
 import { HTMLString } from "../types/common";
+import { pageFinishedMatch, pageLiveMatch } from "./browser.js";
 
-type Viewport = { width: number; height: number };
-export async function screenshot(
-  browser: Browser,
-  html: HTMLString,
-  viewport: Viewport
-) {
-  const page = await browser.newPage();
-  page.setViewport(viewport);
+export async function screenshot(html: HTMLString, live: boolean = true) {
+  const beforePage = performance.now();
+  const page = live ? pageLiveMatch : pageFinishedMatch;
   await page.setContent(html, { waitUntil: "domcontentloaded" });
+  const afterSetcontent = performance.now();
 
   const screenshot = await page.screenshot({
-    fullPage: true,
     optimizeForSpeed: true,
+    type: "webp",
+    omitBackground: true,
   });
-  const screenshotBuffer = Buffer.from(screenshot);
-  const image = new AttachmentBuilder(screenshotBuffer, { name: "live.png" });
+  const afterScreenshot = performance.now();
 
-  page.close();
+  const screenshotBuffer = Buffer.from(screenshot);
+
+  const afterBuffer = performance.now();
+
+  const name = live ? "live.webp" : "finsished.webp";
+  const image = new AttachmentBuilder(screenshotBuffer, { name });
+  const afterImage = performance.now();
+
+  const afterPageClose = performance.now();
+
+  console.log(
+    "afterSetcontent - beforePage",
+    Math.round((afterSetcontent - beforePage) * 1000) / 1000 + " ms"
+  );
+  console.log(
+    "afterScreenshot - afterSetcontent",
+    Math.round((afterScreenshot - afterSetcontent) * 1000) / 1000 + " ms"
+  );
+  console.log(
+    "afterBuffer - afterScreenshot",
+    Math.round((afterBuffer - afterScreenshot) * 1000) / 1000 + " ms"
+  );
+  console.log(
+    "afterImage - afterBuffer",
+    Math.round((afterImage - afterBuffer) * 1000) / 1000 + " ms"
+  );
+  console.log(
+    "afterPageClose - afterImage",
+    Math.round((afterPageClose - afterImage) * 1000) / 1000 + " ms"
+  );
 
   return image;
 }

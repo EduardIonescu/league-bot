@@ -1,8 +1,8 @@
 import { ButtonInteraction, Events } from "discord.js";
+import { performance } from "node:perf_hooks";
 import { FinishedMatchHTML } from "../lib/components/finishedMatch.js";
 import { logInteractionUsage } from "../lib/db/logging.js";
 import { getFinishedMatch } from "../lib/db/match.js";
-import { browser } from "../lib/utils/browser.js";
 import { decodeBase1114111 } from "../lib/utils/common.js";
 import { screenshot } from "../lib/utils/screenshot.js";
 
@@ -12,7 +12,7 @@ export default {
     if (!interaction.customId?.startsWith("show-finished-match")) {
       return;
     }
-
+    const start = performance.now();
     const encodedSummonerPUUIDAndMatchId = interaction.customId.replace(
       "show-finished-match",
       ""
@@ -53,9 +53,29 @@ export default {
     }
 
     const html = FinishedMatchHTML(match.participants, match.gameDuration ?? 0);
-    const image = await screenshot(browser, html, { width: 960, height: 780 });
-
-    interaction.reply({ files: [image] });
+    const beforeImage = performance.now();
+    const image = await screenshot(html, false);
+    const beforeReply = performance.now();
+    await interaction.reply({ files: [image] });
+    const end = performance.now();
     logInteractionUsage(interaction, true);
+
+    console.log(
+      "beforeImage - start",
+      Math.round((beforeImage - start) * 1000) / 1000 + " ms"
+    );
+    console.log(
+      "total",
+      Math.round((beforeReply - beforeImage) * 1000) / 1000 + " ms"
+    );
+    console.log(
+      "end - beforeReply",
+      Math.round((end - beforeReply) * 1000) / 1000 + " ms"
+    );
+    console.log(
+      "beforeImage - start",
+      Math.round((end - start) * 1000) / 1000 + " ms"
+    );
+    console.log("-----------------------------");
   },
 };

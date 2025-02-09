@@ -11,7 +11,6 @@ import {
 } from "../lib/components/spectatorMatch.js";
 import { logInteractionUsage } from "../lib/db/logging.js";
 import { AccountData, Region } from "../lib/types/riot.js";
-import { browser } from "../lib/utils/browser.js";
 import { handleDefer } from "../lib/utils/customReply.js";
 import { calculateLaneWeights } from "../lib/utils/game.js";
 import { fetchAccountData, fetchSpectatorData } from "../lib/utils/riot.js";
@@ -89,7 +88,7 @@ export default {
     );
 
     const html = LiveGameHTML(participantsStats);
-    const image = await screenshot(browser, html, { width: 1920, height: 780 });
+    const image = await screenshot(html);
 
     const button = new ButtonBuilder()
       .setCustomId(`start-bet-${summonerPUUID}`)
