@@ -46,7 +46,7 @@ export const NICU_IN_TZAPI = 1000;
 export const BLUE_TEAM_ID = 100;
 
 /** Default image if src not found so they don't break the UI  */
-export const IMAGE_NOT_FOUND = `src/assets/img/not-found.png`;
+export const IMAGE_NOT_FOUND = `src/assets/img/not-found.webp`;
 
 /** The user is broke if less than this amount of Tzapi  */
 export const BROKE_THRESHOLD = 20;

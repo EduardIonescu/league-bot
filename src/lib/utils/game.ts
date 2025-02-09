@@ -522,7 +522,7 @@ export function colorByKDA(winrate: number) {
 
 export function getChampionSrc(id: number) {
   const champion = champions.find((c) => c.id === id);
-  const imagePath = `src/assets/img/champion/${champion?.name}.png`;
+  const imagePath = `src/assets/img/champion/${champion?.name}.webp`;
 
   const src = htmlImgSrcFromPath(imagePath);
   if (!src) {
@@ -534,7 +534,7 @@ export function getChampionSrc(id: number) {
 
 export function getSummonerSpellSrc(id: number) {
   const name = summonerSpells[id].id;
-  const imagePath = `src/assets/img/spell/${name}.png`;
+  const imagePath = `src/assets/img/spell/${name}.webp`;
   const src = htmlImgSrcFromPath(imagePath);
 
   if (!src) {
@@ -558,7 +558,7 @@ export function getPerkSrc(id: number) {
 }
 
 export function getItemSrc(id: number) {
-  const imagePath = `src/assets/img/item/${id}.png`;
+  const imagePath = `src/assets/img/item/${id}.webp`;
   const src = htmlImgSrcFromPath(imagePath);
 
   if (!src) {
