@@ -5,7 +5,6 @@ import {
   ButtonStyle,
   CommandInteraction,
 } from "discord.js";
-import * as fs from "node:fs/promises";
 import { NICU_IN_TZAPI } from "../constants.js";
 import { logInteractionUsage } from "../db/logging.js";
 import { getAllUsers } from "../db/user.js";
@@ -42,10 +41,6 @@ export async function showLeaderboard(
 
 async function getLeaderboard() {
   try {
-    const rootPath = import.meta.url.split("dist/")[0];
-    const userFolderPath = new URL("src/data/users/", rootPath);
-    const userFolder = await fs.readdir(userFolderPath);
-
     const { error, users } = getAllUsers();
 
     if (error || !users || users.length === 0) {
