@@ -9,6 +9,7 @@
     "migrate": "tsc && node ./dist/migrate.js",
     "register": "tsc && node src/deploy-commands.js",
     "pm2:start": "tsc && pnpm exec pm2 start dist/app.js --name league-bot --log pm2.log --time --max-memory-restart 1G",
+    "pm2:stop": "pnpm exec pm2 stop league-bot",
     "pm2:restart": "pnpm exec pm2 restart league-bot",
     "pm2:delete": "pnpm exec pm2 delete league-bot",
     "pm2:list": "pnpm exec pm2 list"
