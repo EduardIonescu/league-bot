@@ -32,7 +32,6 @@ export async function startBet(
   }
 
   const { summonerPUUID } = account;
-  console.log("account", account);
   const player = formatPlayerName(account.gameName, account.tagLine);
 
   const channel = interaction.channel as TextBasedChannel;
