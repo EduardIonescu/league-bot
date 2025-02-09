@@ -1,6 +1,5 @@
-import { performance } from "node:perf_hooks";
 import puppeteer from "puppeteer";
-const start = performance.now();
+
 const browser = await puppeteer.launch({
   headless: true,
   args: [
@@ -44,12 +43,6 @@ const browser = await puppeteer.launch({
 
 export const page = await browser.newPage();
 await page.setViewport({ width: 1920, height: 780 });
-const end = performance.now();
-console.log(
-  "Browser + Page + setViewport: ",
-  Math.round((end - start) * 1000) / 1000,
-  " ms"
-);
 
 // Close the browser on exit
 [
