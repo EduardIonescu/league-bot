@@ -1,10 +1,16 @@
 import {
+  ActionRowBuilder,
+  ButtonBuilder,
   ButtonInteraction,
+  ButtonStyle,
   EmbedBuilder,
   Events,
+  Interaction,
   MessageFlags,
+  time,
+  TimestampStyles,
 } from "discord.js";
-import { Bet } from "../data/schema.js";
+import { Bet, UserAdvanced } from "../data/schema.js";
 import { loseButtons, NICU_IN_TZAPI, winButtons } from "../lib/constants.js";
 import { logInteractionUsage } from "../lib/db/logging.js";
 import { addBet, getActiveMatch } from "../lib/db/match.js";
@@ -38,11 +44,55 @@ export default {
     const deferHandler = handleDefer(interaction);
     deferHandler.start();
 
+    const discordId = interaction.user.id;
+    const { error: errorUserFirst, user: userFirst } = getUser(discordId);
+
+    if (errorUserFirst || !userFirst) {
+      await interaction.customReply({
+        content: errorUserFirst,
+        flags: MessageFlags.Ephemeral,
+        components: [],
+      });
+      logInteractionUsage(interaction);
+      deferHandler.cancel();
+
+      return;
+    }
+
+    if (prefix.includes("all")) {
+      const { shouldReturn } = await handleAllInClick(
+        interaction,
+        userFirst,
+        deferHandler
+      );
+      if (shouldReturn) {
+        return;
+      }
+    }
+
+    // Fetch the user again. This is against clicking `All In` and then betting
+    // something else before clicking confirm in the ephemeral message
+    const { error: errorUser, user } = getUser(discordId);
+    if (errorUser || !user) {
+      await interaction.customReply({
+        content: errorUser,
+        flags: MessageFlags.Ephemeral,
+        components: [],
+      });
+      logInteractionUsage(interaction);
+      deferHandler.cancel();
+
+      return;
+    }
+
     const summonerPUUID = interaction.customId.replace(prefix + "-", "");
     if (!summonerPUUID) {
-      interaction.customReply(`Player not found`);
-      deferHandler.cancel();
+      interaction.reply({
+        content: `Player not found`,
+        flags: MessageFlags.Ephemeral,
+      });
       logInteractionUsage(interaction);
+      deferHandler.cancel();
 
       return;
     }
@@ -52,15 +102,16 @@ export default {
     if (error || !match || !messages) {
       interaction.customReply({
         content: "Game is not active",
+        flags: MessageFlags.Ephemeral,
+        components: [],
       });
-      deferHandler.cancel();
       logInteractionUsage(interaction);
+      deferHandler.cancel();
 
       return;
     }
 
     const win = winCustomIds.includes(prefix) ? 1 : 0;
-    const discordId = interaction.user.id;
 
     let currencyType: Currency;
     let oppositeCurrencyType: Currency;
@@ -73,18 +124,15 @@ export default {
     }
 
     const { canBet } = canBetOnActiveGame(match.gameStartTime);
-    const embedObject = interaction.message.embeds[0];
 
     if (!canBet) {
-      await interaction.update({
-        embeds: [embedObject],
-        components: [],
-      });
-      await interaction.followUp({
+      await interaction.customReply({
         content: "Betting window has closed. Better luck on the next one!",
         flags: MessageFlags.Ephemeral,
+        components: [],
       });
       logInteractionUsage(interaction);
+      deferHandler.cancel();
 
       return;
     }
@@ -92,22 +140,6 @@ export default {
     const button = [...winButtons, ...loseButtons].find(
       (b) => b.customId === prefix
     );
-
-    const { error: errorUser, user } = getUser(discordId);
-
-    if (errorUser || !user) {
-      await interaction.update({
-        embeds: [embedObject],
-        components: [],
-      });
-      await interaction.followUp({
-        content: errorUser,
-        flags: MessageFlags.Ephemeral,
-      });
-      logInteractionUsage(interaction);
-
-      return;
-    }
 
     let betAmount: number;
 
@@ -124,17 +156,15 @@ export default {
       const userBetOnOppositeOutcome = userBets.find((bet) => bet.win !== win);
 
       if (userBetOnOppositeOutcome) {
-        await interaction.update({
-          embeds: [embedObject],
-          components: [winRow, loseRow],
-        });
-        await interaction.followUp({
+        await interaction.customReply({
           content: `You fool! You tried to bet ${
             win ? "win" : "loss"
           } when you've already bet on the opposite!`,
+          components: [],
           flags: MessageFlags.Ephemeral,
         });
         logInteractionUsage(interaction);
+        deferHandler.cancel();
 
         return;
       }
@@ -148,17 +178,15 @@ export default {
         const totalCurrencyInNicu = user.balance.nicu + totalTzapiInNicu;
 
         if (totalCurrencyInNicu < betAmount) {
-          await interaction.update({
-            embeds: [embedObject],
-            components: [winRow, loseRow],
-          });
-          await interaction.followUp({
+          await interaction.customReply({
             content: `You don't have enough currency to bet ${betAmount}. You currently have ${balance} ${toTitleCase(
               currencyType
             )}.`,
             flags: MessageFlags.Ephemeral,
+            components: [],
           });
           logInteractionUsage(interaction);
+          deferHandler.cancel();
 
           return;
         }
@@ -175,17 +203,15 @@ export default {
         const totalCurrencyInTzapi = user.balance.tzapi + totalNicuInTzapi;
 
         if (totalCurrencyInTzapi < betAmount) {
-          await interaction.update({
-            embeds: [embedObject],
-            components: [winRow, loseRow],
-          });
-          await interaction.followUp({
+          await interaction.customReply({
             content: `You don't have enough currency to bet ${betAmount}. You currently have ${balance} ${toTitleCase(
               currencyType
             )}.`,
             flags: MessageFlags.Ephemeral,
+            components: [],
           });
           logInteractionUsage(interaction);
+          deferHandler.cancel();
 
           return;
         }
@@ -218,11 +244,13 @@ export default {
     const { error: updateError } = updateUser(user);
 
     if (updateError) {
-      await interaction.update({
+      await interaction.reply({
         content: `${updateError}`,
         components: [],
+        flags: MessageFlags.Ephemeral,
       });
       logInteractionUsage(interaction);
+      deferHandler.cancel();
 
       return;
     }
@@ -235,6 +263,7 @@ export default {
       ? `${totalBetLose.nicu} Nicu `
       : "";
 
+    const embedObject = interaction.message.embeds[0];
     const embed = EmbedBuilder.from(embedObject);
     embed.setFields(
       { name: "\u200b", value: "\u200b" },
@@ -282,9 +311,12 @@ export default {
       })
     );
 
-    await interaction.update({
-      embeds: [embed],
-      components: [winRow, loseRow],
+    await interaction.customReply({
+      content: `You've bet ${betAmount} ${toTitleCase(currencyType)} on ${
+        win ? "win" : "lose"!
+      }`,
+      flags: MessageFlags.Ephemeral,
+      components: [],
     });
 
     if (prefix.includes("all")) {
@@ -293,14 +325,76 @@ export default {
           currencyType
         )} on ${win ? "win" : "lose"!}`,
       });
-    } else {
-      await interaction.followUp({
-        content: `You've bet ${betAmount} ${toTitleCase(currencyType)} on ${
-          win ? "win" : "lose"!
-        }`,
-        flags: MessageFlags.Ephemeral,
-      });
     }
+
     logInteractionUsage(interaction, true);
   },
 };
+
+async function handleAllInClick(
+  interaction: ButtonInteraction,
+  user: UserAdvanced,
+  deferHandler: { cancel: () => void }
+) {
+  if (user.balance.nicu === 0 && user.balance.tzapi === 0) {
+    await interaction.reply({
+      content: `You can't bet if you're broke...`,
+      flags: MessageFlags.Ephemeral,
+    });
+
+    logInteractionUsage(interaction);
+    deferHandler.cancel();
+
+    return { shouldReturn: true };
+  }
+  const buttonAccept = new ButtonBuilder()
+    .setCustomId("accept")
+    .setLabel("Confirm")
+    .setStyle(ButtonStyle.Success);
+
+  const buttonCancel = new ButtonBuilder()
+    .setCustomId("cancel")
+    .setLabel("Cancel")
+    .setStyle(ButtonStyle.Secondary);
+  const row = new ActionRowBuilder<ButtonBuilder>().setComponents(
+    buttonCancel,
+    buttonAccept
+  );
+
+  const timeString = time(
+    new Date(new Date().getTime() + 16_000),
+    TimestampStyles.RelativeTime
+  );
+  const response = await interaction.reply({
+    content: `**ALL IN?**  \nWindow closing ${timeString}.`,
+    withResponse: true,
+    flags: MessageFlags.Ephemeral,
+    components: [row],
+  });
+
+  try {
+    const filter = (i: Interaction) => i.user.id === interaction.user.id;
+    const confirmation =
+      await response.resource?.message?.awaitMessageComponent({
+        filter,
+        time: 15_000,
+      });
+
+    if (!confirmation || confirmation.customId === "cancel") {
+      await interaction.editReply({ content: "Canceled.", components: [] });
+      logInteractionUsage(interaction);
+
+      deferHandler.cancel();
+      return { shouldReturn: true };
+    }
+  } catch (error) {
+    await interaction.editReply({ content: "Timed out.", components: [] });
+    logInteractionUsage(interaction);
+
+    deferHandler.cancel();
+
+    return { shouldReturn: true };
+  }
+
+  return { shouldReturn: false };
+}
