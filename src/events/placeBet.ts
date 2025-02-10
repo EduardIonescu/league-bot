@@ -61,10 +61,16 @@ export default {
 
     const win = winCustomIds.includes(prefix) ? 1 : 0;
     const discordId = interaction.user.id;
-    const currencyType: Currency = prefix.includes("nicu") ? "nicu" : "tzapi";
-    const oppositeCurrencyType: Currency = prefix.includes("nicu")
-      ? "tzapi"
-      : "nicu";
+
+    let currencyType: Currency;
+    let oppositeCurrencyType: Currency;
+    if (prefix.includes("tzapi") || prefix.includes("all")) {
+      currencyType = "tzapi";
+      oppositeCurrencyType = "nicu";
+    } else {
+      currencyType = "nicu";
+      oppositeCurrencyType = "tzapi";
+    }
 
     const { canBet } = canBetOnActiveGame(match.gameStartTime);
     const embedObject = interaction.message.embeds[0];
@@ -86,7 +92,6 @@ export default {
     const button = [...winButtons, ...loseButtons].find(
       (b) => b.customId === prefix
     );
-    const betAmount = button!.amount;
 
     const { error: errorUser, user } = getUser(discordId);
 
@@ -102,6 +107,14 @@ export default {
       logInteractionUsage(interaction);
 
       return;
+    }
+
+    let betAmount: number;
+
+    if (prefix.includes("all")) {
+      betAmount = user.balance.nicu * NICU_IN_TZAPI + user.balance.tzapi;
+    } else {
+      betAmount = button!.amount;
     }
 
     const userBets = bets?.filter((bet) => bet.discordId === user.discordId);
@@ -130,29 +143,62 @@ export default {
     const balance = user.balance[currencyType];
 
     if (betAmount > balance) {
-      const totalTzapiInNicu = Math.floor(user.balance.tzapi / NICU_IN_TZAPI);
-      const totalCurrencyInNicu = user.balance.nicu + totalTzapiInNicu;
+      if (currencyType === "nicu") {
+        const totalTzapiInNicu = Math.floor(user.balance.tzapi / NICU_IN_TZAPI);
+        const totalCurrencyInNicu = user.balance.nicu + totalTzapiInNicu;
 
-      if (currencyType !== "nicu" || totalCurrencyInNicu < betAmount) {
-        await interaction.update({
-          embeds: [embedObject],
-          components: [winRow, loseRow],
-        });
-        await interaction.followUp({
-          content: `You don't have enough currency to bet ${betAmount}. You currently have ${balance} ${toTitleCase(
-            currencyType
-          )}.`,
-          flags: MessageFlags.Ephemeral,
-        });
-        logInteractionUsage(interaction);
+        if (totalCurrencyInNicu < betAmount) {
+          await interaction.update({
+            embeds: [embedObject],
+            components: [winRow, loseRow],
+          });
+          await interaction.followUp({
+            content: `You don't have enough currency to bet ${betAmount}. You currently have ${balance} ${toTitleCase(
+              currencyType
+            )}.`,
+            flags: MessageFlags.Ephemeral,
+          });
+          logInteractionUsage(interaction);
 
-        return;
+          return;
+        }
+
+        const nicuInTzapiNeeded =
+          (betAmount - user.balance.nicu) * NICU_IN_TZAPI;
+        const tzapi = user.balance.tzapi - nicuInTzapiNeeded;
+
+        user.balance = { nicu: 0, tzapi };
+
+        // currencyType ===  "tzapi"
+      } else {
+        const totalNicuInTzapi = user.balance.nicu * NICU_IN_TZAPI;
+        const totalCurrencyInTzapi = user.balance.tzapi + totalNicuInTzapi;
+
+        if (totalCurrencyInTzapi < betAmount) {
+          await interaction.update({
+            embeds: [embedObject],
+            components: [winRow, loseRow],
+          });
+          await interaction.followUp({
+            content: `You don't have enough currency to bet ${betAmount}. You currently have ${balance} ${toTitleCase(
+              currencyType
+            )}.`,
+            flags: MessageFlags.Ephemeral,
+          });
+          logInteractionUsage(interaction);
+
+          return;
+        }
+
+        const nicuNeeded = Math.ceil(
+          (betAmount - user.balance.tzapi) / NICU_IN_TZAPI
+        );
+        const nicu = user.balance.nicu - nicuNeeded;
+        const tzapi =
+          nicuNeeded * NICU_IN_TZAPI + user.balance.tzapi - betAmount;
+
+        user.balance = { nicu, tzapi };
       }
-
-      const nicuInTzapiNeeded = (betAmount - user.balance.nicu) * NICU_IN_TZAPI;
-      const tzapi = user.balance.tzapi - nicuInTzapiNeeded;
-
-      user.balance = { nicu: 0, tzapi };
     } else {
       user.balance[currencyType] -= betAmount;
     }
@@ -240,12 +286,21 @@ export default {
       embeds: [embed],
       components: [winRow, loseRow],
     });
-    await interaction.followUp({
-      content: `You've bet ${betAmount} ${toTitleCase(currencyType)} on ${
-        win ? "win" : "lose"!
-      }`,
-      flags: MessageFlags.Ephemeral,
-    });
+
+    if (prefix.includes("all")) {
+      await interaction.followUp({
+        content: `**WHAT A MADLAD!** <@${discordId}> has bet ${betAmount} ${toTitleCase(
+          currencyType
+        )} on ${win ? "win" : "lose"!}`,
+      });
+    } else {
+      await interaction.followUp({
+        content: `You've bet ${betAmount} ${toTitleCase(currencyType)} on ${
+          win ? "win" : "lose"!
+        }`,
+        flags: MessageFlags.Ephemeral,
+      });
+    }
     logInteractionUsage(interaction, true);
   },
 };
