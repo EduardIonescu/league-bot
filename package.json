@@ -5,7 +5,7 @@
   "main": "app.js",
   "type": "module",
   "scripts": {
-    "start": "tsc && node ./dist/app.js",
+    "start": "tsc && node ./dist/app.js --experimental-sqlite",
     "migrate": "tsc && node ./dist/migrate.js",
     "register": "tsc && node src/deploy-commands.js",
     "pm2:start": "tsc && pnpm exec pm2 start dist/app.js --name league-bot --log pm2.log --time --max-memory-restart 1G",
