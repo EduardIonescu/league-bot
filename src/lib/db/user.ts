@@ -109,6 +109,7 @@ function getCurrencies(discordId: string, guildId: string) {
 }
 
 export function getAllUsers(guildId: string) {
+  console.log("guildId", guildId);
   const stmtUser = db.prepare(`
     SELECT
       u.discordId,
@@ -132,7 +133,8 @@ export function getAllUsers(guildId: string) {
       user_currencies AS w ON u.discordId = w.discordId AND w.type = 'won'
     LEFT JOIN
       user_currencies AS l ON u.discordId = l.discordId AND l.type = 'lost'
-    WHERE u.guildId = ?;
+    WHERE u.guildId = ?
+    GROUP BY u.discordId, u.guildId, u.lastAction, u.lastRedeemed, u.timesBet, u.wins, u.losses;
 `);
 
   const rows = stmtUser.all(guildId) as UserQuerried[] | undefined;
