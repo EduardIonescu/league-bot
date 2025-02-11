@@ -78,11 +78,50 @@ async function handleActiveBets(client: Client) {
 
     // Handle Remake
     if (matchResult.info.gameDuration < REMAKE_GAME_LENGTH_CAP * 60) {
-      const betByUser = handleRemake(bets);
+      if (bets && bets.length > 0) {
+        const betByUser = handleRemake(bets);
 
-      const updatedUsers = refundUsers(betByUser);
+        const updatedUsers = refundUsers(betByUser);
 
-      const embedOutcome = createRemakeEmbed(match, bets, updatedUsers);
+        const embedOutcome = createRemakeEmbed(match, bets, updatedUsers);
+        await sendEmbedToChannels(client, messages ?? [], embedOutcome, [
+          components,
+        ]);
+
+        const { error } = addFinishedMatch(
+          match,
+          matchResult,
+          participant.win,
+          true
+        );
+        addFinishedBets(bets);
+
+        if (error) {
+          console.log("Error moving finished game", error);
+        }
+      }
+
+      removeActiveGame(match.gameId);
+
+      // wait a second
+      await setTimeout(1_000);
+      continue;
+    }
+
+    // Handle win and lose
+    if (bets && bets.length > 0) {
+      const betByUser = handleMatchOutcome(bets, participant.win ? 1 : 0);
+      const { winners, losers } = splitBets(betByUser);
+
+      const updatedWinners = handleWinnerBetResult(winners);
+      const updatedLosers = handleLoserBetResult(losers);
+
+      const embedOutcome = createResultEmbed(
+        match,
+        bets,
+        updatedWinners,
+        updatedLosers
+      );
       await sendEmbedToChannels(client, messages ?? [], embedOutcome, [
         components,
       ]);
@@ -91,50 +130,16 @@ async function handleActiveBets(client: Client) {
         match,
         matchResult,
         participant.win,
-        true
+        false
       );
       addFinishedBets(bets);
-      removeActiveGame(match.gameId);
 
       if (error) {
         console.log("Error moving finished game", error);
       }
-
-      // wait a second
-      await setTimeout(1_000);
-      continue;
     }
 
-    // Handle win and lose
-    const betByUser = handleMatchOutcome(bets, participant.win ? 1 : 0);
-    const { winners, losers } = splitBets(betByUser);
-
-    const updatedWinners = handleWinnerBetResult(winners);
-    const updatedLosers = handleLoserBetResult(losers);
-
-    const embedOutcome = createResultEmbed(
-      match,
-      bets,
-      updatedWinners,
-      updatedLosers
-    );
-
-    await sendEmbedToChannels(client, messages ?? [], embedOutcome, [
-      components,
-    ]);
-
-    const { error } = addFinishedMatch(
-      match,
-      matchResult,
-      participant.win,
-      false
-    );
-    addFinishedBets(bets);
     removeActiveGame(match.gameId);
-
-    if (error) {
-      console.log("Error moving finished game", error);
-    }
 
     // wait a second
     await setTimeout(1_000);
