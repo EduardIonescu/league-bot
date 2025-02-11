@@ -29,7 +29,7 @@ export const DEFAULT_USER = {
 };
 
 /** The game length at which games should not be available anymore in MINUTES */
-export const BETS_CLOSE_AT_GAME_LENGTH = 40;
+export const BETS_CLOSE_AT_GAME_LENGTH = 4;
 
 /** When a match should be considered a remake in MINUTES */
 export const REMAKE_GAME_LENGTH_CAP = 10;
