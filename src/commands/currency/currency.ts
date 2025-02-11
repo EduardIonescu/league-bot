@@ -1,6 +1,6 @@
 import { CommandInteraction, SlashCommandBuilder } from "discord.js";
 import { logInteractionUsage } from "../../lib/db/logging.js";
-import { getUser } from "../../lib/db/user.js";
+import { getOrAddUserIfAbsent } from "../../lib/db/user.js";
 
 export default {
   cooldown: 10,
@@ -9,7 +9,10 @@ export default {
     .setDescription("Show current currency"),
   async execute(interaction: CommandInteraction) {
     const discordId = interaction.user.id;
-    const { error, user } = getUser(discordId);
+    const { error, user } = getOrAddUserIfAbsent(
+      discordId,
+      interaction.guildId!
+    );
 
     if (error || !user) {
       interaction.reply(error);

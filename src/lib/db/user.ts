@@ -6,68 +6,92 @@ import {
   UserAdvanced,
   UserQuerried,
 } from "../../data/schema.js";
-import { ZERO_CURRENCIES } from "../constants.js";
+import { DEFAULT_USER } from "../constants.js";
 import { dateToTIMESTAMP } from "../utils/common.js";
 
-const DEFAULT_USER = {
-  balance: {
-    tzapi: 100,
-    nicu: 0,
-  },
-  won: ZERO_CURRENCIES,
-  lost: ZERO_CURRENCIES,
-};
-
-export function addUser(discordId: string) {
+export function addUser(discordId: string, guildId: string) {
   try {
     const stmt = db.prepare(`
     INSERT INTO users
-    (discordId, lastAction)
+    (discordId, guildId)
     VALUES (?, ?);
     `);
 
-    stmt.run(discordId, dateToTIMESTAMP(new Date()));
-    addDefaultCurrencies(discordId);
-
+    stmt.run(discordId, guildId);
+    addDefaultCurrencies(discordId, guildId);
     return { error: undefined };
   } catch (error) {
     return { error: "User already exists" };
   }
 }
 
-function addDefaultCurrencies(discordId: string) {
+function addDefaultCurrencies(discordId: string, guildId: string) {
   const stmt2 = db.prepare(`
     INSERT INTO user_currencies
-    (discordId, type, tzapi)
-    VALUES(?, ?, ?);
+    (discordId, guildId, type, tzapi)
+    VALUES(?, ?, ?, ?);
     `);
 
-  stmt2.run(discordId, "balance", DEFAULT_USER.balance.tzapi);
-  stmt2.run(discordId, "won", DEFAULT_USER.won.tzapi);
-  stmt2.run(discordId, "lost", DEFAULT_USER.lost.tzapi);
+  stmt2.run(discordId, guildId, "balance", DEFAULT_USER.balance.tzapi);
+  stmt2.run(discordId, guildId, "won", DEFAULT_USER.won.tzapi);
+  stmt2.run(discordId, guildId, "lost", DEFAULT_USER.lost.tzapi);
 }
 
-export function getUser(discordId: string) {
-  const stmtUser = db.prepare("SELECT * FROM users WHERE discordId = ?");
+export function getUser(discordId: string, guildId: string) {
+  try {
+    console.log("guildId", guildId);
+    const stmtUser = db.prepare(
+      "SELECT * FROM users WHERE discordId = ? AND guildId = ?;"
+    );
 
-  const user = stmtUser.get(discordId);
-  const currencies = getCurrencies(discordId);
+    const user = stmtUser.get(discordId, guildId);
+    const currencies = getCurrencies(discordId, guildId);
 
-  if (!user || !currencies) {
-    return { error: "User not found", user: undefined };
+    if (!user || !currencies) {
+      return { error: "User not found", user: undefined };
+    }
+
+    return {
+      error: undefined,
+      user: { ...(user as User), ...currencies } as UserAdvanced,
+    };
+  } catch (error) {
+    return {
+      error: "User not found",
+      user: undefined,
+    };
   }
-
-  return {
-    error: undefined,
-    user: { ...(user as User), ...currencies } as UserAdvanced,
-  };
 }
 
-function getCurrencies(discordId: string) {
+export function getOrAddUserIfAbsent(discordId: string, guildId: string) {
+  try {
+    console.log("0");
+    const { error, user } = getUser(discordId, guildId);
+    console.log("user", user);
+    if (error || !user) {
+      addUser(discordId, guildId);
+      const { error: error2, user: user2 } = getUser(discordId, guildId);
+
+      if (error2 || !user2) {
+        return { error: error2, user: undefined };
+      }
+      return { error: undefined, user: user2 };
+    }
+
+    return { error: undefined, user };
+  } catch (error) {
+    return {
+      error: "User not found",
+      user: undefined,
+    };
+  }
+}
+
+function getCurrencies(discordId: string, guildId: string) {
   const stmtCurrency = db.prepare(
-    "SELECT * FROM user_currencies WHERE discordId = ?"
+    "SELECT * FROM user_currencies WHERE discordId = ? AND guildId = ?"
   );
-  const currencies = stmtCurrency.all(discordId);
+  const currencies = stmtCurrency.all(discordId, guildId);
 
   if (!currencies) {
     return undefined;
@@ -84,10 +108,11 @@ function getCurrencies(discordId: string) {
   return formattedCurrencies;
 }
 
-export function getAllUsers() {
+export function getAllUsers(guildId: string) {
   const stmtUser = db.prepare(`
     SELECT
       u.discordId,
+      u.guildId,
       u.lastAction,
       u.lastRedeemed,
       u.timesBet,
@@ -106,10 +131,11 @@ export function getAllUsers() {
     LEFT JOIN
       user_currencies AS w ON u.discordId = w.discordId AND w.type = 'won'
     LEFT JOIN
-      user_currencies AS l ON u.discordId = l.discordId AND l.type = 'lost';
+      user_currencies AS l ON u.discordId = l.discordId AND l.type = 'lost'
+    WHERE u.guildId = ?;
 `);
 
-  const rows = stmtUser.all() as UserQuerried[] | undefined;
+  const rows = stmtUser.all(guildId) as UserQuerried[] | undefined;
 
   if (!rows) {
     return { error: "No user was found", user: undefined };
@@ -117,6 +143,7 @@ export function getAllUsers() {
 
   const users = rows.map((row) => ({
     discordId: row.discordId,
+    guildId: row.guildId,
     lastAction: row.lastAction,
     lastRedeemed: row.lastRedeemed,
     timesBet: row.timesBet,
@@ -142,7 +169,7 @@ export function updateUser(user: UserAdvanced) {
     timesBet = ?, 
     wins = ?, 
     losses = ?
-    WHERE discordId = ?;
+    WHERE discordId = ? && guildId;
     `);
 
     stmt.run(
@@ -151,7 +178,8 @@ export function updateUser(user: UserAdvanced) {
       user.timesBet,
       user.wins,
       user.losses,
-      user.discordId
+      user.discordId,
+      user.guildId
     );
     updateCurrencies(user);
 
@@ -163,22 +191,25 @@ export function updateUser(user: UserAdvanced) {
 }
 
 function updateCurrencies(user: UserAdvanced) {
+  const { discordId, guildId, balance, won, lost } = user;
   const stmt = db.prepare(`
     UPDATE user_currencies SET
     tzapi = ?,
     nicu = ?
-    WHERE discordId = ? AND type = ?;
+    WHERE discordId = ? AND type = ? AND guildId = ?;
     `);
 
-  stmt.run(user.balance.tzapi, user.balance.nicu, user.discordId, "balance");
-  stmt.run(user.won.tzapi, user.won.nicu, user.discordId, "won");
-  stmt.run(user.lost.tzapi, user.lost.nicu, user.discordId, "lost");
+  stmt.run(balance.tzapi, balance.nicu, discordId, "balance", guildId);
+  stmt.run(won.tzapi, won.nicu, discordId, "won", guildId);
+  stmt.run(lost.tzapi, lost.nicu, discordId, "lost", guildId);
 }
 
-export function removeUser(discordId: string) {
+export function removeUser(discordId: string, guildId: string) {
   try {
-    const stmt = db.prepare("DELETE FROM users WHERE discordId = ?");
-    stmt.run(discordId);
+    const stmt = db.prepare(
+      "DELETE FROM users WHERE discordId = ? AND guildId = ?"
+    );
+    stmt.run(discordId, guildId);
 
     return { error: undefined };
   } catch (error) {

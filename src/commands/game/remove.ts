@@ -3,12 +3,9 @@ import {
   CommandInteractionOptionResolver,
   SlashCommandBuilder,
 } from "discord.js";
-import { getAccounts, removeAccount } from "../../lib/db/account.js";
+import { removeAccount } from "../../lib/db/account.js";
 import { logInteractionUsage } from "../../lib/db/logging.js";
-import { formatChoices, formatPlayerName } from "../../lib/utils/game.js";
-
-const { accounts } = getAccounts();
-const choices = formatChoices(accounts, false);
+import { formatPlayerName } from "../../lib/utils/game.js";
 
 export default {
   cooldown: 10,
@@ -20,7 +17,7 @@ export default {
         .setName("account")
         .setDescription("Account")
         .setRequired(true)
-        .addChoices(...choices)
+        .setAutocomplete(true)
     ),
   async execute(interaction: CommandInteraction) {
     const nameAndTag = (

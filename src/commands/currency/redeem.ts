@@ -6,7 +6,7 @@ import {
 } from "../../lib/constants.js";
 import { logInteractionUsage } from "../../lib/db/logging.js";
 import { getActiveMatches, getBets } from "../../lib/db/match.js";
-import { getUser, updateUser } from "../../lib/db/user.js";
+import { getOrAddUserIfAbsent, updateUser } from "../../lib/db/user.js";
 import { handleDefer } from "../../lib/utils/customReply.js";
 
 export default {
@@ -20,7 +20,10 @@ export default {
 
     const discordId = interaction.user.id;
 
-    const { error, user } = getUser(discordId);
+    const { error, user } = getOrAddUserIfAbsent(
+      discordId,
+      interaction.guildId!
+    );
     if (error || !user) {
       interaction.customReply(error);
       deferHandler.cancel();

@@ -2,6 +2,7 @@ import { Region } from "../lib/types/riot.js";
 
 export type User = {
   discordId: string;
+  guildId: string;
   lastAction: Date;
   lastRedeemed: Date | undefined;
   timesBet: number;
@@ -25,6 +26,7 @@ export type UserAdvanced = User & CurrenciesAdvanced;
 
 export type UserQuerried = {
   discordId: string;
+  guildId: string;
   lastAction: Date;
   lastRedeemed: Date | undefined;
   timesBet: number;
@@ -60,6 +62,7 @@ export type Match = {
 
 export type Bet = {
   discordId: string;
+  guildId: string;
   gameId: number;
   win: 0 | 1;
   tzapi?: number;

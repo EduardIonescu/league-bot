@@ -1,6 +1,6 @@
 import { CommandInteraction, SlashCommandBuilder } from "discord.js";
 import { logInteractionUsage } from "../../lib/db/logging.js";
-import { getUser, updateUser } from "../../lib/db/user.js";
+import { getOrAddUserIfAbsent, updateUser } from "../../lib/db/user.js";
 import { handleDefer } from "../../lib/utils/customReply.js";
 
 export default {
@@ -24,12 +24,13 @@ export default {
 
     const giverDiscordId = interaction.user.id;
 
-    const { error: errorGiver, user: giverUser } = getUser(giverDiscordId);
+    const { error: errorGiver, user: giverUser } = getOrAddUserIfAbsent(
+      giverDiscordId,
+      interaction.guildId!
+    );
 
     if (errorGiver || !giverUser) {
-      interaction.customReply(
-        "User not found. Try again or try /currency first."
-      );
+      interaction.customReply(errorGiver);
       deferHandler.cancel();
       logInteractionUsage(interaction);
 
@@ -55,12 +56,14 @@ export default {
       return;
     }
 
-    const { error: errorReceiver, user: receiverUser } =
-      getUser(receiverDiscordId);
+    const { error: errorReceiver, user: receiverUser } = getOrAddUserIfAbsent(
+      receiverDiscordId,
+      interaction.guildId!
+    );
 
     if (errorReceiver || !receiverUser) {
       interaction.customReply(
-        "User not found. Try again or try /currency first."
+        "User not found. Try again or have them try /currency first."
       );
       deferHandler.cancel();
       logInteractionUsage(interaction);

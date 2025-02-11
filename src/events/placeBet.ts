@@ -14,7 +14,7 @@ import { Bet, UserAdvanced } from "../data/schema.js";
 import { loseButtons, NICU_IN_TZAPI, winButtons } from "../lib/constants.js";
 import { logInteractionUsage } from "../lib/db/logging.js";
 import { addBet, getActiveMatch } from "../lib/db/match.js";
-import { getUser, updateUser } from "../lib/db/user.js";
+import { getOrAddUserIfAbsent, getUser, updateUser } from "../lib/db/user.js";
 import { Currency } from "../lib/types/common.js";
 import { toTitleCase } from "../lib/utils/common.js";
 import { handleDefer } from "../lib/utils/customReply.js";
@@ -45,7 +45,10 @@ export default {
     deferHandler.start();
 
     const discordId = interaction.user.id;
-    const { error: errorUserFirst, user: userFirst } = getUser(discordId);
+    const { error: errorUserFirst, user: userFirst } = getOrAddUserIfAbsent(
+      discordId,
+      interaction.guildId!
+    );
 
     if (errorUserFirst || !userFirst) {
       await interaction.customReply({
@@ -72,7 +75,7 @@ export default {
 
     // Fetch the user again. This is against clicking `All In` and then betting
     // something else before clicking confirm in the ephemeral message
-    const { error: errorUser, user } = getUser(discordId);
+    const { error: errorUser, user } = getUser(discordId, interaction.guildId!);
     if (errorUser || !user) {
       await interaction.customReply({
         content: errorUser,
@@ -233,6 +236,7 @@ export default {
 
     const bet: Bet = {
       discordId,
+      guildId: interaction.guildId!,
       win,
       gameId: match.gameId,
       [currencyType]: betAmount,

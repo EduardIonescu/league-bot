@@ -13,7 +13,7 @@ import { getCheckButton } from "./check.js";
 export async function showLeaderboard(
   interaction: CommandInteraction | ButtonInteraction
 ) {
-  const { error, users } = await getLeaderboard();
+  const { error, users } = await getLeaderboard(interaction.guildId!);
 
   if (error || !users) {
     interaction.reply(error ?? "Error loading users.");
@@ -39,9 +39,9 @@ export async function showLeaderboard(
   logInteractionUsage(interaction, true);
 }
 
-async function getLeaderboard() {
+async function getLeaderboard(guildId: string) {
   try {
-    const { error, users } = getAllUsers();
+    const { error, users } = getAllUsers(guildId);
 
     if (error || !users || users.length === 0) {
       return {

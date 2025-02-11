@@ -59,12 +59,13 @@ export function addBet(bet: Bet) {
   try {
     const stmt = db.prepare(`
         INSERT INTO bets
-        (discordId, gameId, win, tzapi, nicu, timestamp)
-        VALUES (?, ?, ?, ?, ?, ?);
+        (discordId, guildId, gameId, win, tzapi, nicu, timestamp)
+        VALUES (?, ?, ?, ?, ?, ?, ?);
       `);
 
     stmt.run(
       bet.discordId,
+      bet.guildId,
       bet.gameId,
       bet.win ? 1 : 0,
       bet.tzapi ?? null,

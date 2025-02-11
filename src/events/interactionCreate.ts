@@ -1,13 +1,23 @@
-import { Collection, Events, MessageFlags } from "discord.js";
+import { Collection, Events, Interaction, MessageFlags } from "discord.js";
+import { ClientWithCommands } from "../app";
 
 export default {
   name: Events.InteractionCreate,
-  async execute(interaction: any) {
+  async execute(interaction: Interaction) {
     if (!interaction.isChatInputCommand()) {
       return;
     }
 
-    const command = interaction.client.commands.get(interaction.commandName);
+    if (!interaction.guildId) {
+      interaction.reply(
+        "I can't respond to commands in DMs. Please use me in a server!"
+      );
+      return;
+    }
+
+    const client = interaction.client as ClientWithCommands;
+
+    const command = client.commands.get(interaction.commandName);
 
     if (!command) {
       console.error(
@@ -16,7 +26,7 @@ export default {
       return;
     }
 
-    const { cooldowns } = interaction.client;
+    const { cooldowns } = client;
 
     if (!cooldowns.has(command.data.name)) {
       cooldowns.set(command.data.name, new Collection());
@@ -57,5 +67,7 @@ export default {
         });
       }
     }
+
+    return;
   },
 };

@@ -20,15 +20,12 @@ export const loseButtons = [
 
 export const ZERO_CURRENCIES: Currencies = { tzapi: 0, nicu: 0 };
 export const DEFAULT_USER = {
-  currency: { tzapi: 100, nicu: 0 },
-  data: {
-    currencyInActiveBets: [],
-    timesBet: 0,
-    wins: 0,
-    loses: 0,
-    currencyWon: ZERO_CURRENCIES,
-    currencyLost: ZERO_CURRENCIES,
+  balance: {
+    tzapi: 100,
+    nicu: 0,
   },
+  won: ZERO_CURRENCIES,
+  lost: ZERO_CURRENCIES,
 };
 
 /** The game length at which games should not be available anymore in MINUTES */

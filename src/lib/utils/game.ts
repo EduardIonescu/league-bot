@@ -64,7 +64,7 @@ export function handleMatchOutcome(bets: Bet[] | undefined, win: 1 | 0) {
       };
       return acc;
     }
-    return [...acc, { discordId: cur.discordId, amount }];
+    return [...acc, { discordId: cur.discordId, guildId: cur.guildId, amount }];
   }, [] as AmountByUser[]);
   return amountByUser;
 }
@@ -76,7 +76,7 @@ export function handleRemake(bets: Bet[] | undefined) {
 
   const amountByUser = bets.reduce((acc, cur) => {
     const accumulatedUser = acc.find(
-      (user) => user.discordId === cur.discordId
+      (user) => user.discordId === cur.discordId && user.guildId === cur.guildId
     );
     if (accumulatedUser) {
       accumulatedUser.amount = {
@@ -89,6 +89,7 @@ export function handleRemake(bets: Bet[] | undefined) {
       ...acc,
       {
         discordId: cur.discordId,
+        guildId: cur.guildId,
         amount: { tzapi: cur.tzapi ?? 0, nicu: cur.nicu ?? 0 },
       },
     ];
@@ -102,7 +103,10 @@ export function refundUsers(users: AmountByUser[]) {
   }
 
   const bettingUsers = users.map((user) => {
-    const { error: error, user: userDb } = getUser(user.discordId);
+    const { error: error, user: userDb } = getUser(
+      user.discordId,
+      user.guildId
+    );
 
     if (error || !userDb) {
       return;
@@ -124,7 +128,7 @@ export function refundUsers(users: AmountByUser[]) {
 
 export function handleWinnerBetResult(users: AmountByUser[]) {
   const winners = users.map((user) => {
-    const { error, user: userDb } = getUser(user.discordId);
+    const { error, user: userDb } = getUser(user.discordId, user.guildId);
 
     if (error || !userDb) {
       console.log("error", error);
@@ -159,7 +163,7 @@ export function handleWinnerBetResult(users: AmountByUser[]) {
 
 export function handleLoserBetResult(users: AmountByUser[]) {
   const losers = users.map((user) => {
-    const { error, user: userDb } = getUser(user.discordId);
+    const { error, user: userDb } = getUser(user.discordId, user.guildId);
 
     if (error || !userDb) {
       return;

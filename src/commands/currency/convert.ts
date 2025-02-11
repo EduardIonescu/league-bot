@@ -1,7 +1,7 @@
 import { CommandInteraction, SlashCommandBuilder } from "discord.js";
 import { NICU_IN_TZAPI } from "../../lib/constants.js";
 import { logInteractionUsage } from "../../lib/db/logging.js";
-import { getUser, updateUser } from "../../lib/db/user.js";
+import { getOrAddUserIfAbsent, updateUser } from "../../lib/db/user.js";
 import { Currencies, Currency } from "../../lib/types/common.js";
 import { handleDefer } from "../../lib/utils/customReply.js";
 
@@ -34,13 +34,13 @@ export default {
     deferHandler.start();
 
     const discordId = interaction.user.id;
-    const { error, user } = getUser(discordId);
+    const { error, user } = getOrAddUserIfAbsent(
+      discordId,
+      interaction.guildId!
+    );
 
     if (error || !user) {
-      console.log("error", error);
-      interaction.customReply(
-        "User not found. Try again or try /currency first."
-      );
+      interaction.customReply(error);
       deferHandler.cancel();
       logInteractionUsage(interaction);
 

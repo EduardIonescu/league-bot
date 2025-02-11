@@ -15,6 +15,7 @@ export type Currency = "nicu" | "tzapi";
 
 export type AmountByUser = {
   discordId: string;
+  guildId: string;
   amount: Currencies;
   winnings?: Currencies;
   loss?: Currencies;
