@@ -25,21 +25,27 @@ CREATE TABLE user_currencies (
 
 );
 
+WITH col_check AS (
+    SELECT COUNT(*) AS col_exists 
+    FROM pragma_table_info('users_old') 
+    WHERE name = 'guildId'
+)
+
 INSERT INTO users (discordId, guildId, lastAction, lastRedeemed, timesBet, wins, losses)
 SELECT discordId,
-    CASE WHEN EXISTS (SELECT 1 FROM pragma_table_info('users_old') WHERE name = 'guildId')
-        THEN guildId
-        ELSE '761981700942987284'
-    END, 
+    (SELECT CASE WHEN col_exists > 0 THEN guildId ELSE '761981700942987284' END FROM col_check),
     lastAction, lastRedeemed, timesBet, wins, losses
 FROM users_old;
 
+WITH col_check AS (
+    SELECT COUNT(*) AS col_exists 
+    FROM pragma_table_info('user_currencies_old') 
+    WHERE name = 'guildId'
+)
+
 INSERT INTO user_currencies (discordId, guildId, type, tzapi, nicu)
 SELECT discordId,
-    CASE WHEN EXISTS (SELECT 1 FROM pragma_table_info('users_old') WHERE name = 'guildId')
-        THEN guildId
-        ELSE '761981700942987284'
-    END, 
+    (SELECT CASE WHEN col_exists > 0 THEN guildId ELSE '761981700942987284' END FROM col_check),
     type, tzapi, nicu
 FROM user_currencies_old;
 
