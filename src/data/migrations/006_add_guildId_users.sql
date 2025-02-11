@@ -25,31 +25,32 @@ CREATE TABLE user_currencies (
 
 );
 
-WITH col_check AS (
-    SELECT COUNT(*) AS col_exists 
-    FROM pragma_table_info('users_old') 
-    WHERE name = 'guildId'
-)
+CREATE TEMP TABLE temp_col_check AS 
+SELECT COUNT(*) AS col_exists FROM pragma_table_info('users_old') WHERE name = 'guildId';
 
 INSERT INTO users (discordId, guildId, lastAction, lastRedeemed, timesBet, wins, losses)
-SELECT discordId,
-    (SELECT CASE WHEN col_exists > 0 THEN guildId ELSE '761981700942987284' END FROM col_check),
-    lastAction, lastRedeemed, timesBet, wins, losses
-FROM users_old;
+SELECT discordId, guildId, lastAction, lastRedeemed, timesBet, wins, losses
+FROM users_old
+WHERE (SELECT col_exists FROM temp_col_check) > 0;
 
-WITH col_check AS (
-    SELECT COUNT(*) AS col_exists 
-    FROM pragma_table_info('user_currencies_old') 
-    WHERE name = 'guildId'
-)
+INSERT INTO users (discordId, guildId, lastAction, lastRedeemed, timesBet, wins, losses)
+SELECT discordId, '761981700942987284', lastAction, lastRedeemed, timesBet, wins, losses
+FROM users_old
+WHERE (SELECT col_exists FROM temp_col_check) = 0;
+
 
 INSERT INTO user_currencies (discordId, guildId, type, tzapi, nicu)
-SELECT discordId,
-    (SELECT CASE WHEN col_exists > 0 THEN guildId ELSE '761981700942987284' END FROM col_check),
-    type, tzapi, nicu
-FROM user_currencies_old;
+SELECT discordId, guildId, type, tzapi, nicu
+FROM user_currencies_old
+WHERE (SELECT col_exists FROM temp_col_check) > 0;
+
+INSERT INTO user_currencies (discordId, guildId, type, tzapi, nicu)
+SELECT discordId, '761981700942987284', type, tzapi, nicu
+FROM user_currencies_old
+WHERE (SELECT col_exists FROM temp_col_check) = 0;
 
 DROP TABLE users_old;
 DROP TABLE user_currencies_old;
+DROP TABLE temp_col_check;
 
 COMMIT TRANSACTION;
