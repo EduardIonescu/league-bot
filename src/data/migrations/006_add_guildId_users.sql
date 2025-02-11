@@ -25,32 +25,15 @@ CREATE TABLE user_currencies (
 
 );
 
-CREATE TEMP TABLE temp_col_check AS 
-SELECT COUNT(*) AS col_exists FROM pragma_table_info('users_old') WHERE name = 'guildId';
-
-INSERT INTO users (discordId, guildId, lastAction, lastRedeemed, timesBet, wins, losses)
-SELECT discordId, guildId, lastAction, lastRedeemed, timesBet, wins, losses
-FROM users_old
-WHERE (SELECT col_exists FROM temp_col_check) > 0;
-
 INSERT INTO users (discordId, guildId, lastAction, lastRedeemed, timesBet, wins, losses)
 SELECT discordId, '761981700942987284', lastAction, lastRedeemed, timesBet, wins, losses
-FROM users_old
-WHERE (SELECT col_exists FROM temp_col_check) = 0;
-
-
-INSERT INTO user_currencies (discordId, guildId, type, tzapi, nicu)
-SELECT discordId, guildId, type, tzapi, nicu
-FROM user_currencies_old
-WHERE (SELECT col_exists FROM temp_col_check) > 0;
+FROM users_old;
 
 INSERT INTO user_currencies (discordId, guildId, type, tzapi, nicu)
 SELECT discordId, '761981700942987284', type, tzapi, nicu
-FROM user_currencies_old
-WHERE (SELECT col_exists FROM temp_col_check) = 0;
+FROM user_currencies_old;
 
 DROP TABLE users_old;
 DROP TABLE user_currencies_old;
-DROP TABLE temp_col_check;
 
 COMMIT TRANSACTION;
