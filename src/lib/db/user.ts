@@ -39,7 +39,6 @@ function addDefaultCurrencies(discordId: string, guildId: string) {
 
 export function getUser(discordId: string, guildId: string) {
   try {
-    console.log("guildId", guildId);
     const stmtUser = db.prepare(
       "SELECT * FROM users WHERE discordId = ? AND guildId = ?;"
     );
@@ -65,9 +64,7 @@ export function getUser(discordId: string, guildId: string) {
 
 export function getOrAddUserIfAbsent(discordId: string, guildId: string) {
   try {
-    console.log("0");
     const { error, user } = getUser(discordId, guildId);
-    console.log("user", user);
     if (error || !user) {
       addUser(discordId, guildId);
       const { error: error2, user: user2 } = getUser(discordId, guildId);
@@ -89,10 +86,9 @@ export function getOrAddUserIfAbsent(discordId: string, guildId: string) {
 
 function getCurrencies(discordId: string, guildId: string) {
   const stmtCurrency = db.prepare(
-    "SELECT * FROM user_currencies WHERE discordId = ? AND guildId = ?"
+    "SELECT * FROM user_currencies WHERE discordId = ? AND guildId = ?;"
   );
   const currencies = stmtCurrency.all(discordId, guildId);
-
   if (!currencies) {
     return undefined;
   }
@@ -109,7 +105,6 @@ function getCurrencies(discordId: string, guildId: string) {
 }
 
 export function getAllUsers(guildId: string) {
-  console.log("guildId", guildId);
   const stmtUser = db.prepare(`
     SELECT
       u.discordId,
@@ -171,7 +166,7 @@ export function updateUser(user: UserAdvanced) {
     timesBet = ?, 
     wins = ?, 
     losses = ?
-    WHERE discordId = ? && guildId;
+    WHERE discordId = ? AND guildId = ?;
     `);
 
     stmt.run(
