@@ -128,11 +128,11 @@ export function getAllUsers(guildId: string) {
     FROM
       users AS u
     LEFT JOIN
-      user_currencies AS b ON u.discordId = b.discordId AND b.type = 'balance'
+      user_currencies AS b ON u.discordId = b.discordId AND b.type = 'balance' AND u.guildId = b.guildId
     LEFT JOIN
-      user_currencies AS w ON u.discordId = w.discordId AND w.type = 'won'
+      user_currencies AS w ON u.discordId = w.discordId AND w.type = 'won' AND u.guildId = w.guildId
     LEFT JOIN
-      user_currencies AS l ON u.discordId = l.discordId AND l.type = 'lost'
+      user_currencies AS l ON u.discordId = l.discordId AND l.type = 'lost' AND u.guildId = l.guildId
     WHERE u.guildId = ?
     GROUP BY u.discordId, u.guildId, u.lastAction, u.lastRedeemed, u.timesBet, u.wins, u.losses;
 `);
