@@ -26,11 +26,21 @@ CREATE TABLE user_currencies (
 );
 
 INSERT INTO users (discordId, guildId, lastAction, lastRedeemed, timesBet, wins, losses)
-SELECT discordId, COALESCE(guildId, '761981700942987284'), lastAction, lastRedeemed, timesBet, wins, losses
+SELECT discordId,
+    CASE WHEN EXISTS (SELECT 1 FROM pragma_table_info('users_old') WHERE name = 'guildId')
+        THEN guildId
+        ELSE '761981700942987284'
+    END, 
+    lastAction, lastRedeemed, timesBet, wins, losses
 FROM users_old;
 
 INSERT INTO user_currencies (discordId, guildId, type, tzapi, nicu)
-SELECT discordId, COALESCE(guildId, '761981700942987284'), type, tzapi, nicu
+SELECT discordId,
+    CASE WHEN EXISTS (SELECT 1 FROM pragma_table_info('users_old') WHERE name = 'guildId')
+        THEN guildId
+        ELSE '761981700942987284'
+    END, 
+    type, tzapi, nicu
 FROM user_currencies_old;
 
 DROP TABLE users_old;
