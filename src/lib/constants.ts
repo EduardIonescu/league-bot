@@ -1,20 +1,20 @@
 import { Currencies } from "./types/common";
 
 export const winButtons = [
-  { customId: "win-1", label: "1 Tzapi", amount: 1 },
-  { customId: "win-10", label: "10 Tzapi", amount: 10 },
-  { customId: "win-100", label: "100 Tzapi", amount: 100 },
+  { customId: "win-10-tzapi", label: "10 Tzapi", amount: 10 },
+  { customId: "win-100-tzapi", label: "100 Tzapi", amount: 100 },
   { customId: "win-1-nicu", label: "1 Nicu", amount: 1 },
   { customId: "win-10-nicu", label: "10 Nicu", amount: 10 },
+  { customId: "win-all", label: "ALL IN", amount: 99999 },
   // { customId: "win-custom", label: "Bet Custom" },
 ];
 
 export const loseButtons = [
-  { customId: "lose-1", label: "1 Tzapi", amount: 1 },
-  { customId: "lose-10", label: "10 Tzapi", amount: 10 },
-  { customId: "lose-100", label: "100 Tzapi", amount: 100 },
+  { customId: "lose-10-tzapi", label: "10 Tzapi", amount: 10 },
+  { customId: "lose-100-tzapi", label: "100 Tzapi", amount: 100 },
   { customId: "lose-1-nicu", label: "1 Nicu", amount: 1 },
   { customId: "lose-10-nicu", label: "10 Nicu", amount: 10 },
+  { customId: "lose-all", label: "ALL IN", amount: 99999 },
   // { customId: "lose-custom", label: "Bet Custom" },
 ];
 
