@@ -5,12 +5,13 @@ export function addAccount(account: Account) {
   try {
     const stmt = db.prepare(`
     INSERT INTO accounts
-    (summonerPUUID, gameName, tagLine, region)
-    VALUES (?, ?, ?, ?);
+    (summonerPUUID, guildId, gameName, tagLine, region)
+    VALUES (?, ?, ?, ?, ?);
     `);
 
     stmt.run(
       account.summonerPUUID,
+      account.guildId,
       account.gameName.toLowerCase(),
       account.tagLine.toLowerCase(),
       account.region
@@ -22,10 +23,10 @@ export function addAccount(account: Account) {
   }
 }
 
-export function getAccounts() {
-  const stmtUser = db.prepare("SELECT * FROM accounts");
+export function getAccounts(guildId: string) {
+  const stmtUser = db.prepare("SELECT * FROM accounts WHERE guildId = ?");
 
-  const accounts = stmtUser.all();
+  const accounts = stmtUser.all(guildId);
 
   if (!accounts || accounts.length === 0) {
     return { error: "No accounts found", accounts: undefined };
@@ -37,13 +38,17 @@ export function getAccounts() {
   };
 }
 
-export function removeAccount(nameAndTag: string) {
+export function removeAccount(nameAndTag: string, guildId: string) {
   const [gameName, tagLine] = nameAndTag.split("_");
   try {
     const stmt = db.prepare(
-      `DELETE FROM accounts WHERE gameName = ? AND tagLine = ?;`
+      `DELETE FROM accounts WHERE gameName = ? AND tagLine = ? AND guildId = ?;`
     );
-    const { changes } = stmt.run(gameName.toLowerCase(), tagLine.toLowerCase());
+    const { changes } = stmt.run(
+      gameName.toLowerCase(),
+      tagLine.toLowerCase(),
+      guildId
+    );
     if (changes === 0) {
       return { error: "Account not found" };
     }

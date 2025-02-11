@@ -100,7 +100,10 @@ export default {
       return;
     }
 
-    const { error, match, bets, messages } = getActiveMatch(summonerPUUID);
+    const { error, match, bets, messages } = getActiveMatch(
+      summonerPUUID,
+      interaction.guildId!
+    );
 
     if (error || !match || !messages) {
       interaction.customReply({

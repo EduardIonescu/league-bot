@@ -64,8 +64,8 @@ async function handleActiveBets(client: Client) {
       getCheckButton(false)
     );
 
-    const { bets } = getBets(match.gameId);
-    const { messages } = getMessages(match.gameId);
+    const { bets } = getBets(match.gameId, match.guildId);
+    const { messages } = getMessages(match.gameId, match.guildId);
 
     const participant = matchResult.info.participants.find(
       (p) => p.puuid === summonerPUUID
@@ -101,7 +101,7 @@ async function handleActiveBets(client: Client) {
         }
       }
 
-      removeActiveGame(match.gameId);
+      removeActiveGame(match.gameId, match.guildId);
 
       // wait a second
       await setTimeout(1_000);
@@ -139,7 +139,7 @@ async function handleActiveBets(client: Client) {
       }
     }
 
-    removeActiveGame(match.gameId);
+    removeActiveGame(match.gameId, match.guildId);
 
     // wait a second
     await setTimeout(1_000);

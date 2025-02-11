@@ -31,7 +31,7 @@ export default {
       return;
     }
 
-    const { error } = removeAccount(nameAndTag);
+    const { error } = removeAccount(nameAndTag, interaction.guildId!);
     if (error) {
       interaction.reply(error);
       logInteractionUsage(interaction);

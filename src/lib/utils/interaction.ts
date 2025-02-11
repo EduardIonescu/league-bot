@@ -36,7 +36,12 @@ export async function startBet(
 
   const channel = interaction.channel as TextBasedChannel;
 
-  let { error: errorDb, match, bets, messages } = getActiveMatch(summonerPUUID);
+  let {
+    error: errorDb,
+    match,
+    bets,
+    messages,
+  } = getActiveMatch(summonerPUUID, interaction.guildId!);
 
   if (errorDb || !match) {
     try {
@@ -66,6 +71,7 @@ export async function startBet(
 
       match = {
         gameId: spectatorData.gameId,
+        guildId: interaction.guildId!,
         region: account.region,
         gameQueueConfigId: spectatorData.gameQueueConfigId,
         gameMode: spectatorData.gameMode,
@@ -153,6 +159,7 @@ export async function startBet(
   if (!isMessageIdSaved) {
     const message = {
       channelId: channel.id,
+      guildId: response.guildId!,
       messageId: response.id,
       gameId: match.gameId,
     };

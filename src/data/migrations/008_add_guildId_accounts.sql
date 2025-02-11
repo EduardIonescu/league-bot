@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS accounts (
 );
 
 INSERT INTO accounts (summonerPUUID, guildId, gameName, tagLine, region)
-SELECT summonerPUUID, '761981700942987284', gameName, tagLine, region
+SELECT summonerPUUID, COALESCE(guildId, '761981700942987284'), gameName, tagLine, region
 FROM accounts_old;
 
 DROP TABLE accounts_old;

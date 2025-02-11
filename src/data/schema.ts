@@ -50,6 +50,7 @@ export type CurrencyType = "balance" | "won" | "lost";
 
 export type Match = {
   gameId: number;
+  guildId: string;
   player: string;
   gameType: string;
   gameMode: string;
@@ -72,6 +73,7 @@ export type Bet = {
 
 export type SentInMessage = {
   messageId: string;
+  guildId: string;
   channelId: string;
   gameId: number;
 };

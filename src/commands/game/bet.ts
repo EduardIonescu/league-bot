@@ -1,37 +1,28 @@
-import {
-  CommandInteraction,
-  CommandInteractionOptionResolver,
-  SlashCommandBuilder,
-} from "discord.js";
-import { getAccounts } from "../../lib/db/account.js";
-import { formatChoices } from "../../lib/utils/game.js";
-import { startBet } from "../../lib/utils/interaction.js";
-
-const { accounts } = getAccounts();
-const choices = formatChoices(accounts);
+import { CommandInteraction, SlashCommandBuilder } from "discord.js";
 
 export default {
   cooldown: 10,
   data: new SlashCommandBuilder()
     .setName("bet")
-    .setDescription("Bet on League matches' outcomes vs the bot.")
-    .addStringOption((option) =>
-      option
-        .setName("account")
-        .setDescription("Account")
-        .setRequired(true)
-        .addChoices(...choices)
-    ),
+    .setDescription("Bet on League matches' outcomes vs the bot."),
+  // .addStringOption((option) =>
+  //   option
+  //     .setName("account")
+  //     .setDescription("Account")
+  //     .setRequired(true)
+  //     .addChoices(...choices)
+  // )
   async execute(interaction: CommandInteraction) {
-    const summonerPUUID = (
-      interaction.options as CommandInteractionOptionResolver
-    ).getString("account");
-    console.log("summonerPUUID", summonerPUUID);
+    return interaction.reply("Under construction...");
+    // const summonerPUUID = (
+    //   interaction.options as CommandInteractionOptionResolver
+    // ).getString("account");
+    // console.log("summonerPUUID", summonerPUUID);
 
-    const account = accounts?.find(
-      (acc) => acc.summonerPUUID === summonerPUUID
-    );
+    // const account = accounts?.find(
+    //   (acc) => acc.summonerPUUID === summonerPUUID
+    // );
 
-    await startBet(interaction, account);
+    // await startBet(interaction, account);
   },
 };

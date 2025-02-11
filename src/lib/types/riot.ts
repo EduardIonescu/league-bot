@@ -3,6 +3,7 @@ export type Region = "eun1" | "euw1" | "na1";
 export type SummonerData = { puuid: string; gameName: string; tagLine: string };
 export type Account = {
   gameName: string;
+  guildId: string;
   tagLine: string;
   summonerPUUID: string;
   region: Region;

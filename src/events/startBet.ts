@@ -9,7 +9,7 @@ export default {
       return;
     }
     const summonerPUUID = interaction.customId.slice(10);
-    const { accounts } = getAccounts();
+    const { accounts } = getAccounts(interaction.guildId!);
     const account = accounts?.find(
       (acc) => acc.summonerPUUID === summonerPUUID
     );

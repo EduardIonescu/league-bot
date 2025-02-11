@@ -20,7 +20,7 @@ export async function check(
   const deferHandler = handleDefer(interaction);
   deferHandler.start();
 
-  const { error, accounts } = getAccounts();
+  const { error, accounts } = getAccounts(interaction.guildId!);
 
   if (error || !accounts || accounts.length === 0) {
     await interaction.customReply(

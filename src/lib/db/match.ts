@@ -14,12 +14,13 @@ export function addActiveMatch(match: Match) {
   try {
     const stmt = db.prepare(`
         INSERT INTO activeMatches
-        (gameId, player, gameType, gameMode, gameQueueConfigId, summonerPUUID, inGameTime, gameStartTime, region)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+        (gameId, guildId, player, gameType, gameMode, gameQueueConfigId, summonerPUUID, inGameTime, gameStartTime, region)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
         `);
 
     stmt.run(
       match.gameId,
+      match.guildId,
       match.player,
       match.gameType,
       match.gameMode,
@@ -41,11 +42,16 @@ export function addMessage(message: SentInMessage) {
   try {
     const stmt = db.prepare(`
         INSERT INTO messages
-        (messageId, channelId, gameId)
-        VALUES (?, ?, ?);
+        (messageId, guildId, channelId, gameId)
+        VALUES (?, ?, ?, ?);
       `);
 
-    stmt.run(message.messageId, message.channelId, message.gameId);
+    stmt.run(
+      message.messageId,
+      message.guildId,
+      message.channelId,
+      message.gameId
+    );
 
     return { error: undefined };
   } catch (error) {
@@ -81,13 +87,13 @@ export function addBet(bet: Bet) {
   }
 }
 
-export function getActiveMatch(summonerPUUID: string) {
+export function getActiveMatch(summonerPUUID: string, guildId: string) {
   try {
     const stmt = db.prepare(`
-      SELECT * FROM activeMatches WHERE summonerPUUID = ?;
+      SELECT * FROM activeMatches WHERE summonerPUUID = ? AND guildId = ?;
   `);
 
-    const match = stmt.get(summonerPUUID) as Match | undefined;
+    const match = stmt.get(summonerPUUID, guildId) as Match | undefined;
 
     if (!match) {
       return {
@@ -98,8 +104,8 @@ export function getActiveMatch(summonerPUUID: string) {
       };
     }
 
-    const { bets } = getBets(match.gameId);
-    const { messages } = getMessages(match.gameId);
+    const { bets } = getBets(match.gameId, guildId);
+    const { messages } = getMessages(match.gameId, match.guildId);
 
     return { error: undefined, match, messages, bets };
   } catch (error) {
@@ -113,13 +119,13 @@ export function getActiveMatch(summonerPUUID: string) {
   }
 }
 
-export function getBets(gameId: number) {
+export function getBets(gameId: number, guildId: string) {
   try {
     const stmt = db.prepare(`
-      SELECT * FROM bets WHERE gameId = ?;
+      SELECT * FROM bets WHERE gameId = ? AND guildId = ?;
       `);
 
-    const bets = stmt.all(gameId) as Bet[];
+    const bets = stmt.all(gameId, guildId) as Bet[];
 
     return { error: undefined, bets };
   } catch (error) {
@@ -128,13 +134,13 @@ export function getBets(gameId: number) {
   }
 }
 
-export function getMessages(gameId: number) {
+export function getMessages(gameId: number, guildId: string) {
   try {
     const stmt = db.prepare(`
-      SELECT * FROM messages WHERE gameId = ?;
+      SELECT * FROM messages WHERE gameId = ? AND guildId = ?;
       `);
 
-    const messages = stmt.all(gameId) as SentInMessage[];
+    const messages = stmt.all(gameId, guildId) as SentInMessage[];
 
     return { error: undefined, messages };
   } catch (error) {
@@ -143,13 +149,13 @@ export function getMessages(gameId: number) {
   }
 }
 
-export function getMessageById(id: string, channelId: string) {
+export function getMessageById(id: string) {
   try {
     const stmt = db.prepare(`
-        SELECT * FROM messages WHERE messageId = ? AND channelId = ?;
+        SELECT * FROM messages WHERE messageId = ?;
       `);
 
-    const message = stmt.get(id, channelId) as SentInMessage | undefined;
+    const message = stmt.get(id) as SentInMessage | undefined;
 
     return message;
   } catch (error) {
@@ -201,13 +207,13 @@ export function getActiveMatches() {
   }
 }
 
-export function removeActiveGame(gameId: number) {
+export function removeActiveGame(gameId: number, guildId: string) {
   try {
     const stmt = db.prepare(`
-    DELETE FROM activeMatches WHERE gameId = ?;
+    DELETE FROM activeMatches WHERE gameId = ? AND guildId = ?;
     `);
 
-    stmt.run(gameId);
+    stmt.run(gameId, guildId);
 
     return { error: undefined };
   } catch (error) {

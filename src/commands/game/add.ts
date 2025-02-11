@@ -57,6 +57,7 @@ export default {
 
     const account: Account = {
       gameName,
+      guildId: interaction.guildId!,
       tagLine,
       summonerPUUID: summonerData.puuid,
       region,

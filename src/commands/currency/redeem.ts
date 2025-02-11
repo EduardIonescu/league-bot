@@ -64,7 +64,7 @@ export default {
     // Don't allow if they've bet on an active match until the match is over.
     if (matches && matches.length > 0) {
       for (const match of matches) {
-        const { bets } = getBets(match.gameId);
+        const { bets } = getBets(match.gameId, interaction.guildId!);
         if (!bets) {
           continue;
         }

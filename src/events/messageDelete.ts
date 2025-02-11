@@ -10,7 +10,7 @@ export default {
       return;
     }
 
-    if (!getMessageById(message.id, message.channelId)) {
+    if (!getMessageById(message.id)) {
       return;
     }
 
