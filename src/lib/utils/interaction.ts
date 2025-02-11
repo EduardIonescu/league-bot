@@ -169,7 +169,7 @@ export async function startBet(
         return;
       }
 
-      msg.edit({ embeds: [embed], components: [winRow, loseRow] });
+      msg.edit({ components: [winRow, loseRow] });
     } catch (error) {
       console.log(
         "Message has already been deleted. Can't change buttons in startBet.ts"
