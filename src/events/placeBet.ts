@@ -263,10 +263,7 @@ export default {
     }
 
     const totalBets = [...(bets ?? []), bet];
-    console.log("totalBets", totalBets);
     const { totalBetWin, totalBetLose } = getTotalBets(totalBets);
-    console.log("totalBetWin", totalBetWin);
-    console.log("totalBetLose", totalBetLose);
 
     const totalNicuWinMsg = totalBetWin.nicu ? `${totalBetWin.nicu} Nicu ` : "";
     const totalNicuLoseMsg = totalBetLose.nicu
@@ -297,7 +294,6 @@ export default {
       interaction.user.username
     );
 
-    console.log("messages", messages);
     await Promise.all(
       messages.map(async (msg) => {
         try {
@@ -313,7 +309,6 @@ export default {
               embeds: [embed],
               components: [winRow, loseRow],
             });
-            console.log("message edited successfully");
           }
         } catch (err) {
           console.log("msg", msg);
