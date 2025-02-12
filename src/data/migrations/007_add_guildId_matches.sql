@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS activeMatches(
   inGameTime INTEGER NOT NULL,
   gameStartTime INTEGER NOT NULL,
   region VARCHAR(255) NOT NULL,
-  PRIMARY KEY (summonerPUUID, guildId)
+  PRIMARY KEY (gameId, guildId)
 );
 
 CREATE TABLE IF NOT EXISTS bets (
