@@ -38,6 +38,23 @@ export function getAccounts(guildId: string) {
   };
 }
 
+export function getAccount(summonerPUUID: string, guildId: string) {
+  const stmtUser = db.prepare(
+    "SELECT * FROM accounts WHERE guildId = ? AND summonerPUUID = ?;"
+  );
+
+  const account = stmtUser.get(guildId, summonerPUUID) as Account | undefined;
+
+  if (!account) {
+    return { error: "No account found", account: undefined };
+  }
+
+  return {
+    error: undefined,
+    account,
+  };
+}
+
 export function removeAccount(nameAndTag: string, guildId: string) {
   const [gameName, tagLine] = nameAndTag.split("_");
   try {

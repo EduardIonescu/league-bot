@@ -22,13 +22,12 @@ import {
 import { getUser, updateUser } from "../db/user.js";
 import {
   AmountByUser,
-  Choice,
   Lane,
   LoserBetingUser,
   RefundedBettingUser,
   WinnerBetingUser,
 } from "../types/common.js";
-import { Account, SpectatorParticipant } from "../types/riot.js";
+import { SpectatorParticipant } from "../types/riot.js";
 import {
   encodeBase1114111,
   htmlImgSrcFromPath,
@@ -197,26 +196,13 @@ export function handleLoserBetResult(users: AmountByUser[]) {
   return losers.filter((loser) => loser != undefined);
 }
 
-export function formatChoices(
-  accounts: Account[] | undefined,
-  valueIsSummonerPUUID: boolean = true
+export function formatPlayerName(
+  gameName: string,
+  tagLine: string,
+  underscore: boolean = false
 ) {
-  const choices: Choice[] | undefined = accounts?.map((account) => {
-    const nameAndTag = (account.gameName + "_" + account.tagLine).toLowerCase();
-    const value = valueIsSummonerPUUID ? account.summonerPUUID : nameAndTag;
-
-    return {
-      name: formatPlayerName(account.gameName, account.tagLine),
-      value,
-    };
-  });
-
-  return choices ?? [];
-}
-
-/** Returns player name as `Demon#Ikspe`  */
-export function formatPlayerName(gameName: string, tagLine: string) {
-  return `${toTitleCase(gameName)}#${tagLine.toUpperCase()}`;
+  const sign = underscore ? "_" : "#";
+  return `${toTitleCase(gameName)}${sign}${tagLine.toUpperCase()}`;
 }
 
 export function bettingButtons(summonerPUUID: string) {

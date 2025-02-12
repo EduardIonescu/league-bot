@@ -1,10 +1,29 @@
 import { Collection, Events, Interaction, MessageFlags } from "discord.js";
-import { ClientWithCommands } from "../app";
+import { ClientWithCommands } from "../app.js";
 
 export default {
   name: Events.InteractionCreate,
   async execute(interaction: Interaction) {
     if (!interaction.isChatInputCommand()) {
+      if (interaction.isAutocomplete()) {
+        const client = interaction.client as ClientWithCommands;
+        const command = client.commands.get(interaction.commandName);
+
+        if (!command) {
+          if (!command) {
+            console.error(
+              `No command matching ${interaction.commandName} was found.`
+            );
+            return;
+          }
+        }
+
+        try {
+          await command.autocomplete(interaction);
+        } catch (error) {
+          console.error(error);
+        }
+      }
       return;
     }
 
@@ -16,7 +35,6 @@ export default {
     }
 
     const client = interaction.client as ClientWithCommands;
-
     const command = client.commands.get(interaction.commandName);
 
     if (!command) {
