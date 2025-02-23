@@ -49,9 +49,3 @@ If you'd like to run the bot yourself:
 
 6.  **Run the bot:** `pnpm run start`
 
-## TODO
-
-*   Reduce the size of the screenshots taken by Puppeteer.
-*   Consider removing support for Flex games.
-*   Disable buttons when they should no longer be usable.
-
